@@ -39,6 +39,23 @@ final class Audit extends AggregateRoot
         return $audit;
     }
 
+    public static function reconstitute(
+        AuditId $id,
+        AuditConfiguration $configuration,
+        AuditStatus $status,
+        AuditStatistics $statistics,
+        DateTimeImmutable $createdAt,
+    ): self {
+        $audit = new self();
+        $audit->id = $id;
+        $audit->configuration = $configuration;
+        $audit->status = $status;
+        $audit->statistics = $statistics;
+        $audit->createdAt = $createdAt;
+
+        return $audit;
+    }
+
     public function registerPageCrawled(int $issueErrors, int $issueWarnings): void
     {
         $this->guardIsRunning('registerPageCrawled');

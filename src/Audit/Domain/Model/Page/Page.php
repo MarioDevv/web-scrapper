@@ -56,6 +56,44 @@ final class Page extends AggregateRoot
         return $page;
     }
 
+    /**
+     * @param Link[] $links
+     * @param Hreflang[] $hreflangs
+     * @param Issue[] $issues
+     */
+    public static function reconstitute(
+        PageId $id,
+        AuditId $auditId,
+        Url $url,
+        PageResponse $response,
+        RedirectChain $redirectChain,
+        int $crawlDepth,
+        ?PageMetadata $metadata,
+        ?Directive $directives,
+        ?Fingerprint $fingerprint,
+        array $links,
+        array $hreflangs,
+        array $issues,
+        DateTimeImmutable $crawledAt,
+    ): self {
+        $page = new self();
+        $page->id = $id;
+        $page->auditId = $auditId;
+        $page->url = $url;
+        $page->response = $response;
+        $page->redirectChain = $redirectChain;
+        $page->crawlDepth = $crawlDepth;
+        $page->metadata = $metadata;
+        $page->directives = $directives;
+        $page->fingerprint = $fingerprint;
+        $page->links = $links;
+        $page->hreflangs = $hreflangs;
+        $page->issues = $issues;
+        $page->crawledAt = $crawledAt;
+
+        return $page;
+    }
+
     public function enrichWithMetadata(PageMetadata $metadata): void
     {
         $this->metadata = $metadata;

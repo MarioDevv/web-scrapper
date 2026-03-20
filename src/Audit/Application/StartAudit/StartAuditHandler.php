@@ -42,7 +42,7 @@ final readonly class StartAuditHandler
         );
 
         $this->auditRepository->save($audit);
-        $this->frontier->enqueue($audit->id(), $seedUrl, depth: 0);
+        $_ = $this->frontier->enqueue($audit->id(), $seedUrl, depth: 0);
         $this->eventBus->publish(...$audit->pullDomainEvents());
 
         return new StartAuditResponse(
