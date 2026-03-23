@@ -9,3 +9,6 @@ composer.lock
 *.db
 *.sqlite
 .env
+/.idea/
+/.phpstan-cache/
+.phpunit.result.cache
