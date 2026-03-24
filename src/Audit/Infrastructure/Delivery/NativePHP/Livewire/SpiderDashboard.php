@@ -16,6 +16,7 @@ use SeoSpider\Audit\Application\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Audit\Application\CancelAudit\CancelAuditCommand;
 use SeoSpider\Audit\Application\CancelAudit\CancelAuditHandler;
 use App\Jobs\RunCrawlJob;
+use Symfony\Component\Uid\Uuid;
 
 class SpiderDashboard extends Component
 {
@@ -44,7 +45,14 @@ class SpiderDashboard extends Component
 
     // ── Sidebar
     public bool $sidebarCollapsed = false;
+    public array $folders = [];
     public array $auditHistory = [];
+
+    // ── Folder editing
+    public ?string $editingFolderId = null;
+    public string $editingFolderName = '';
+    public string $newFolderName = '';
+    public bool $showNewFolder = false;
 
     // ── Page discovery tracking
     public array $knownPageIds = [];
@@ -55,8 +63,13 @@ class SpiderDashboard extends Component
 
     public function mount(): void
     {
+        $this->loadFolders();
         $this->loadAuditHistory();
     }
+
+    // ═══════════════════════════════════════
+    //  Crawl actions
+    // ═══════════════════════════════════════
 
     public function startCrawl(): void
     {
@@ -178,6 +191,104 @@ class SpiderDashboard extends Component
         }
     }
 
+    // ═══════════════════════════════════════
+    //  Folder CRUD
+    // ═══════════════════════════════════════
+
+    public function createFolder(): void
+    {
+        $name = trim($this->newFolderName);
+        if ($name === '') return;
+
+        $pdo = app(\PDO::class);
+        $id = Uuid::v7()->toRfc4122();
+        $maxOrder = (int) $pdo->query("SELECT COALESCE(MAX(sort_order), 0) FROM folders")->fetchColumn();
+
+        $pdo->prepare("INSERT INTO folders (id, name, sort_order) VALUES (?, ?, ?)")
+            ->execute([$id, $name, $maxOrder + 1]);
+
+        $this->newFolderName = '';
+        $this->showNewFolder = false;
+        $this->loadFolders();
+    }
+
+    public function startEditFolder(string $folderId): void
+    {
+        $this->editingFolderId = $folderId;
+        foreach ($this->folders as $f) {
+            if ($f['id'] === $folderId) {
+                $this->editingFolderName = $f['name'];
+                break;
+            }
+        }
+    }
+
+    public function saveFolder(): void
+    {
+        if (!$this->editingFolderId) return;
+        $name = trim($this->editingFolderName);
+        if ($name === '') return;
+
+        $pdo = app(\PDO::class);
+        $pdo->prepare("UPDATE folders SET name = ? WHERE id = ?")
+            ->execute([$name, $this->editingFolderId]);
+
+        $this->editingFolderId = null;
+        $this->editingFolderName = '';
+        $this->loadFolders();
+    }
+
+    public function cancelEditFolder(): void
+    {
+        $this->editingFolderId = null;
+        $this->editingFolderName = '';
+    }
+
+    public function deleteFolder(string $folderId): void
+    {
+        $pdo = app(\PDO::class);
+        // Move audits out of folder first
+        $pdo->prepare("UPDATE audits SET folder_id = NULL WHERE folder_id = ?")->execute([$folderId]);
+        $pdo->prepare("DELETE FROM folders WHERE id = ?")->execute([$folderId]);
+
+        $this->loadFolders();
+        $this->loadAuditHistory();
+    }
+
+    public function moveAuditToFolder(string $auditId, ?string $folderId): void
+    {
+        $pdo = app(\PDO::class);
+        $pdo->prepare("UPDATE audits SET folder_id = ? WHERE id = ?")
+            ->execute([$folderId ?: null, $auditId]);
+
+        $this->loadAuditHistory();
+    }
+
+    public function deleteAudit(string $auditId): void
+    {
+        if ($this->auditId === $auditId && $this->crawling) return;
+
+        $pdo = app(\PDO::class);
+        // Delete in correct order for foreign keys
+        $pdo->prepare("DELETE FROM issues WHERE page_id IN (SELECT id FROM pages WHERE audit_id = ?)")->execute([$auditId]);
+        $pdo->prepare("DELETE FROM pages WHERE audit_id = ?")->execute([$auditId]);
+        $pdo->prepare("DELETE FROM frontier WHERE audit_id = ?")->execute([$auditId]);
+        $pdo->prepare("DELETE FROM audits WHERE id = ?")->execute([$auditId]);
+
+        if ($this->auditId === $auditId) {
+            $this->auditId = null;
+            $this->status = null;
+            $this->pages = [];
+            $this->reset(['selectedPageId', 'selectedPage', 'detailOpen']);
+        }
+
+        $this->loadAuditHistory();
+    }
+
+    // ═══════════════════════════════════════
+    //  Data refresh
+    // ═══════════════════════════════════════
+
     public function refreshStatus(): void
     {
         if (!$this->auditId) return;
@@ -225,7 +336,9 @@ class SpiderDashboard extends Component
         $this->knownPageIds = $currentIds;
     }
 
-    // ── Computed properties ──
+    // ═══════════════════════════════════════
+    //  Computed properties
+    // ═══════════════════════════════════════
 
     public function getFilteredPagesProperty(): array
     {
@@ -270,13 +383,11 @@ class SpiderDashboard extends Component
 
     public function getProgressProperty(): array
     {
-        if (!$this->status) return ['pct' => 0, 'label' => ''];
+        if (!$this->status) return ['pct' => 0, 'label' => '', 'rate' => 0];
 
         $crawled = $this->status['pagesCrawled'];
         $discovered = $this->status['pagesDiscovered'];
-        $max = $this->status['maxPages'];
 
-        // Use discovered as denominator when crawling, max when done
         $total = $this->crawling ? max($discovered, 1) : max($crawled, 1);
         $pct = min(($crawled / $total) * 100, 100);
 
@@ -284,42 +395,28 @@ class SpiderDashboard extends Component
             'pct' => round($pct, 1),
             'label' => "{$crawled} / {$discovered}",
             'rate' => $this->status['duration'] > 0
-                ? round($crawled / $this->status['duration'], 1)
-                : 0,
+                ? round($crawled / $this->status['duration'], 1) : 0,
         ];
     }
 
-    public function getAuditScoreProperty(): ?int
+    // ═══════════════════════════════════════
+    //  Private
+    // ═══════════════════════════════════════
+
+    private function loadFolders(): void
     {
-        if (empty($this->pages) || !$this->status) return null;
-        $total = count($this->pages);
-        if ($total === 0) return 100;
-
-        $errors = $this->status['errorsFound'] ?? 0;
-        $warnings = $this->status['warningsFound'] ?? 0;
-        $penalty = ($errors * 3) + ($warnings * 1);
-        $maxPenalty = $total * 5;
-
-        return min(100, max(0, 100 - (int)(($penalty / max($maxPenalty, 1)) * 100)));
-    }
-
-    /** Group history by domain for sidebar folders */
-    public function getGroupedHistoryProperty(): array
-    {
-        $groups = [];
-        foreach ($this->auditHistory as $audit) {
-            $host = parse_url($audit['seed_url'], PHP_URL_HOST) ?: 'unknown';
-            $groups[$host][] = $audit;
-        }
-        ksort($groups);
-        return $groups;
+        $pdo = app(\PDO::class);
+        $this->folders = $pdo->query("SELECT * FROM folders ORDER BY sort_order ASC, name ASC")
+            ->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     private function loadAuditHistory(): void
     {
         $pdo = app(\PDO::class);
-        $stmt = $pdo->query('SELECT id, seed_url, status, pages_crawled, errors_found, warnings_found, created_at FROM audits ORDER BY created_at DESC LIMIT 50');
-        $this->auditHistory = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $this->auditHistory = $pdo->query(
+            "SELECT id, folder_id, seed_url, status, pages_crawled, errors_found, warnings_found, created_at
+             FROM audits ORDER BY created_at DESC LIMIT 100"
+        )->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     public function render()

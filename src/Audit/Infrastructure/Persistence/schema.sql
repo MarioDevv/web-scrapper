@@ -1,5 +1,14 @@
+CREATE TABLE IF NOT EXISTS folders (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    color TEXT NOT NULL DEFAULT '#5b8af5',
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS audits (
     id TEXT PRIMARY KEY,
+    folder_id TEXT,
     seed_url TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
     max_pages INTEGER NOT NULL DEFAULT 500,
@@ -20,7 +29,8 @@ CREATE TABLE IF NOT EXISTS audits (
     warnings_found INTEGER NOT NULL DEFAULT 0,
     started_at TEXT,
     completed_at TEXT,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS pages (

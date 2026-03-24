@@ -137,5 +137,12 @@ final class AuditServiceProvider extends ServiceProvider
             ) . '/schema.sql';
 
         SqliteConnection::migrate($pdo, $schemaPath);
+
+        // Safe migration: add folder_id to existing audits tables
+        $columns = $pdo->query("PRAGMA table_info(audits)")->fetchAll();
+        $columnNames = array_column($columns, 'name');
+        if (!in_array('folder_id', $columnNames, true)) {
+            $pdo->exec('ALTER TABLE audits ADD COLUMN folder_id TEXT REFERENCES folders(id) ON DELETE SET NULL');
+        }
     }
 }

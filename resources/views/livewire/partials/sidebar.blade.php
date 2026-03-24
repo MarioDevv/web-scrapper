@@ -10,32 +10,9 @@
 
     @if(!$sidebarCollapsed)
 
-    {{-- Score + Stats --}}
+    {{-- Stats (when audit loaded) --}}
     @if($status)
-    <div class="flex-none p-3 border-b border-line space-y-3">
-
-        {{-- Audit Score --}}
-        @php $score = $this->auditScore; @endphp
-        @if($score !== null && !$crawling)
-        <div class="flex items-center gap-3">
-            <div class="relative w-12 h-12 shrink-0">
-                <svg class="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="15" fill="none" stroke="var(--c-bg3)" stroke-width="2.5"/>
-                    <circle cx="18" cy="18" r="15" fill="none" stroke-width="2.5"
-                        stroke-dasharray="{{ $score * 0.942 }} 100" stroke-linecap="round"
-                        style="stroke:{{ $score >= 80 ? 'var(--c-ok)' : ($score >= 50 ? 'var(--c-warn)' : 'var(--c-err)') }}"/>
-                </svg>
-                <span class="absolute inset-0 flex items-center justify-center text-[11px] font-bold"
-                      style="color:{{ $score >= 80 ? 'var(--c-ok)' : ($score >= 50 ? 'var(--c-warn)' : 'var(--c-err)') }}">{{ $score }}</span>
-            </div>
-            <div>
-                <div class="text-[13px] font-semibold text-primary">Health Score</div>
-                <div class="text-2xs text-tertiary">{{ $score >= 80 ? 'Good' : ($score >= 50 ? 'Needs work' : 'Critical') }}</div>
-            </div>
-        </div>
-        @endif
-
-        {{-- Stats grid --}}
+    <div class="flex-none p-3 border-b border-line">
         <div class="grid grid-cols-2 gap-1.5">
             @php
                 $stats = [
@@ -52,75 +29,117 @@
             </div>
             @endforeach
         </div>
-
-        <div class="flex gap-4 text-2xs text-tertiary">
+        <div class="flex gap-4 text-2xs text-tertiary mt-2">
             <span>Discovered: <span class="text-secondary font-medium tabular-nums">{{ $status['pagesDiscovered'] }}</span></span>
             @if($status['duration'])<span>{{ number_format($status['duration'], 1) }}s</span>@endif
         </div>
     </div>
     @endif
 
-    {{-- History grouped by domain --}}
-    <div class="flex-1 overflow-y-auto">
-        <div class="px-3 pt-3 pb-1.5 flex items-center justify-between">
+    {{-- History with folders --}}
+    <div class="flex-1 overflow-y-auto" x-data="{ openFolders: JSON.parse(localStorage.getItem('sf') || '{}'), movingAudit: null }"
+         x-effect="localStorage.setItem('sf', JSON.stringify(openFolders))">
+
+        {{-- Header --}}
+        <div class="px-3 pt-3 pb-1 flex items-center justify-between">
             <h3 class="text-2xs uppercase tracking-widest text-muted font-semibold">History</h3>
-            <span class="text-2xs text-muted">{{ count($auditHistory) }}</span>
+            <button wire:click="$toggle('showNewFolder')" class="text-muted hover:text-secondary transition-colors p-0.5 rounded hover:bg-panel2" title="New folder">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.06-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.38a1.5 1.5 0 01-1.06-.44z"/>
+                </svg>
+            </button>
         </div>
 
-        <div class="px-2 pb-3 space-y-2"
-             x-data="{ openFolders: JSON.parse(localStorage.getItem('openFolders') || '{}') }"
-             x-effect="localStorage.setItem('openFolders', JSON.stringify(openFolders))">
+        {{-- New folder input --}}
+        @if($showNewFolder)
+        <div class="px-2 pb-2">
+            <div class="flex items-center gap-1">
+                <input type="text" wire:model="newFolderName" wire:keydown.enter="createFolder" wire:keydown.escape="$set('showNewFolder', false)"
+                    placeholder="Folder name…" autofocus
+                    class="flex-1 h-7 bg-app2 border border-line rounded-md px-2 text-2xs text-primary placeholder:text-muted focus:border-[var(--c-accent)]">
+                <button wire:click="createFolder" class="h-7 px-2 rounded-md bg-accent-s c-accent text-2xs font-medium hover:brightness-110">Create</button>
+            </div>
+        </div>
+        @endif
 
-            @forelse($this->groupedHistory as $domain => $audits)
-            <div>
-                {{-- Domain folder header --}}
-                <button class="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-2xs text-secondary hover:bg-panel2 transition-colors"
-                    @click="openFolders['{{ $domain }}'] = !openFolders['{{ $domain }}']">
-                    <svg class="w-3 h-3 text-muted transition-transform"
-                         :class="openFolders['{{ $domain }}'] ? 'rotate-90' : ''"
-                         fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" d="M9 5l7 7-7 7"/>
-                    </svg>
-                    <svg class="w-3.5 h-3.5 text-muted" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 015.25 3.75h3.69a1.5 1.5 0 011.06.44l1.122 1.122a1.5 1.5 0 001.06.438H18.75A2.25 2.25 0 0121 8.25v1.526"/>
-                    </svg>
-                    <span class="font-medium truncate">{{ $domain }}</span>
-                    <span class="ml-auto text-muted text-[10px]">{{ count($audits) }}</span>
-                </button>
+        <div class="px-2 pb-3 space-y-1">
 
-                {{-- Audit items in this domain --}}
-                <div x-show="openFolders['{{ $domain }}']" x-collapse class="pl-4 mt-0.5 space-y-0.5">
-                    @foreach($audits as $audit)
-                    <button wire:click="loadAudit('{{ $audit['id'] }}')"
-                        class="w-full text-left px-2 py-1.5 rounded-md transition-all duration-100
-                            {{ $auditId === $audit['id']
-                                ? 'bg-accent-s border border-line2'
-                                : 'hover:bg-panel2 border border-transparent' }}">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-1.5 h-1.5 rounded-full shrink-0 {{ match($audit['status']) {
-                                'completed' => 'c-ok', 'running' => 'c-accent dot-pulse',
-                                'failed' => 'c-err', default => ''
-                            } }}" style="background:currentColor"></span>
-                            <span class="text-2xs truncate {{ $auditId === $audit['id'] ? 'text-primary font-medium' : 'text-secondary' }}">
-                                {{ parse_url($audit['seed_url'], PHP_URL_PATH) ?: '/' }}
-                            </span>
-                        </div>
-                        <div class="flex items-center gap-2 mt-0.5 pl-3 text-[10px] text-muted tabular-nums">
-                            <span>{{ $audit['pages_crawled'] }}p</span>
-                            @if($audit['errors_found'] > 0)<span class="c-err">{{ $audit['errors_found'] }}E</span>@endif
-                            @if($audit['warnings_found'] > 0)<span class="c-warn">{{ $audit['warnings_found'] }}W</span>@endif
-                            <span class="ml-auto">{{ \Carbon\Carbon::parse($audit['created_at'])->format('d M H:i') }}</span>
-                        </div>
+            {{-- Folders --}}
+            @foreach($folders as $folder)
+            @php
+                $folderAudits = array_values(array_filter($auditHistory, fn($a) => ($a['folder_id'] ?? null) === $folder['id']));
+            @endphp
+            <div class="group">
+                {{-- Folder header --}}
+                <div class="flex items-center gap-1 px-1.5 py-1 rounded-md hover:bg-panel2 transition-colors">
+                    <button @click="openFolders['{{ $folder['id'] }}'] = !openFolders['{{ $folder['id'] }}']" class="flex items-center gap-1.5 flex-1 min-w-0">
+                        <svg class="w-3 h-3 text-muted transition-transform shrink-0" :class="openFolders['{{ $folder['id'] }}'] ? 'rotate-90' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 5l7 7-7 7"/></svg>
+                        <svg class="w-3.5 h-3.5 shrink-0" style="color:{{ $folder['color'] }}" fill="currentColor" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>
+
+                        @if($editingFolderId === $folder['id'])
+                            <input type="text" wire:model="editingFolderName" wire:keydown.enter="saveFolder" wire:keydown.escape="cancelEditFolder"
+                                @click.stop autofocus
+                                class="flex-1 h-5 bg-app2 border border-line rounded px-1 text-2xs text-primary focus:border-[var(--c-accent)]">
+                        @else
+                            <span class="text-2xs font-medium text-secondary truncate">{{ $folder['name'] }}</span>
+                        @endif
                     </button>
-                    @endforeach
+
+                    <span class="text-[10px] text-muted tabular-nums mr-1">{{ count($folderAudits) }}</span>
+
+                    {{-- Folder actions --}}
+                    <div class="hidden group-hover:flex items-center gap-0.5">
+                        @if($editingFolderId === $folder['id'])
+                            <button wire:click="saveFolder" class="p-0.5 rounded c-ok hover:bg-panel3" title="Save">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M5 13l4 4L19 7"/></svg>
+                            </button>
+                        @else
+                            <button wire:click="startEditFolder('{{ $folder['id'] }}')" class="p-0.5 rounded text-muted hover:text-secondary hover:bg-panel3" title="Rename">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                            </button>
+                            <button wire:click="deleteFolder('{{ $folder['id'] }}')" wire:confirm="Delete folder '{{ $folder['name'] }}'? Audits will be moved to Unfiled."
+                                class="p-0.5 rounded text-muted hover:c-err hover:bg-panel3" title="Delete folder">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Audits in folder --}}
+                <div x-show="openFolders['{{ $folder['id'] }}']" x-collapse class="pl-3 mt-0.5 space-y-0.5">
+                    @forelse($folderAudits as $audit)
+                        @include('livewire.partials.sidebar-audit-item', ['audit' => $audit])
+                    @empty
+                        <p class="text-[10px] text-muted italic pl-5 py-1">Empty</p>
+                    @endforelse
                 </div>
             </div>
-            @empty
-            <div class="px-3 py-8 text-center">
-                <svg class="w-8 h-8 text-muted mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m21 21-4.35-4.35"/></svg>
-                <p class="text-2xs text-muted">No audits yet</p>
+            @endforeach
+
+            {{-- Unfiled audits --}}
+            @php
+                $unfiled = array_values(array_filter($auditHistory, fn($a) => empty($a['folder_id'])));
+            @endphp
+            @if(count($unfiled) > 0 || count($folders) === 0)
+            <div class="{{ count($folders) > 0 ? 'mt-2 pt-2 border-t border-line' : '' }}">
+                @if(count($folders) > 0)
+                <div class="px-1.5 pb-1">
+                    <span class="text-[10px] uppercase tracking-widest text-muted font-semibold">Unfiled</span>
+                </div>
+                @endif
+                <div class="space-y-0.5">
+                    @forelse($unfiled as $audit)
+                        @include('livewire.partials.sidebar-audit-item', ['audit' => $audit])
+                    @empty
+                        <div class="px-3 py-8 text-center">
+                            <svg class="w-8 h-8 text-muted mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m21 21-4.35-4.35"/></svg>
+                            <p class="text-2xs text-muted">No audits yet</p>
+                        </div>
+                    @endforelse
+                </div>
             </div>
-            @endforelse
+            @endif
+
         </div>
     </div>
 
