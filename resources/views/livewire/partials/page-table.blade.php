@@ -30,7 +30,7 @@
         <div class="relative">
             <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path stroke-linecap="round" d="m21 21-4.35-4.35"/></svg>
             <input type="text" wire:model.live.debounce.300ms="searchQuery"
-                placeholder="Filter pages…"
+                placeholder="Filtrar páginas…"
                 class="h-7 w-40 bg-app2 border border-line rounded-md pl-7 pr-2 text-2xs text-primary placeholder:text-muted focus:border-[var(--c-accent)] focus:w-56 transition-all duration-200">
         </div>
     </div>
@@ -39,24 +39,31 @@
 {{-- ══ TABLE ══ --}}
 <div class="flex-1 overflow-auto min-h-0">
     @if(count($this->filteredPages) > 0)
-    <table class="w-full text-[13px] border-collapse">
+    <div class="overflow-x-auto">
+    <table class="w-full text-[13px] border-collapse" style="min-width:1200px">
         <thead class="sticky top-0 z-10">
             <tr class="bg-panel2 border-b border-line" style="backdrop-filter:blur(8px)">
                 @php
                     $cols = [
-                        ['url',          'URL',    'text-left',   'px-3', ''],
-                        ['statusCode',   'Status', 'text-center', 'px-2', 'w-16'],
-                        ['title',        'Title',  'text-left',   'px-2', ''],
-                        ['bodySize',     'Size',   'text-right',  'px-2', 'w-16'],
-                        ['responseTime', 'Time',   'text-right',  'px-2', 'w-16'],
-                        ['crawlDepth',   'Depth',  'text-center', 'px-2', 'w-12'],
-                        ['errorCount',   'Issues', 'text-center', 'px-2', 'w-16'],
-                        ['isIndexable',  'Idx',    'text-center', 'px-2', 'w-10'],
+                        ['url',               'URL',         'text-left',   'px-3 min-w-[260px]'],
+                        ['statusCode',        'Estado',      'text-center', 'px-2 w-16'],
+                        ['title',             'Título',      'text-left',   'px-2 min-w-[180px]'],
+                        ['wordCount',         'Palabras',    'text-right',  'px-2 w-[70px]'],
+                        ['h1Count',           'H1',          'text-center', 'px-2 w-10'],
+                        ['internalLinkCount', 'Int.',        'text-right',  'px-2 w-12'],
+                        ['externalLinkCount', 'Ext.',        'text-right',  'px-2 w-12'],
+                        ['imageCount',        'Imgs',        'text-right',  'px-2 w-12'],
+                        ['canonicalStatus',   'Canonical',   'text-center', 'px-2 w-[90px]'],
+                        ['bodySize',          'Tamaño',      'text-right',  'px-2 w-16'],
+                        ['responseTime',      'Tiempo',      'text-right',  'px-2 w-16'],
+                        ['crawlDepth',        'Prof.',       'text-center', 'px-2 w-12'],
+                        ['errorCount',        'Problemas',   'text-center', 'px-2 w-20'],
+                        ['isIndexable',       'Idx',         'text-center', 'px-2 w-10'],
                     ];
                 @endphp
-                @foreach($cols as [$field, $label, $align, $px, $w])
+                @foreach($cols as [$field, $label, $align, $classes])
                 <th wire:click="toggleSort('{{ $field }}')"
-                    class="{{ $align }} {{ $px }} py-2 font-medium text-tertiary text-2xs uppercase tracking-wider {{ $w }} cursor-pointer hover:text-secondary select-none transition-colors group">
+                    class="{{ $align }} {{ $classes }} py-2 font-medium text-tertiary text-2xs uppercase tracking-wider cursor-pointer hover:text-secondary select-none transition-colors group whitespace-nowrap">
                     <span class="inline-flex items-center gap-1">
                         {{ $label }}
                         @if($sortField === $field)
@@ -77,30 +84,76 @@
                        {{ $selectedPageId === $page['pageId'] ? 'row-selected' : '' }}
                        {{ in_array($page['pageId'], $newPageIds) ? 'anim-fade' : '' }}">
 
+                {{-- URL --}}
                 <td class="px-3 py-[7px] font-mono text-[12px] truncate max-w-0">
                     <span class="text-muted">{{ parse_url($page['url'], PHP_URL_HOST) }}</span><span class="text-secondary">{{ parse_url($page['url'], PHP_URL_PATH) ?: '/' }}</span>
                 </td>
 
+                {{-- Status Code --}}
                 <td class="px-2 py-[7px] text-center">
                     @php $sc = $page['statusCode']; @endphp
                     <span class="badge font-mono text-[11px]
                         {{ $sc >= 200 && $sc < 300 ? 'badge-ok' : ($sc >= 300 && $sc < 400 ? 'badge-warn' : 'badge-err') }}">{{ $sc }}</span>
                 </td>
 
+                {{-- Title --}}
                 <td class="px-2 py-[7px] text-secondary truncate max-w-0">{{ $page['title'] ?? '' }}</td>
 
+                {{-- Word Count --}}
+                <td class="px-2 py-[7px] text-right font-mono text-[12px] tabular-nums text-tertiary">
+                    {{ $page['wordCount'] > 0 ? $page['wordCount'] : '—' }}
+                </td>
+
+                {{-- H1 Count --}}
+                <td class="px-2 py-[7px] text-center text-[12px] tabular-nums">
+                    @if($page['h1Count'] === 0)
+                        <span class="c-err font-medium">0</span>
+                    @elseif($page['h1Count'] > 1)
+                        <span class="c-warn font-medium">{{ $page['h1Count'] }}</span>
+                    @else
+                        <span class="text-tertiary">{{ $page['h1Count'] }}</span>
+                    @endif
+                </td>
+
+                {{-- Internal Links --}}
+                <td class="px-2 py-[7px] text-right font-mono text-[12px] tabular-nums text-tertiary">
+                    {{ $page['internalLinkCount'] }}
+                </td>
+
+                {{-- External Links --}}
+                <td class="px-2 py-[7px] text-right font-mono text-[12px] tabular-nums text-tertiary">
+                    {{ $page['externalLinkCount'] }}
+                </td>
+
+                {{-- Images --}}
+                <td class="px-2 py-[7px] text-right font-mono text-[12px] tabular-nums text-tertiary">
+                    {{ $page['imageCount'] }}
+                </td>
+
+                {{-- Canonical --}}
+                <td class="px-2 py-[7px] text-center">
+                    @php $cs = $page['canonicalStatus']; @endphp
+                    <span class="text-[11px] font-medium {{ match($cs) { 'self' => 'c-ok', 'other' => 'c-warn', default => 'c-err' } }}">
+                        {{ match($cs) { 'self' => 'Auto-ref.', 'other' => 'Canonical.', default => 'Falta' } }}
+                    </span>
+                </td>
+
+                {{-- Size --}}
                 <td class="px-2 py-[7px] text-right font-mono text-[12px] text-tertiary tabular-nums">
                     {{ $page['bodySize'] > 1048576 ? number_format($page['bodySize']/1048576,1).'M'
                         : ($page['bodySize'] > 1024 ? number_format($page['bodySize']/1024,0).'K' : $page['bodySize'].'B') }}
                 </td>
 
+                {{-- Response Time --}}
                 <td class="px-2 py-[7px] text-right font-mono text-[12px] tabular-nums"
                     style="color:{{ $page['responseTime'] > 2000 ? 'var(--c-err)' : ($page['responseTime'] > 1000 ? 'var(--c-warn)' : 'var(--c-fg3)') }}">
                     {{ number_format($page['responseTime'], 0) }}<span class="text-muted">ms</span>
                 </td>
 
+                {{-- Depth --}}
                 <td class="px-2 py-[7px] text-center text-tertiary tabular-nums">{{ $page['crawlDepth'] }}</td>
 
+                {{-- Issues --}}
                 <td class="px-2 py-[7px] text-center">
                     @if($page['errorCount'] > 0)<span class="c-err font-medium text-2xs">{{ $page['errorCount'] }}E</span>@endif
                     @if($page['warningCount'] > 0)<span class="c-warn font-medium text-2xs {{ $page['errorCount'] > 0 ? 'ml-0.5' : '' }}">{{ $page['warningCount'] }}W</span>@endif
@@ -109,6 +162,7 @@
                     @endif
                 </td>
 
+                {{-- Indexable --}}
                 <td class="px-2 py-[7px] text-center">
                     <span class="w-2.5 h-2.5 rounded-full inline-block"
                         style="background:{{ $page['isIndexable'] ? 'var(--c-ok)' : 'var(--c-err)' }};opacity:{{ $page['isIndexable'] ? '0.6' : '0.4' }}"></span>
@@ -117,24 +171,23 @@
             @endforeach
         </tbody>
     </table>
+    </div>
 
     @elseif($auditId && $crawling)
-    {{-- Discovering --}}
     <div class="flex flex-col items-center justify-center h-full gap-4">
         <div class="w-12 h-12 rounded-xl bg-accent-s flex items-center justify-center">
             <div class="w-6 h-6 border-2 border-line rounded-full animate-spin" style="border-top-color:var(--c-accent)"></div>
         </div>
         <div class="text-center">
-            <p class="text-[14px] text-secondary font-medium">Discovering pages…</p>
-            <p class="text-2xs text-muted mt-1">Pages will appear here as they are crawled</p>
+            <p class="text-[14px] text-secondary font-medium">Descubriendo páginas…</p>
+            <p class="text-2xs text-muted mt-1">Las páginas aparecerán aquí a medida que se rastreen</p>
         </div>
     </div>
 
     @elseif($auditId)
-    <div class="flex items-center justify-center h-full text-tertiary text-[14px]">No pages match this filter</div>
+    <div class="flex items-center justify-center h-full text-tertiary text-[14px]">No hay páginas que coincidan con este filtro</div>
 
     @else
-    {{-- Empty state --}}
     <div class="flex flex-col items-center justify-center h-full gap-4">
         <div class="w-16 h-16 rounded-2xl bg-panel2 flex items-center justify-center border border-line">
             <svg class="w-8 h-8 text-muted opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -143,8 +196,8 @@
             </svg>
         </div>
         <div class="text-center">
-            <p class="text-[14px] text-secondary">Enter a URL and click <span class="c-accent font-semibold">Crawl</span> to start</p>
-            <p class="text-2xs text-muted mt-1">Pages will appear in real-time as they are discovered</p>
+            <p class="text-[14px] text-secondary">Introduce una URL y pulsa <span class="c-accent font-semibold">Crawl</span> para empezar</p>
+            <p class="text-2xs text-muted mt-1">Las páginas aparecerán en tiempo real</p>
         </div>
     </div>
     @endif

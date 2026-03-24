@@ -93,7 +93,7 @@
                         <div class="text-tertiary mb-0.5">Canonical</div>
                         @php $cs = $selectedPage['canonicalStatus']; @endphp
                         <div class="font-medium {{ match($cs) { 'self' => 'c-ok', 'other' => 'c-warn', default => 'c-err' } }}">
-                            {{ match($cs) { 'self' => 'Auto-referente', 'other' => 'Canonicalizada', default => 'Falta' } }}
+                            {{ match($cs) { 'self' => 'Self', 'other' => 'Other', default => 'Missing' } }}
                         </div>
                     </div>
                 </div>

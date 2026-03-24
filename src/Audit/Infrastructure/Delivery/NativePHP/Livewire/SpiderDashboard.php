@@ -330,6 +330,12 @@ class SpiderDashboard extends Component
             'errorCount' => $p->errorCount,
             'warningCount' => $p->warningCount,
             'isIndexable' => $p->isIndexable,
+            'wordCount' => $p->wordCount,
+            'internalLinkCount' => $p->internalLinkCount,
+            'externalLinkCount' => $p->externalLinkCount,
+            'imageCount' => $p->imageCount,
+            'canonicalStatus' => $p->canonicalStatus,
+            'h1Count' => $p->h1Count,
         ], $r->pages);
 
         $currentIds = array_map(fn($p) => $p['pageId'], $this->pages);

@@ -25,6 +25,11 @@ use SeoSpider\Audit\Infrastructure\Bus\SyncEventBus;
 use SeoSpider\Audit\Domain\Model\Analyzer\BrokenLinkAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\MetaDataAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\DirectiveAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\HeadingAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\ContentAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\ImageAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\PerformanceAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\SecurityHeaderAnalyzer;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Audit\Application\PauseAudit\PauseAuditHandler;
@@ -70,6 +75,11 @@ final class AuditServiceProvider extends ServiceProvider
             BrokenLinkAnalyzer::class,
             MetaDataAnalyzer::class,
             DirectiveAnalyzer::class,
+            HeadingAnalyzer::class,
+            ContentAnalyzer::class,
+            ImageAnalyzer::class,
+            PerformanceAnalyzer::class,
+            SecurityHeaderAnalyzer::class,
         ], 'analyzers');
 
         $this->app->singleton(CrawlPageHandler::class, fn($app) => new CrawlPageHandler(

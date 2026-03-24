@@ -18,6 +18,12 @@ final readonly class PageSummary
         public int $warningCount,
         public bool $isIndexable,
         public ?string $title,
+        public int $wordCount,
+        public int $internalLinkCount,
+        public int $externalLinkCount,
+        public int $imageCount,
+        public string $canonicalStatus,
+        public int $h1Count,
         public string $crawledAt,
     ) {
     }

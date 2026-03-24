@@ -37,6 +37,9 @@ final readonly class GetAuditPagesHandler
 
     private function toSummary(Page $page): PageSummary
     {
+        $directives = $page->directives();
+        $anchors = array_filter($page->links(), static fn($l) => $l->isAnchor());
+
         return new PageSummary(
             pageId: $page->id()->value(),
             url: $page->url()->toString(),
@@ -49,6 +52,16 @@ final readonly class GetAuditPagesHandler
             warningCount: $page->warningCount(),
             isIndexable: $page->isIndexable(),
             title: $page->metadata()?->title(),
+            wordCount: $page->metadata()?->wordCount() ?? 0,
+            internalLinkCount: count(array_filter($anchors, static fn($l) => $l->isInternal())),
+            externalLinkCount: count(array_filter($anchors, static fn($l) => $l->isExternal())),
+            imageCount: count(array_filter($page->links(), static fn($l) => $l->type() === \SeoSpider\Audit\Domain\Model\Page\LinkType::IMAGE)),
+            canonicalStatus: match (true) {
+                $directives === null || !$directives->hasCanonical() => 'missing',
+                $directives->isSelfCanonical($page->url()) => 'self',
+                default => 'other',
+            },
+            h1Count: $page->metadata()?->h1Count() ?? 0,
             crawledAt: $page->crawledAt()->format('c'),
         );
     }
