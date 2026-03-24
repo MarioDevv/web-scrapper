@@ -1,58 +1,130 @@
 <!DOCTYPE html>
-<html lang="en" class="dark h-full">
+<html lang="en" x-data="{ dark: localStorage.getItem('theme') !== 'light' }"
+      x-init="$watch('dark', v => { localStorage.setItem('theme', v ? 'dark' : 'light') })"
+      :class="dark ? 'dark' : ''" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SEO Spider</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        bg:       { DEFAULT: '#09090b', 2: '#0f0f12', 3: '#18181b' },
-                        surface:  { DEFAULT: '#131316', 2: '#1a1a1f', 3: '#222228' },
-                        border:   { DEFAULT: '#27272a', 2: '#3f3f46' },
-                        fg:       { DEFAULT: '#fafafa', 2: '#a1a1aa', 3: '#71717a', 4: '#52525b' },
-                        accent:   { DEFAULT: '#3b82f6', dim: '#1d4ed8', glow: 'rgba(59,130,246,0.15)' },
-                        ok:       { DEFAULT: '#22c55e', dim: '#166534', bg: 'rgba(34,197,94,0.1)' },
-                        warn:     { DEFAULT: '#f59e0b', dim: '#92400e', bg: 'rgba(245,158,11,0.1)' },
-                        err:      { DEFAULT: '#ef4444', dim: '#991b1b', bg: 'rgba(239,68,68,0.1)' },
-                        info:     { DEFAULT: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
-                    },
-                    fontFamily: {
-                        sans: ['"Inter"', 'system-ui', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'Consolas', 'monospace'],
-                    },
-                    fontSize: {
-                        '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
-                    }
-                }
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+                    mono: ['"JetBrains Mono"', 'Consolas', 'monospace'],
+                },
+                fontSize: {
+                    '2xs': ['0.6875rem', { lineHeight: '1rem' }],
+                },
             }
         }
+    }
     </script>
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; }
+        :root {
+            --c-bg:       #ffffff; --c-bg2:      #f7f7f8; --c-bg3:      #efefef;
+            --c-surface:  #ffffff; --c-surface2: #f4f4f5; --c-surface3: #e8e8ec;
+            --c-border:   #e0e0e4; --c-border2:  #d0d0d6;
+            --c-fg:       #1a1a1f; --c-fg2:      #4a4a58; --c-fg3:      #78788a; --c-fg4: #a0a0b2;
+            --c-accent:   #2563eb; --c-accent-h: #1d4ed8; --c-accent-bg: rgba(37,99,235,0.07);
+            --c-ok:       #16a34a; --c-ok-bg:    rgba(22,163,74,0.08);
+            --c-warn:     #d97706; --c-warn-bg:  rgba(217,119,6,0.08);
+            --c-err:      #dc2626; --c-err-bg:   rgba(220,38,38,0.07);
+            --c-info:     #7c3aed; --c-info-bg:  rgba(124,58,237,0.07);
+            --c-row-hover: rgba(0,0,0,0.02); --c-row-sel: rgba(37,99,235,0.06);
+        }
+        .dark {
+            --c-bg:       #0a0a0c; --c-bg2:      #101014; --c-bg3:      #1a1a20;
+            --c-surface:  #111116; --c-surface2: #19191f; --c-surface3: #222230;
+            --c-border:   rgba(255,255,255,0.07); --c-border2: rgba(255,255,255,0.12);
+            --c-fg:       #ededf0; --c-fg2:      #a0a0b0; --c-fg3:      #6b6b80; --c-fg4: #4a4a5e;
+            --c-accent:   #5b8af5; --c-accent-h: #7ba3ff; --c-accent-bg: rgba(91,138,245,0.1);
+            --c-ok:       #34d399; --c-ok-bg:    rgba(52,211,153,0.08);
+            --c-warn:     #fbbf24; --c-warn-bg:  rgba(251,191,36,0.08);
+            --c-err:      #f87171; --c-err-bg:   rgba(248,113,113,0.08);
+            --c-info:     #a78bfa; --c-info-bg:  rgba(167,139,250,0.08);
+            --c-row-hover: rgba(255,255,255,0.015); --c-row-sel: rgba(91,138,245,0.07);
+        }
+
+        body { font-family: 'DM Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+               background: var(--c-bg); color: var(--c-fg); }
         .font-mono { font-family: 'JetBrains Mono', Consolas, monospace; }
 
+        /* Utility color classes via custom properties */
+        .bg-app       { background: var(--c-bg); }
+        .bg-app2      { background: var(--c-bg2); }
+        .bg-app3      { background: var(--c-bg3); }
+        .bg-panel     { background: var(--c-surface); }
+        .bg-panel2    { background: var(--c-surface2); }
+        .bg-panel3    { background: var(--c-surface3); }
+        .border-line  { border-color: var(--c-border); }
+        .border-line2 { border-color: var(--c-border2); }
+        .text-primary   { color: var(--c-fg); }
+        .text-secondary { color: var(--c-fg2); }
+        .text-tertiary  { color: var(--c-fg3); }
+        .text-muted     { color: var(--c-fg4); }
+        .text-link      { color: var(--c-accent); }
+        .bg-accent-s  { background: var(--c-accent-bg); }
+        .bg-ok-s      { background: var(--c-ok-bg); }
+        .bg-warn-s    { background: var(--c-warn-bg); }
+        .bg-err-s     { background: var(--c-err-bg); }
+        .bg-info-s    { background: var(--c-info-bg); }
+        .c-accent     { color: var(--c-accent); }
+        .c-ok         { color: var(--c-ok); }
+        .c-warn       { color: var(--c-warn); }
+        .c-err        { color: var(--c-err); }
+        .c-info       { color: var(--c-info); }
+
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+        ::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--c-border2); }
         ::-webkit-scrollbar-corner { background: transparent; }
 
-        @keyframes pulse-dot { 0%,100% { opacity:1 } 50% { opacity:.4 } }
-        .dot-pulse { animation: pulse-dot 1.5s ease-in-out infinite; }
+        /* Animations */
+        @keyframes fade-in { from { opacity:0; transform:translateY(3px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes slide-up { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes pulse-dot { 0%,100% { opacity:1 } 50% { opacity:.3 } }
+        .anim-fade   { animation: fade-in 0.25s ease-out both; }
+        .anim-slide  { animation: slide-up 0.3s ease-out both; }
+        .dot-pulse   { animation: pulse-dot 1.4s ease-in-out infinite; }
 
-        .row-selected { background: rgba(59,130,246,0.08) !important; }
-        tr:hover { background: rgba(255,255,255,0.02); }
+        /* Table rows */
+        .row-hover:hover  { background: var(--c-row-hover); }
+        .row-selected     { background: var(--c-row-sel) !important; }
+        tbody tr          { transition: background 0.1s ease; }
+
+        /* Badge */
+        .badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            font-size: 11px; font-weight: 500; padding: 1px 7px; border-radius: 4px;
+            line-height: 1.4;
+        }
+        .badge-ok   { background: var(--c-ok-bg);   color: var(--c-ok); }
+        .badge-warn { background: var(--c-warn-bg); color: var(--c-warn); }
+        .badge-err  { background: var(--c-err-bg);  color: var(--c-err); }
+        .badge-info { background: var(--c-info-bg); color: var(--c-info); }
+
+        /* Stat card */
+        .stat-card { transition: all 0.15s ease; }
+        .stat-card:hover { border-color: var(--c-border2); }
+
+        /* Progress bar smooth */
+        .progress-fill { transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+
+        /* Input */
+        input:focus { outline: none; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
     </style>
     @livewireStyles
 </head>
-<body class="h-full bg-bg text-fg overflow-hidden">
+<body class="h-full overflow-hidden">
     {{ $slot }}
     @livewireScripts
 </body>

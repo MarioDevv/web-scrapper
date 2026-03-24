@@ -43,6 +43,11 @@ final readonly class StartAuditHandler
 
         $this->auditRepository->save($audit);
         $_ = $this->frontier->enqueue($audit->id(), $seedUrl, depth: 0);
+
+        // Count the seed URL as discovered
+        $audit->registerUrlsDiscovered(1);
+        $this->auditRepository->save($audit);
+
         $this->eventBus->publish(...$audit->pullDomainEvents());
 
         return new StartAuditResponse(

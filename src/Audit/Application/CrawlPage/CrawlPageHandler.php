@@ -6,6 +6,7 @@ namespace SeoSpider\Audit\Application\CrawlPage;
 
 use SeoSpider\Audit\Domain\Model\Analyzer\Analyzer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
@@ -69,7 +70,9 @@ final readonly class CrawlPageHandler
 
         if ($page->isHtml() && $result['response']->body() !== null) {
             $this->enrichHtmlPage($page, $result['response']->body(), $url);
-            $this->discoverUrls($page, $auditId, $command->depth);
+            $newUrls = $this->discoverUrls($page, $auditId, $command->depth, $audit->configuration());
+        } else {
+            $newUrls = 0;
         }
 
         $this->runAnalyzers($page);
@@ -77,6 +80,9 @@ final readonly class CrawlPageHandler
 
         $this->pageRepository->save($page);
 
+        if ($newUrls > 0) {
+            $audit->registerUrlsDiscovered($newUrls);
+        }
         $audit->registerPageCrawled($page->errorCount(), $page->warningCount());
         $this->auditRepository->save($audit);
 
@@ -121,18 +127,12 @@ final readonly class CrawlPageHandler
         );
     }
 
-    private function discoverUrls(Page $page, AuditId $auditId, int $currentDepth): void
+    private function discoverUrls(Page $page, AuditId $auditId, int $currentDepth, AuditConfiguration $config): int
     {
-        $audit = $this->auditRepository->findById($auditId);
-        if ($audit === null) {
-            return;
-        }
-
-        $maxDepth = $audit->configuration()->maxDepth;
         $nextDepth = $currentDepth + 1;
 
-        if ($nextDepth > $maxDepth) {
-            return;
+        if ($nextDepth > $config->maxDepth) {
+            return 0;
         }
 
         $newUrls = 0;
@@ -147,10 +147,7 @@ final readonly class CrawlPageHandler
             }
         }
 
-        if ($newUrls > 0) {
-            $audit->registerUrlsDiscovered($newUrls);
-            $this->auditRepository->save($audit);
-        }
+        return $newUrls;
     }
 
     private function runAnalyzers(Page $page): void

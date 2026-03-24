@@ -39,8 +39,21 @@ final class AuditServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(PDO::class, fn() => SqliteConnection::shared(storage_path('app/spider.db'))
-        );
+        // IMPORTANT: Use Laravel's default DB connection instead of a custom
+        // storage_path() PDO. NativePHP rewrites storage_path() differently
+        // for the HTTP process vs the queue worker child process, causing them
+        // to use separate SQLite databases. Laravel's DB manager handles this
+        // correctly, sharing the same database across all processes.
+        $this->app->singleton(PDO::class, function ($app) {
+            $pdo = $app['db']->connection()->getPdo();
+
+            $pdo->exec('PRAGMA journal_mode=WAL');
+            $pdo->exec('PRAGMA busy_timeout=5000');
+            $pdo->exec('PRAGMA synchronous=NORMAL');
+            $pdo->exec('PRAGMA foreign_keys=ON');
+
+            return $pdo;
+        });
 
         $this->app->singleton(AuditRepository::class, fn($app) => new SqliteAuditRepository($app->make(PDO::class)));
 
