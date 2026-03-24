@@ -48,6 +48,23 @@ final class StubHttpClient implements HttpClient
         );
     }
 
+    /** @return array{statusCode: int, responseTime: float} */
+    public function head(Url $url, ?string $userAgent = null, float $timeout = 10.0): array
+    {
+        $key = $url->toString();
+
+        if (isset($this->failures[$key])) {
+            throw HttpRequestFailed::becauseOfNetworkError($url, $this->failures[$key]);
+        }
+
+        $response = $this->responses[$key] ?? null;
+
+        return [
+            'statusCode' => $response?->statusCode()->code() ?? 200,
+            'responseTime' => $response?->responseTime() ?? 50.0,
+        ];
+    }
+
     /** @return array{response: PageResponse, chain: RedirectChain} */
     public function followRedirects(Url $url, ?string $userAgent = null, int $maxHops = 10): array
     {

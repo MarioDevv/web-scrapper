@@ -66,6 +66,30 @@ final class SymfonyHttpClient implements HttpClient
         }
     }
 
+    /** @return array{statusCode: int, responseTime: float} */
+    public function head(Url $url, ?string $userAgent = null, float $timeout = 10.0): array
+    {
+        $options = [
+            'timeout' => $timeout,
+            'max_redirects' => 5,
+        ];
+
+        if ($userAgent !== null) {
+            $options['headers']['User-Agent'] = $userAgent;
+        }
+
+        try {
+            $response = $this->client->request('HEAD', $url->toString(), $options);
+
+            return [
+                'statusCode' => $response->getStatusCode(),
+                'responseTime' => $this->extractResponseTime($response),
+            ];
+        } catch (TransportExceptionInterface $e) {
+            throw HttpRequestFailed::becauseOfNetworkError($url, $e->getMessage());
+        }
+    }
+
     /** @return array{response: PageResponse, chain: RedirectChain} */
     public function followRedirects(Url $url, ?string $userAgent = null, int $maxHops = 10): array
     {

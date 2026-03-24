@@ -13,6 +13,13 @@ interface HttpClient
     public function get(Url $url, ?string $userAgent = null, float $timeout = 30.0): PageResponse;
 
     /**
+     * HEAD request — only fetches headers, no body. Returns status code and response time.
+     * @return array{statusCode: int, responseTime: float}
+     * @throws HttpRequestFailed
+     */
+    public function head(Url $url, ?string $userAgent = null, float $timeout = 10.0): array;
+
+    /**
      * @return array{response: PageResponse, chain: RedirectChain}
      * @throws HttpRequestFailed
      */

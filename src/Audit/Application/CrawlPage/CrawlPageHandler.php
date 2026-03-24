@@ -15,6 +15,7 @@ use SeoSpider\Audit\Domain\Model\HttpRequestFailed;
 use SeoSpider\Audit\Domain\Model\Page\Directive;
 use SeoSpider\Audit\Domain\Model\Page\DirectiveSource;
 use SeoSpider\Audit\Domain\Model\Page\Fingerprint;
+use SeoSpider\Audit\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageFailed;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
@@ -33,6 +34,7 @@ final readonly class CrawlPageHandler
         private HtmlParser $htmlParser,
         private Frontier $frontier,
         private EventBus $eventBus,
+        private \PDO $pdo,
         private array $analyzers = [],
     ) {
     }
@@ -79,6 +81,9 @@ final readonly class CrawlPageHandler
         $page->markAsAnalyzed();
 
         $this->pageRepository->save($page);
+
+        // Check external links via HEAD requests
+        $this->checkExternalLinks($page, $auditId, $audit->configuration()->customUserAgent);
 
         if ($newUrls > 0) {
             $audit->registerUrlsDiscovered($newUrls);
@@ -178,5 +183,68 @@ final readonly class CrawlPageHandler
             ),
             ...$audit->pullDomainEvents(),
         );
+    }
+
+    private function checkExternalLinks(Page $page, AuditId $auditId, ?string $userAgent): void
+    {
+        $externalAnchors = array_filter(
+            $page->links(),
+            static fn($link) => $link->isExternal() && $link->isAnchor(),
+        );
+
+        if (count($externalAnchors) === 0) {
+            return;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'INSERT OR IGNORE INTO external_url_checks (audit_id, url, status_code, response_time, error, source_page_id, anchor_text)
+             VALUES (?, ?, ?, ?, ?, ?, ?)'
+        );
+
+        // Deduplicate by URL within this page
+        $checked = [];
+
+        foreach ($externalAnchors as $link) {
+            $extUrl = $link->targetUrl()->toString();
+
+            if (isset($checked[$extUrl])) {
+                continue;
+            }
+            $checked[$extUrl] = true;
+
+            // Check if already verified for this audit from another page
+            $exists = $this->pdo->prepare(
+                'SELECT 1 FROM external_url_checks WHERE audit_id = ? AND url = ? LIMIT 1'
+            );
+            $exists->execute([$auditId->value(), $extUrl]);
+
+            if ($exists->fetch() !== false) {
+                continue;
+            }
+
+            // HEAD request
+            try {
+                $result = $this->httpClient->head($link->targetUrl(), $userAgent);
+                $stmt->execute([
+                    $auditId->value(),
+                    $extUrl,
+                    $result['statusCode'],
+                    $result['responseTime'],
+                    null,
+                    $page->id()->value(),
+                    $link->anchorText(),
+                ]);
+            } catch (HttpRequestFailed $e) {
+                $stmt->execute([
+                    $auditId->value(),
+                    $extUrl,
+                    0,
+                    0,
+                    $e->getMessage(),
+                    $page->id()->value(),
+                    $link->anchorText(),
+                ]);
+            }
+        }
     }
 }
