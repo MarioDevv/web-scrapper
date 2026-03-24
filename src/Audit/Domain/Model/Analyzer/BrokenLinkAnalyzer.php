@@ -8,6 +8,7 @@ use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
+use SeoSpider\Audit\Domain\Model\Page\LinkRelation;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class BrokenLinkAnalyzer implements Analyzer
@@ -18,6 +19,7 @@ final class BrokenLinkAnalyzer implements Analyzer
         $this->checkRedirectChain($page);
         $this->checkRedirectLoop($page);
         $this->checkMixedProtocols($page);
+        $this->checkInternalNofollow($page);
     }
 
     public function category(): IssueCategory
@@ -97,7 +99,39 @@ final class BrokenLinkAnalyzer implements Analyzer
             category: IssueCategory::LINKS,
             severity: IssueSeverity::WARNING,
             code: 'mixed_protocol_redirect',
-            message: 'Redirect chain mixes HTTP and HTTPS.',
+            message: 'La cadena de redirección mezcla HTTP y HTTPS.',
+        ));
+    }
+
+    private function checkInternalNofollow(Page $page): void
+    {
+        if (!$page->isHtml()) {
+            return;
+        }
+
+        $nofollowInternal = array_filter(
+            $page->internalLinks(),
+            static fn($link) => $link->isAnchor() && $link->relation() === LinkRelation::NOFOLLOW,
+        );
+
+        $count = count($nofollowInternal);
+
+        if ($count === 0) {
+            return;
+        }
+
+        $urls = array_map(
+            static fn($link) => $link->targetUrl()->toString(),
+            array_slice($nofollowInternal, 0, 5),
+        );
+
+        $page->addIssue(new Issue(
+            id: IssueId::generate(),
+            category: IssueCategory::LINKS,
+            severity: IssueSeverity::NOTICE,
+            code: 'internal_nofollow',
+            message: sprintf('%d enlace(s) interno(s) con rel="nofollow". Esto bloquea el flujo de autoridad dentro del sitio.', $count),
+            context: implode(', ', $urls) . ($count > 5 ? sprintf(' (+%d más)', $count - 5) : ''),
         ));
     }
 }
