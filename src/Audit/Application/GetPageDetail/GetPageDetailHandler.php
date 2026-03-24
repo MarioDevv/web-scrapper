@@ -74,6 +74,16 @@ final readonly class GetPageDetailHandler
             ),
             internalLinkCount: count(array_filter($page->internalLinks(), static fn($l) => $l->isAnchor())),
             externalLinkCount: count(array_filter($page->externalLinks(), static fn($l) => $l->isAnchor())),
+            links: array_map(
+                static fn($l) => [
+                    'url' => $l->targetUrl()->toString(),
+                    'type' => $l->type()->value,
+                    'anchor' => $l->anchorText(),
+                    'relation' => $l->relation()->value,
+                    'internal' => $l->isInternal(),
+                ],
+                $page->links(),
+            ),
             issues: array_map($this->toIssueSummary(...), $page->issues()),
             crawledAt: $page->crawledAt()->format('c'),
         );

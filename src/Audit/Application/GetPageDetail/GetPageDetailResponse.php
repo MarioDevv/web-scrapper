@@ -11,6 +11,7 @@ final readonly class GetPageDetailResponse
      * @param string[] $h1s
      * @param array{from: string, to: string, statusCode: int}[] $redirectChain
      * @param array{language: string, region: ?string, href: string}[] $hreflangs
+     * @param array{url: string, type: string, anchor: ?string, relation: string, internal: bool}[] $links
      */
     public function __construct(
         public string $pageId,
@@ -36,6 +37,7 @@ final readonly class GetPageDetailResponse
         public array $hreflangs,
         public int $internalLinkCount,
         public int $externalLinkCount,
+        public array $links,
         public array $issues,
         public string $crawledAt,
     ) {
