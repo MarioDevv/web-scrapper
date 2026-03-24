@@ -11,8 +11,7 @@
             </div>
             <span class="text-2xs font-semibold text-tertiary tracking-widest hidden xl:block">SEO SPIDER</span>
 
-            {{-- Light/Dark toggle --}}
-            <button @click="dark = !dark" class="ml-1 p-1 rounded-md hover:bg-panel3 transition-colors text-tertiary hover:text-secondary" title="Toggle theme">
+            <button @click="dark = !dark" class="ml-1 p-1 rounded-md hover:bg-panel3 transition-colors text-tertiary hover:text-secondary" title="Cambiar tema">
                 <template x-if="dark">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                 </template>
@@ -34,7 +33,7 @@
                 placeholder="https://example.com"
                 class="w-full h-9 bg-app2 border border-line rounded-lg pl-9 pr-10 text-[13px] font-mono text-primary placeholder:text-muted
                        focus:border-[var(--c-accent)] focus:ring-1 focus:ring-[var(--c-accent-bg)] transition-all duration-200"
-                @if($crawling) disabled @endif autocomplete="off" spellcheck="false">
+                @if($crawling || $paused) disabled @endif autocomplete="off" spellcheck="false">
             @if($crawling)
             <div class="absolute right-3 top-1/2 -translate-y-1/2">
                 <div class="w-4 h-4 border-2 border-line border-t-[var(--c-accent)] rounded-full animate-spin"></div>
@@ -46,18 +45,35 @@
         <div class="flex items-center gap-1.5">
             <div class="flex items-center gap-1.5 bg-app2 border border-line rounded-lg px-2.5 h-9">
                 <span class="text-2xs text-tertiary">Max</span>
-                <input type="number" wire:model="maxPages" class="w-14 bg-transparent text-[13px] font-mono text-primary text-center tabular-nums" @if($crawling) disabled @endif>
+                <input type="number" wire:model="maxPages" class="w-14 bg-transparent text-[13px] font-mono text-primary text-center tabular-nums" @if($crawling || $paused) disabled @endif>
             </div>
             <div class="flex items-center gap-1.5 bg-app2 border border-line rounded-lg px-2.5 h-9">
                 <span class="text-2xs text-tertiary">Depth</span>
-                <input type="number" wire:model="maxDepth" class="w-10 bg-transparent text-[13px] font-mono text-primary text-center tabular-nums" @if($crawling) disabled @endif>
+                <input type="number" wire:model="maxDepth" class="w-10 bg-transparent text-[13px] font-mono text-primary text-center tabular-nums" @if($crawling || $paused) disabled @endif>
             </div>
         </div>
 
-        {{-- Action --}}
+        {{-- Actions --}}
         @if($crawling)
+            <button wire:click="pauseCrawl"
+                class="h-9 px-3 rounded-lg text-[13px] font-medium bg-app2 border border-line text-secondary hover:text-primary hover:border-line2 transition-all flex items-center gap-1.5" title="Pausar">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                Pausar
+            </button>
             <button wire:click="cancelCrawl"
-                class="h-9 px-4 rounded-lg text-[13px] font-medium bg-err-s c-err border border-line hover:brightness-110 transition-all flex items-center gap-1.5">
+                class="h-9 px-3 rounded-lg text-[13px] font-medium bg-err-s c-err border border-line hover:brightness-110 transition-all flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                Stop
+            </button>
+        @elseif($paused)
+            <button wire:click="resumeCrawl"
+                class="h-9 px-4 rounded-lg text-[13px] font-semibold text-white transition-all flex items-center gap-1.5"
+                style="background:var(--c-accent)">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                Reanudar
+            </button>
+            <button wire:click="cancelCrawl"
+                class="h-9 px-3 rounded-lg text-[13px] font-medium bg-err-s c-err border border-line hover:brightness-110 transition-all flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
                 Stop
             </button>
@@ -80,23 +96,28 @@
         <div class="flex-1">
             <div class="w-full h-1 bg-app3 rounded-full overflow-hidden">
                 <div class="progress-fill h-full rounded-full"
-                     style="width:{{ $prog['pct'] }}%; background:{{ $crawling ? 'var(--c-accent)' : ($status['status'] === 'completed' ? 'var(--c-ok)' : 'var(--c-err)') }}"></div>
+                     style="width:{{ $prog['pct'] }}%; background:{{ $crawling ? 'var(--c-accent)' : ($paused ? 'var(--c-warn)' : ($status['status'] === 'completed' ? 'var(--c-ok)' : 'var(--c-err)')) }}"></div>
             </div>
         </div>
         <div class="flex items-center gap-3 text-2xs tabular-nums shrink-0">
             @if($crawling)
                 <span class="flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full dot-pulse" style="background:var(--c-accent)"></span>
-                    <span class="c-accent font-medium">Crawling</span>
+                    <span class="c-accent font-medium">Rastreando</span>
+                </span>
+            @elseif($paused)
+                <span class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full" style="background:var(--c-warn)"></span>
+                    <span class="c-warn font-medium">Pausado</span>
                 </span>
             @else
                 <span class="flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $status['status'] === 'completed' ? 'var(--c-ok)' : 'var(--c-err)' }}"></span>
-                    <span class="text-secondary">{{ ucfirst($status['status']) }}</span>
+                    <span class="text-secondary">{{ match($status['status']) { 'completed' => 'Completado', 'cancelled' => 'Cancelado', 'failed' => 'Error', default => ucfirst($status['status']) } }}</span>
                 </span>
             @endif
 
-            <span><span class="text-primary font-medium">{{ $prog['label'] }}</span> <span class="text-muted">pages</span></span>
+            <span><span class="text-primary font-medium">{{ $prog['label'] }}</span> <span class="text-muted">páginas</span></span>
 
             @if($prog['rate'] > 0 && $crawling)
                 <span class="text-muted">{{ $prog['rate'] }} p/s</span>

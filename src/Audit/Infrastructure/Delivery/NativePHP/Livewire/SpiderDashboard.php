@@ -15,6 +15,10 @@ use SeoSpider\Audit\Application\GetPageDetail\GetPageDetailQuery;
 use SeoSpider\Audit\Application\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Audit\Application\CancelAudit\CancelAuditCommand;
 use SeoSpider\Audit\Application\CancelAudit\CancelAuditHandler;
+use SeoSpider\Audit\Application\PauseAudit\PauseAuditCommand;
+use SeoSpider\Audit\Application\PauseAudit\PauseAuditHandler;
+use SeoSpider\Audit\Application\ResumeAudit\ResumeAuditCommand;
+use SeoSpider\Audit\Application\ResumeAudit\ResumeAuditHandler;
 use App\Jobs\RunCrawlJob;
 use Symfony\Component\Uid\Uuid;
 
@@ -30,6 +34,7 @@ class SpiderDashboard extends Component
     public ?array $status = null;
     public array $pages = [];
     public bool $crawling = false;
+    public bool $paused = false;
 
     // ── Page detail
     public ?string $selectedPageId = null;
@@ -57,6 +62,9 @@ class SpiderDashboard extends Component
     // ── Page discovery tracking
     public array $knownPageIds = [];
     public array $newPageIds = [];
+
+    // ── External links
+    public array $externalLinks = [];
 
     // ── Progress tracking
     public int $prevPagesCrawled = 0;
@@ -103,6 +111,26 @@ class SpiderDashboard extends Component
         if (!$this->auditId) return;
         app(CancelAuditHandler::class)(new CancelAuditCommand($this->auditId));
         $this->crawling = false;
+        $this->paused = false;
+        $this->refreshStatus();
+    }
+
+    public function pauseCrawl(): void
+    {
+        if (!$this->auditId || !$this->crawling) return;
+        app(PauseAuditHandler::class)(new PauseAuditCommand($this->auditId));
+        $this->paused = true;
+        $this->crawling = false;
+        $this->refreshStatus();
+    }
+
+    public function resumeCrawl(): void
+    {
+        if (!$this->auditId || !$this->paused) return;
+        app(ResumeAuditHandler::class)(new ResumeAuditCommand($this->auditId));
+        $this->paused = false;
+        $this->crawling = true;
+        RunCrawlJob::dispatch($this->auditId);
         $this->refreshStatus();
     }
 
@@ -115,9 +143,11 @@ class SpiderDashboard extends Component
         ]);
         $this->refreshStatus();
         $this->refreshPages();
+        $this->loadExternalLinks();
         if ($this->status) {
             $this->url = $this->status['seedUrl'] ?? '';
             $this->crawling = $this->status['status'] === 'running';
+            $this->paused = $this->status['status'] === 'paused';
         }
     }
 
@@ -152,6 +182,7 @@ class SpiderDashboard extends Component
             'hreflangs' => $r->hreflangs,
             'internalLinkCount' => $r->internalLinkCount,
             'externalLinkCount' => $r->externalLinkCount,
+            'links' => $r->links,
             'issues' => array_map(fn($i) => [
                 'id' => $i->id,
                 'category' => $i->category,
@@ -185,6 +216,7 @@ class SpiderDashboard extends Component
         $this->prevPagesCrawled = $this->status['pagesCrawled'] ?? 0;
         $this->refreshStatus();
         $this->refreshPages();
+        $this->loadExternalLinks();
 
         if ($this->status && in_array($this->status['status'], ['completed', 'failed', 'cancelled'])) {
             $this->crawling = false;
@@ -271,6 +303,7 @@ class SpiderDashboard extends Component
 
         $pdo = app(\PDO::class);
         // Delete in correct order for foreign keys
+        $pdo->prepare("DELETE FROM external_url_checks WHERE audit_id = ?")->execute([$auditId]);
         $pdo->prepare("DELETE FROM issues WHERE page_id IN (SELECT id FROM pages WHERE audit_id = ?)")->execute([$auditId]);
         $pdo->prepare("DELETE FROM pages WHERE audit_id = ?")->execute([$auditId]);
         $pdo->prepare("DELETE FROM frontier WHERE audit_id = ?")->execute([$auditId]);
@@ -343,16 +376,114 @@ class SpiderDashboard extends Component
         $this->knownPageIds = $currentIds;
     }
 
+    public function loadExternalLinks(): void
+    {
+        if (!$this->auditId) {
+            $this->externalLinks = [];
+            return;
+        }
+
+        $pdo = app(\PDO::class);
+        $stmt = $pdo->prepare(
+            "SELECT e.url, e.status_code, e.response_time, e.error, e.anchor_text, p.url as source_url
+             FROM external_url_checks e
+             LEFT JOIN pages p ON p.id = e.source_page_id
+             WHERE e.audit_id = ?
+             ORDER BY e.status_code DESC, e.url ASC"
+        );
+        $stmt->execute([$this->auditId]);
+        $this->externalLinks = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function exportCsv(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $pages = $this->filteredPages;
+        $tab = $this->activeTab;
+
+        return response()->streamDownload(function () use ($pages) {
+            $out = fopen('php://output', 'w');
+
+            // Header row
+            fputcsv($out, [
+                'URL', 'Estado', 'Título', 'Palabras', 'H1', 'Int. Links', 'Ext. Links',
+                'Imágenes', 'Canonical', 'Tamaño (B)', 'Tiempo (ms)', 'Profundidad',
+                'Errores', 'Avisos', 'Indexable',
+            ]);
+
+            foreach ($pages as $page) {
+                fputcsv($out, [
+                    $page['url'],
+                    $page['statusCode'],
+                    $page['title'] ?? '',
+                    $page['wordCount'],
+                    $page['h1Count'],
+                    $page['internalLinkCount'],
+                    $page['externalLinkCount'],
+                    $page['imageCount'],
+                    $page['canonicalStatus'],
+                    $page['bodySize'],
+                    number_format($page['responseTime'], 0),
+                    $page['crawlDepth'],
+                    $page['errorCount'],
+                    $page['warningCount'],
+                    $page['isIndexable'] ? 'Sí' : 'No',
+                ]);
+            }
+
+            fclose($out);
+        }, sprintf('seo-audit-%s-%s.csv', $tab, date('Y-m-d')), [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function exportExternalCsv(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $links = $this->externalLinks;
+
+        return response()->streamDownload(function () use ($links) {
+            $out = fopen('php://output', 'w');
+
+            fputcsv($out, ['URL Externa', 'Estado', 'Tiempo (ms)', 'Error', 'Anchor Text', 'Página origen']);
+
+            foreach ($links as $link) {
+                fputcsv($out, [
+                    $link['url'],
+                    $link['status_code'] ?? 'Error',
+                    number_format($link['response_time'] ?? 0, 0),
+                    $link['error'] ?? '',
+                    $link['anchor_text'] ?? '',
+                    $link['source_url'] ?? '',
+                ]);
+            }
+
+            fclose($out);
+        }, sprintf('external-links-%s.csv', date('Y-m-d')), [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     // ═══════════════════════════════════════
     //  Computed properties
     // ═══════════════════════════════════════
 
     public function getFilteredPagesProperty(): array
     {
+        $extAsPages = $this->externalLinksAsPages();
+
         $pages = match ($this->activeTab) {
-            'html'      => array_values(array_filter($this->pages, fn($p) => str_contains($p['contentType'], 'html'))),
-            'errors'    => array_values(array_filter($this->pages, fn($p) => $p['statusCode'] >= 400)),
-            'redirects' => array_values(array_filter($this->pages, fn($p) => $p['statusCode'] >= 300 && $p['statusCode'] < 400)),
+            'all'       => array_merge($this->pages, $extAsPages),
+            'overview'  => [],  // handled in blade via $this->overview
+            'internal'  => array_values(array_filter($this->pages, fn($p) => str_contains($p['contentType'] ?? '', 'html') && $p['statusCode'] < 300)),
+            'external'  => [],  // handled separately in blade
+            'html'      => array_values(array_filter($this->pages, fn($p) => str_contains($p['contentType'] ?? '', 'html'))),
+            'redirects' => array_values(array_filter(
+                array_merge($this->pages, $extAsPages),
+                fn($p) => $p['statusCode'] >= 300 && $p['statusCode'] < 400
+            )),
+            'errors'    => array_values(array_filter(
+                array_merge($this->pages, $extAsPages),
+                fn($p) => $p['statusCode'] >= 400 || ($p['statusCode'] === 0 && !empty($p['isExternalCheck']))
+            )),
             'issues'    => array_values(array_filter($this->pages, fn($p) => $p['errorCount'] > 0 || $p['warningCount'] > 0)),
             'noindex'   => array_values(array_filter($this->pages, fn($p) => !$p['isIndexable'])),
             default     => $this->pages,
@@ -378,11 +509,22 @@ class SpiderDashboard extends Component
 
     public function getTabCountsProperty(): array
     {
+        $extAsPages = $this->externalLinksAsPages();
+
         return [
-            'all'       => count($this->pages),
+            'overview'  => count($this->pages),
+            'all'       => count($this->pages) + count($extAsPages),
+            'internal'  => count(array_filter($this->pages, fn($p) => str_contains($p['contentType'] ?? '', 'html') && $p['statusCode'] < 300)),
+            'external'  => count($this->externalLinks),
             'html'      => count(array_filter($this->pages, fn($p) => str_contains($p['contentType'] ?? '', 'html'))),
-            'redirects' => count(array_filter($this->pages, fn($p) => $p['statusCode'] >= 300 && $p['statusCode'] < 400)),
-            'errors'    => count(array_filter($this->pages, fn($p) => $p['statusCode'] >= 400)),
+            'redirects' => count(array_filter(
+                array_merge($this->pages, $extAsPages),
+                fn($p) => $p['statusCode'] >= 300 && $p['statusCode'] < 400
+            )),
+            'errors'    => count(array_filter(
+                array_merge($this->pages, $extAsPages),
+                fn($p) => $p['statusCode'] >= 400 || ($p['statusCode'] === 0 && !empty($p['isExternalCheck']))
+            )),
             'issues'    => count(array_filter($this->pages, fn($p) => $p['errorCount'] > 0 || $p['warningCount'] > 0)),
             'noindex'   => count(array_filter($this->pages, fn($p) => !$p['isIndexable'])),
         ];
@@ -406,6 +548,98 @@ class SpiderDashboard extends Component
         ];
     }
 
+    public function getOverviewProperty(): array
+    {
+        if (count($this->pages) === 0) {
+            return [];
+        }
+
+        // Status code distribution
+        $statusGroups = ['2xx' => 0, '3xx' => 0, '4xx' => 0, '5xx' => 0];
+        $depthDist = [];
+        $responseTimeBuckets = ['<200ms' => 0, '200-500ms' => 0, '500ms-1s' => 0, '1-3s' => 0, '>3s' => 0];
+        $issuesByCategory = [];
+        $issuesBySeverity = ['error' => 0, 'warning' => 0, 'notice' => 0, 'info' => 0];
+        $totalWords = 0;
+        $totalImages = 0;
+        $pagesWithoutTitle = 0;
+        $pagesWithoutDesc = 0;
+        $pagesWithoutH1 = 0;
+
+        foreach ($this->pages as $p) {
+            $sc = $p['statusCode'];
+            if ($sc >= 200 && $sc < 300) $statusGroups['2xx']++;
+            elseif ($sc >= 300 && $sc < 400) $statusGroups['3xx']++;
+            elseif ($sc >= 400 && $sc < 500) $statusGroups['4xx']++;
+            elseif ($sc >= 500) $statusGroups['5xx']++;
+
+            $d = $p['crawlDepth'];
+            $depthDist[$d] = ($depthDist[$d] ?? 0) + 1;
+
+            $rt = $p['responseTime'];
+            if ($rt < 200) $responseTimeBuckets['<200ms']++;
+            elseif ($rt < 500) $responseTimeBuckets['200-500ms']++;
+            elseif ($rt < 1000) $responseTimeBuckets['500ms-1s']++;
+            elseif ($rt < 3000) $responseTimeBuckets['1-3s']++;
+            else $responseTimeBuckets['>3s']++;
+
+            $totalWords += $p['wordCount'];
+            $totalImages += $p['imageCount'];
+            if ($p['h1Count'] === 0 && str_contains($p['contentType'] ?? '', 'html')) $pagesWithoutH1++;
+        }
+
+        // Collect all issues from all pages via DB
+        $pdo = app(\PDO::class);
+        if ($this->auditId) {
+            $stmt = $pdo->prepare(
+                "SELECT i.category, i.severity, COUNT(*) as cnt
+                 FROM issues i
+                 JOIN pages p ON p.id = i.page_id
+                 WHERE p.audit_id = ?
+                 GROUP BY i.category, i.severity"
+            );
+            $stmt->execute([$this->auditId]);
+            foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+                $cat = $row['category'];
+                $sev = $row['severity'];
+                $issuesByCategory[$cat] = ($issuesByCategory[$cat] ?? 0) + (int)$row['cnt'];
+                $issuesBySeverity[$sev] = ($issuesBySeverity[$sev] ?? 0) + (int)$row['cnt'];
+            }
+
+            // Pages without title/desc
+            $stmt2 = $pdo->prepare(
+                "SELECT
+                    SUM(CASE WHEN title IS NULL OR title = '' THEN 1 ELSE 0 END) as no_title,
+                    SUM(CASE WHEN meta_description IS NULL OR meta_description = '' THEN 1 ELSE 0 END) as no_desc
+                 FROM pages WHERE audit_id = ? AND is_html = 1"
+            );
+            $stmt2->execute([$this->auditId]);
+            $meta = $stmt2->fetch(\PDO::FETCH_ASSOC);
+            $pagesWithoutTitle = (int)($meta['no_title'] ?? 0);
+            $pagesWithoutDesc = (int)($meta['no_desc'] ?? 0);
+        }
+
+        ksort($depthDist);
+
+        return [
+            'statusGroups' => $statusGroups,
+            'depthDistribution' => $depthDist,
+            'responseTimeBuckets' => $responseTimeBuckets,
+            'issuesByCategory' => $issuesByCategory,
+            'issuesBySeverity' => $issuesBySeverity,
+            'totalIssues' => array_sum($issuesBySeverity),
+            'totalPages' => count($this->pages),
+            'totalExternal' => count($this->externalLinks),
+            'avgResponseTime' => count($this->pages) > 0
+                ? round(array_sum(array_column($this->pages, 'responseTime')) / count($this->pages), 0) : 0,
+            'totalWords' => $totalWords,
+            'totalImages' => $totalImages,
+            'pagesWithoutTitle' => $pagesWithoutTitle,
+            'pagesWithoutDesc' => $pagesWithoutDesc,
+            'pagesWithoutH1' => $pagesWithoutH1,
+        ];
+    }
+
     // ═══════════════════════════════════════
     //  Private
     // ═══════════════════════════════════════
@@ -424,6 +658,34 @@ class SpiderDashboard extends Component
             "SELECT id, folder_id, seed_url, status, pages_crawled, errors_found, warnings_found, created_at
              FROM audits ORDER BY created_at DESC LIMIT 100"
         )->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Map external link checks to page-like arrays for unified table rendering.
+     * @return array<int, array<string, mixed>>
+     */
+    private function externalLinksAsPages(): array
+    {
+        return array_map(fn($ext) => [
+            'pageId' => null,
+            'url' => $ext['url'],
+            'statusCode' => (int) ($ext['status_code'] ?? 0),
+            'contentType' => 'external',
+            'title' => $ext['anchor_text'],
+            'responseTime' => (float) ($ext['response_time'] ?? 0),
+            'bodySize' => 0,
+            'crawlDepth' => 0,
+            'errorCount' => (($ext['status_code'] ?? 0) >= 400 || ($ext['status_code'] ?? 0) === 0) ? 1 : 0,
+            'warningCount' => ($ext['error'] ?? null) ? 1 : 0,
+            'isIndexable' => false,
+            'wordCount' => 0,
+            'internalLinkCount' => 0,
+            'externalLinkCount' => 0,
+            'imageCount' => 0,
+            'canonicalStatus' => '-',
+            'h1Count' => 0,
+            'isExternalCheck' => true,
+        ], $this->externalLinks);
     }
 
     public function render()

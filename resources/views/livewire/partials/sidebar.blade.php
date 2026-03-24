@@ -52,14 +52,14 @@
 
         {{-- New folder input --}}
         @if($showNewFolder)
-        <div class="px-2 pb-2">
-            <div class="flex items-center gap-1">
-                <input type="text" wire:model="newFolderName" wire:keydown.enter="createFolder" wire:keydown.escape="$set('showNewFolder', false)"
-                    placeholder="Folder name…" autofocus
-                    class="flex-1 h-7 bg-app2 border border-line rounded-md px-2 text-2xs text-primary placeholder:text-muted focus:border-[var(--c-accent)]">
-                <button wire:click="createFolder" class="h-7 px-2 rounded-md bg-accent-s c-accent text-2xs font-medium hover:brightness-110">Create</button>
+            <div class="px-2 pb-2">
+                <div class="flex items-center gap-1">
+                    <input type="text" wire:model="newFolderName" wire:keydown.enter="createFolder" wire:keydown.escape="$set('showNewFolder', false)"
+                        placeholder="Folder name…" autofocus
+                        class="flex-1 h-7 bg-app2 border border-line rounded-md px-2 text-2xs text-primary placeholder:text-muted focus:border-[var(--c-accent)]">
+                    <button wire:click="createFolder" class="h-7 px-2 rounded-md bg-accent-s c-accent text-2xs font-medium hover:brightness-110">Create</button>
+                </div>
             </div>
-        </div>
         @endif
 
         <div class="px-2 pb-3 space-y-1">
