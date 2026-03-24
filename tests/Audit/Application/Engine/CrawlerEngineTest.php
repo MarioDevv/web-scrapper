@@ -21,6 +21,7 @@ use SeoSpider\Audit\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
+use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryExternalLinkRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubHttpClient;
@@ -33,6 +34,7 @@ final class CrawlerEngineTest extends TestCase
     private InMemoryPageRepository $pageRepository;
     private InMemoryFrontier $frontier;
     private InMemoryEventBus $eventBus;
+    private InMemoryExternalLinkRepository $externalLinkRepository;
     private StubHttpClient $httpClient;
     private StubHtmlParser $htmlParser;
     private StubRobotsPolicy $robotsPolicy;
@@ -44,9 +46,13 @@ final class CrawlerEngineTest extends TestCase
         $this->pageRepository = new InMemoryPageRepository();
         $this->frontier = new InMemoryFrontier();
         $this->eventBus = new InMemoryEventBus();
+        $this->externalLinkRepository = new InMemoryExternalLinkRepository();
         $this->httpClient = new StubHttpClient();
         $this->htmlParser = new StubHtmlParser();
         $this->robotsPolicy = new StubRobotsPolicy();
+
+        $pdo = new \PDO('sqlite::memory:');
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         $crawlHandler = new CrawlPageHandler(
             auditRepository: $this->auditRepository,
@@ -55,6 +61,7 @@ final class CrawlerEngineTest extends TestCase
             htmlParser: $this->htmlParser,
             frontier: $this->frontier,
             eventBus: $this->eventBus,
+            externalLinkRepository: $this->externalLinkRepository,
             analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer(), new DirectiveAnalyzer()],
         );
 
@@ -67,11 +74,12 @@ final class CrawlerEngineTest extends TestCase
     }
 
     private function startAudit(
-        int $maxPages = 500,
-        int $maxDepth = 10,
+        int   $maxPages = 500,
+        int   $maxDepth = 10,
         float $requestDelay = 0.0,
-        bool $respectRobotsTxt = false,
-    ): string {
+        bool  $respectRobotsTxt = false,
+    ): string
+    {
         $startHandler = new StartAuditHandler(
             $this->auditRepository,
             $this->frontier,

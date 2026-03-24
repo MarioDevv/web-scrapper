@@ -7,11 +7,13 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
+use SeoSpider\Audit\Infrastructure\Persistence\SqliteExternalLinkRepository;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteAuditRepository;
 use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageRepository;
@@ -64,6 +66,8 @@ final class AuditServiceProvider extends ServiceProvider
 
         $this->app->singleton(PageRepository::class, fn($app) => new SqlitePageRepository($app->make(PDO::class)));
 
+        $this->app->singleton(ExternalLinkRepository::class, fn($app) => new SqliteExternalLinkRepository($app->make(PDO::class)));
+
         $this->app->singleton(Frontier::class, fn($app) => new SqliteFrontier($app->make(PDO::class)));
 
         $this->app->singleton(HttpClient::class, fn() => new SymfonyHttpClient());
@@ -91,9 +95,10 @@ final class AuditServiceProvider extends ServiceProvider
             htmlParser: $app->make(HtmlParser::class),
             frontier: $app->make(Frontier::class),
             eventBus: $app->make(EventBus::class),
-            pdo: $app->make(PDO::class),
+            externalLinkRepository: $app->make(ExternalLinkRepository::class),
             analyzers: iterator_to_array($app->tagged('analyzers')),
         ));
+
 
         $this->app->singleton(StartAuditHandler::class, fn($app) => new StartAuditHandler(
             auditRepository: $app->make(AuditRepository::class),

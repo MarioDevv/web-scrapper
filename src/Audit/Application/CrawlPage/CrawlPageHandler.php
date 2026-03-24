@@ -8,6 +8,7 @@ use SeoSpider\Audit\Domain\Model\Analyzer\Analyzer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\HttpClient;
@@ -15,7 +16,6 @@ use SeoSpider\Audit\Domain\Model\HttpRequestFailed;
 use SeoSpider\Audit\Domain\Model\Page\Directive;
 use SeoSpider\Audit\Domain\Model\Page\DirectiveSource;
 use SeoSpider\Audit\Domain\Model\Page\Fingerprint;
-use SeoSpider\Audit\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageFailed;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
@@ -34,10 +34,9 @@ final readonly class CrawlPageHandler
         private HtmlParser $htmlParser,
         private Frontier $frontier,
         private EventBus $eventBus,
-        private \PDO $pdo,
+        private ExternalLinkRepository $externalLinkRepository,
         private array $analyzers = [],
-    ) {
-    }
+    ) {}
 
     public function __invoke(CrawlPageCommand $command): void
     {
@@ -82,7 +81,6 @@ final readonly class CrawlPageHandler
 
         $this->pageRepository->save($page);
 
-        // Check external links via HEAD requests
         $this->checkExternalLinks($page, $auditId, $audit->configuration()->customUserAgent);
 
         if ($newUrls > 0) {
@@ -142,7 +140,6 @@ final readonly class CrawlPageHandler
 
         $newUrls = 0;
         foreach ($page->internalLinks() as $link) {
-            // Only follow anchor links — not images, scripts, stylesheets, etc.
             if (!$link->isAnchor() || !$link->isFollowable()) {
                 continue;
             }
@@ -196,12 +193,6 @@ final readonly class CrawlPageHandler
             return;
         }
 
-        $stmt = $this->pdo->prepare(
-            'INSERT OR IGNORE INTO external_url_checks (audit_id, url, status_code, response_time, error, source_page_id, anchor_text)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
-        );
-
-        // Deduplicate by URL within this page
         $checked = [];
 
         foreach ($externalAnchors as $link) {
@@ -212,38 +203,31 @@ final readonly class CrawlPageHandler
             }
             $checked[$extUrl] = true;
 
-            // Check if already verified for this audit from another page
-            $exists = $this->pdo->prepare(
-                'SELECT 1 FROM external_url_checks WHERE audit_id = ? AND url = ? LIMIT 1'
-            );
-            $exists->execute([$auditId->value(), $extUrl]);
-
-            if ($exists->fetch() !== false) {
+            if ($this->externalLinkRepository->exists($auditId, $link->targetUrl())) {
                 continue;
             }
 
-            // HEAD request
             try {
                 $result = $this->httpClient->head($link->targetUrl(), $userAgent);
-                $stmt->execute([
-                    $auditId->value(),
-                    $extUrl,
+                $this->externalLinkRepository->save(
+                    $auditId,
+                    $link->targetUrl(),
                     $result['statusCode'],
                     $result['responseTime'],
                     null,
-                    $page->id()->value(),
+                    $page->id(),
                     $link->anchorText(),
-                ]);
+                );
             } catch (HttpRequestFailed $e) {
-                $stmt->execute([
-                    $auditId->value(),
-                    $extUrl,
+                $this->externalLinkRepository->save(
+                    $auditId,
+                    $link->targetUrl(),
                     0,
-                    0,
+                    0.0,
                     $e->getMessage(),
-                    $page->id()->value(),
+                    $page->id(),
                     $link->anchorText(),
-                ]);
+                );
             }
         }
     }

@@ -24,6 +24,7 @@ use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
+use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryExternalLinkRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubHttpClient;
@@ -55,6 +56,7 @@ final class CrawlPageHandlerTest extends TestCase
             htmlParser: $this->htmlParser,
             frontier: $this->frontier,
             eventBus: $this->eventBus,
+            externalLinkRepository: new InMemoryExternalLinkRepository(),
             analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer()],
         );
     }
@@ -152,7 +154,7 @@ final class CrawlPageHandlerTest extends TestCase
 
         $id = new AuditId($auditId);
         $this->assertSame(2, $this->frontier->pendingCount($id));
-        $this->assertSame(2, $this->auditRepository->findById($id)->statistics()->pagesDiscovered);
+        $this->assertSame(3, $this->auditRepository->findById($id)->statistics()->pagesDiscovered);
     }
 
     public function test_does_not_enqueue_nofollow_links(): void
