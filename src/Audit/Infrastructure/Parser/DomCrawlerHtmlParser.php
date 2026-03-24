@@ -78,6 +78,7 @@ final class DomCrawlerHtmlParser implements HtmlParser
         $crawler = new Crawler($html);
         $links = [];
 
+        // ── Anchors (<a href>)
         $crawler->filter('a[href]')->each(function (Crawler $node) use ($baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
 
@@ -105,6 +106,90 @@ final class DomCrawlerHtmlParser implements HtmlParser
                 type: LinkType::ANCHOR,
                 anchorText: trim($node->text('', false)) ?: null,
                 relation: $relation,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        // ── Images (<img src>)
+        $crawler->filter('img[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $src = trim($node->attr('src') ?? '');
+            if ($src === '' || str_starts_with($src, 'data:')) {
+                return;
+            }
+
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            if ($resolved === null) {
+                return;
+            }
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: LinkType::IMAGE,
+                anchorText: $node->attr('alt') ?: null,
+                relation: LinkRelation::FOLLOW,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        // ── Scripts (<script src>)
+        $crawler->filter('script[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $src = trim($node->attr('src') ?? '');
+            if ($src === '') {
+                return;
+            }
+
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            if ($resolved === null) {
+                return;
+            }
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: LinkType::SCRIPT,
+                anchorText: null,
+                relation: LinkRelation::FOLLOW,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        // ── Stylesheets (<link rel="stylesheet" href>)
+        $crawler->filter('link[rel="stylesheet"][href]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $href = trim($node->attr('href') ?? '');
+            if ($href === '') {
+                return;
+            }
+
+            $resolved = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
+            if ($resolved === null) {
+                return;
+            }
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: LinkType::STYLESHEET,
+                anchorText: null,
+                relation: LinkRelation::FOLLOW,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        // ── Iframes (<iframe src>)
+        $crawler->filter('iframe[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $src = trim($node->attr('src') ?? '');
+            if ($src === '' || str_starts_with($src, 'about:')) {
+                return;
+            }
+
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            if ($resolved === null) {
+                return;
+            }
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: LinkType::IFRAME,
+                anchorText: null,
+                relation: LinkRelation::FOLLOW,
                 isInternal: $resolved->isInternalTo($baseUrl),
             );
         });

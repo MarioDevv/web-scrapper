@@ -29,6 +29,7 @@ final readonly class GetPageDetailResponse
         public array $h1s,
         public int $wordCount,
         public ?string $canonical,
+        public string $canonicalStatus,  // 'self' | 'other' | 'missing'
         public bool $noindex,
         public bool $nofollow,
         public array $redirectChain,

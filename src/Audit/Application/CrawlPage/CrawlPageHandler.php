@@ -137,7 +137,8 @@ final readonly class CrawlPageHandler
 
         $newUrls = 0;
         foreach ($page->internalLinks() as $link) {
-            if (!$link->isFollowable()) {
+            // Only follow anchor links — not images, scripts, stylesheets, etc.
+            if (!$link->isAnchor() || !$link->isFollowable()) {
                 continue;
             }
 

@@ -49,6 +49,11 @@ final readonly class GetPageDetailHandler
             h1s: $metadata?->h1s() ?? [],
             wordCount: $metadata?->wordCount() ?? 0,
             canonical: $directives?->canonical()?->toString(),
+            canonicalStatus: match (true) {
+                $directives === null || !$directives->hasCanonical() => 'missing',
+                $directives->isSelfCanonical($page->url()) => 'self',
+                default => 'other',
+            },
             noindex: $directives?->noindex() ?? false,
             nofollow: $directives?->nofollow() ?? false,
             redirectChain: array_map(
@@ -67,8 +72,8 @@ final readonly class GetPageDetailHandler
                 ],
                 $page->hreflangs(),
             ),
-            internalLinkCount: count($page->internalLinks()),
-            externalLinkCount: count($page->externalLinks()),
+            internalLinkCount: count(array_filter($page->internalLinks(), static fn($l) => $l->isAnchor())),
+            externalLinkCount: count(array_filter($page->externalLinks(), static fn($l) => $l->isAnchor())),
             issues: array_map($this->toIssueSummary(...), $page->issues()),
             crawledAt: $page->crawledAt()->format('c'),
         );

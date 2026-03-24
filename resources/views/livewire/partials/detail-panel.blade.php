@@ -81,7 +81,6 @@
                 <div class="flex gap-5 text-2xs shrink-0">
                     @foreach([
                         ['Words', $selectedPage['wordCount']],
-                        ['Canonical', $selectedPage['canonical'] ? 'Yes' : 'No'],
                         ['Internal', $selectedPage['internalLinkCount']],
                         ['External', $selectedPage['externalLinkCount']],
                     ] as [$metricLabel, $metricValue])
@@ -90,8 +89,22 @@
                         <div class="text-primary font-medium tabular-nums">{{ $metricValue }}</div>
                     </div>
                     @endforeach
+                    <div>
+                        <div class="text-tertiary mb-0.5">Canonical</div>
+                        @php $cs = $selectedPage['canonicalStatus']; @endphp
+                        <div class="font-medium {{ match($cs) { 'self' => 'c-ok', 'other' => 'c-warn', default => 'c-err' } }}">
+                            {{ match($cs) { 'self' => 'Auto-referente', 'other' => 'Canonicalizada', default => 'Falta' } }}
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            @if($selectedPage['canonicalStatus'] === 'other' && $selectedPage['canonical'])
+            <div>
+                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-1">Canonical Target</div>
+                <div class="text-[12px] font-mono text-secondary truncate">{{ $selectedPage['canonical'] }}</div>
+            </div>
+            @endif
 
             @if(count($selectedPage['hreflangs']) > 0)
             <div>

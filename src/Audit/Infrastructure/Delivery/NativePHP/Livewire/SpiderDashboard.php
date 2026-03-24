@@ -145,6 +145,7 @@ class SpiderDashboard extends Component
             'h1s' => $r->h1s,
             'wordCount' => $r->wordCount,
             'canonical' => $r->canonical,
+            'canonicalStatus' => $r->canonicalStatus,
             'noindex' => $r->noindex,
             'nofollow' => $r->nofollow,
             'redirectChain' => $r->redirectChain,
