@@ -43,7 +43,7 @@
         {{-- Header --}}
         <div class="px-3 pt-3 pb-1 flex items-center justify-between">
             <h3 class="text-2xs uppercase tracking-widest text-muted font-semibold">History</h3>
-            <button @click="$wire.showNewFolder = !$wire.showNewFolder" class="text-muted hover:text-secondary transition-colors p-0.5 rounded hover:bg-panel2" title="New folder">
+            <button wire:click="$toggle('showNewFolder')" class="text-muted hover:text-secondary transition-colors p-0.5 rounded hover:bg-panel2" title="New folder">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.06-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.38a1.5 1.5 0 01-1.06-.44z"/>
                 </svg>
