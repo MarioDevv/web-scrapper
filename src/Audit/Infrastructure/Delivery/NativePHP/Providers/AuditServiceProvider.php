@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\ServiceProvider;
 use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
@@ -14,7 +13,6 @@ use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
 use SeoSpider\Shared\Domain\Bus\EventBus;
-use SeoSpider\Audit\Infrastructure\Persistence\SqliteConnection;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteAuditRepository;
 use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageRepository;
 use SeoSpider\Audit\Infrastructure\Frontier\SqliteFrontier;
@@ -30,6 +28,8 @@ use SeoSpider\Audit\Domain\Model\Analyzer\ContentAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\ImageAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\PerformanceAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\SecurityHeaderAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\HreflangAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\DuplicateAnalyzer;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Audit\Application\PauseAudit\PauseAuditHandler;
@@ -80,6 +80,8 @@ final class AuditServiceProvider extends ServiceProvider
             ImageAnalyzer::class,
             PerformanceAnalyzer::class,
             SecurityHeaderAnalyzer::class,
+            HreflangAnalyzer::class,
+            DuplicateAnalyzer::class,
         ], 'analyzers');
 
         $this->app->singleton(CrawlPageHandler::class, fn($app) => new CrawlPageHandler(
@@ -89,6 +91,7 @@ final class AuditServiceProvider extends ServiceProvider
             htmlParser: $app->make(HtmlParser::class),
             frontier: $app->make(Frontier::class),
             eventBus: $app->make(EventBus::class),
+            pdo: $app->make(PDO::class),
             analyzers: iterator_to_array($app->tagged('analyzers')),
         ));
 
@@ -134,25 +137,5 @@ final class AuditServiceProvider extends ServiceProvider
             crawlPageHandler: $app->make(CrawlPageHandler::class),
             robotsPolicy: $app->make(RobotsPolicy::class),
         ));
-    }
-
-    /**
-     * @throws BindingResolutionException
-     */
-    public function boot(): void
-    {
-        $pdo = $this->app->make(PDO::class);
-        $schemaPath = dirname(
-                (new \ReflectionClass(SqliteConnection::class))->getFileName()
-            ) . '/schema.sql';
-
-        SqliteConnection::migrate($pdo, $schemaPath);
-
-        // Safe migration: add folder_id to existing audits tables
-        $columns = $pdo->query("PRAGMA table_info(audits)")->fetchAll();
-        $columnNames = array_column($columns, 'name');
-        if (!in_array('folder_id', $columnNames, true)) {
-            $pdo->exec('ALTER TABLE audits ADD COLUMN folder_id TEXT REFERENCES folders(id) ON DELETE SET NULL');
-        }
     }
 }
