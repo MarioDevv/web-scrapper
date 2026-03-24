@@ -14,13 +14,13 @@ use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteExternalLinkRepository;
+use SeoSpider\Audit\Infrastructure\Robots\RobotsTxtPolicy;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteAuditRepository;
 use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageRepository;
 use SeoSpider\Audit\Infrastructure\Frontier\SqliteFrontier;
 use SeoSpider\Audit\Infrastructure\Http\SymfonyHttpClient;
 use SeoSpider\Audit\Infrastructure\Parser\DomCrawlerHtmlParser;
-use SeoSpider\Audit\Infrastructure\Robots\NullRobotsPolicy;
 use SeoSpider\Audit\Infrastructure\Bus\SyncEventBus;
 use SeoSpider\Audit\Domain\Model\Analyzer\BrokenLinkAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\MetaDataAnalyzer;
@@ -72,7 +72,7 @@ final class AuditServiceProvider extends ServiceProvider
 
         $this->app->singleton(HttpClient::class, fn() => new SymfonyHttpClient());
         $this->app->singleton(HtmlParser::class, fn() => new DomCrawlerHtmlParser());
-        $this->app->singleton(RobotsPolicy::class, fn() => new NullRobotsPolicy());
+        $this->app->singleton(RobotsPolicy::class, fn() => new RobotsTxtPolicy($this->app->make(HttpClient::class)));
         $this->app->singleton(EventBus::class, fn() => new SyncEventBus());
 
         $this->app->tag([
