@@ -56,4 +56,9 @@ final readonly class Link
     {
         return $this->type === LinkType::ANCHOR;
     }
+
+    public function isResource(): bool
+    {
+        return $this->type->isResource();
+    }
 }

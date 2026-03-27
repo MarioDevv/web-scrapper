@@ -53,6 +53,108 @@
             </div>
         </div>
 
+        {{-- ═══ Advanced Options Dropdown ═══ --}}
+        @php $hasAdvanced = $crawlResources || $crawlSubdomains || $followExternalLinks; @endphp
+        <div x-data="{ open: false }" class="relative">
+            <button @click="open = !open"
+                    :disabled="@js($crawling || $paused)"
+                    class="h-9 w-9 rounded-lg bg-app2 border flex items-center justify-center transition-all relative
+                           {{ $hasAdvanced ? 'border-[var(--c-accent)] text-[var(--c-accent)]' : 'border-line text-tertiary hover:text-secondary hover:border-line2' }}
+                           {{ ($crawling || $paused) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                    :class="{ 'border-[var(--c-accent)] text-[var(--c-accent)]': open }"
+                    title="Opciones avanzadas">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                </svg>
+                @if($hasAdvanced)
+                <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full" style="background: var(--c-accent)"></span>
+                @endif
+            </button>
+
+            {{-- Dropdown Panel --}}
+            <div x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                 @click.outside="open = false"
+                 class="absolute right-0 top-full mt-2 w-80 bg-panel border border-line rounded-xl shadow-2xl z-50 overflow-hidden">
+
+                {{-- Header --}}
+                <div class="px-4 py-3 border-b border-line bg-panel2">
+                    <h3 class="text-[13px] font-semibold text-primary flex items-center gap-2">
+                        <svg class="w-4 h-4 text-tertiary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/>
+                        </svg>
+                        Opciones de rastreo
+                    </h3>
+                    <p class="text-2xs text-tertiary mt-0.5">Configuración avanzada del crawler</p>
+                </div>
+
+                {{-- Options --}}
+                <div class="p-2 space-y-0.5">
+
+                    {{-- Crawl Resources --}}
+                    <label class="flex items-start gap-3 p-3 rounded-lg hover:bg-panel2 cursor-pointer transition-colors">
+                        <input type="checkbox" wire:model.live="crawlResources"
+                               class="mt-0.5 w-4 h-4 rounded border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[13px] font-medium text-primary">Recursos estáticos</span>
+                                <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-info-s c-info">CSS · JS · IMG</span>
+                            </div>
+                            <p class="text-2xs text-tertiary mt-1 leading-relaxed">
+                                Rastrea archivos CSS, JavaScript, imágenes y otros recursos para detectar errores 404 y analizar tamaños
+                            </p>
+                        </div>
+                    </label>
+
+                    {{-- Crawl Subdomains --}}
+                    <label class="flex items-start gap-3 p-3 rounded-lg hover:bg-panel2 cursor-pointer transition-colors">
+                        <input type="checkbox" wire:model.live="crawlSubdomains"
+                               class="mt-0.5 w-4 h-4 rounded border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[13px] font-medium text-primary">Subdominios</span>
+                            </div>
+                            <p class="text-2xs text-tertiary mt-1 leading-relaxed">
+                                Incluye subdominios como <code class="font-mono text-secondary bg-panel3 px-1 rounded">blog.ejemplo.com</code> en el rastreo
+                            </p>
+                        </div>
+                    </label>
+
+                    {{-- Follow External Links --}}
+                    <label class="flex items-start gap-3 p-3 rounded-lg hover:bg-panel2 cursor-pointer transition-colors">
+                        <input type="checkbox" wire:model.live="followExternalLinks"
+                               class="mt-0.5 w-4 h-4 rounded border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[13px] font-medium text-primary">Links externos</span>
+                                <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-warn-s c-warn">+ lento</span>
+                            </div>
+                            <p class="text-2xs text-tertiary mt-1 leading-relaxed">
+                                Verifica el estado HTTP de enlaces salientes a otros dominios
+                            </p>
+                        </div>
+                    </label>
+
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-4 py-2.5 border-t border-line bg-panel2">
+                    <p class="text-2xs text-muted flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>
+                        </svg>
+                        Activar opciones aumenta el tiempo de rastreo
+                    </p>
+                </div>
+            </div>
+        </div>
+
         {{-- Actions --}}
         @if($crawling)
             <button wire:click="pauseCrawl"
@@ -121,6 +223,15 @@
 
             @if($prog['rate'] > 0 && $crawling)
                 <span class="text-muted">{{ $prog['rate'] }} p/s</span>
+            @endif
+
+            {{-- Active options badges --}}
+            @if($crawlResources || $crawlSubdomains || $followExternalLinks)
+                <span class="flex items-center gap-1">
+                    @if($crawlResources)<span class="text-[9px] font-semibold px-1 py-0.5 rounded bg-info-s c-info">RES</span>@endif
+                    @if($crawlSubdomains)<span class="text-[9px] font-semibold px-1 py-0.5 rounded bg-info-s c-info">SUB</span>@endif
+                    @if($followExternalLinks)<span class="text-[9px] font-semibold px-1 py-0.5 rounded bg-warn-s c-warn">EXT</span>@endif
+                </span>
             @endif
 
             @if($status['errorsFound'] > 0)<span class="badge badge-err">{{ $status['errorsFound'] }} err</span>@endif

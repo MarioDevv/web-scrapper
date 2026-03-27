@@ -194,7 +194,229 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        return $links;
+        // ── Preload (<link rel="preload" href>)
+        $crawler->filter('link[rel="preload"][href]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $href = trim($node->attr('href') ?? '');
+            if ($href === '') {
+                return;
+            }
+
+            $resolved = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
+            if ($resolved === null) {
+                return;
+            }
+
+            $as = strtolower(trim($node->attr('as') ?? ''));
+            $type = match ($as) {
+                'style' => LinkType::STYLESHEET,
+                'script' => LinkType::SCRIPT,
+                'font' => LinkType::FONT,
+                'image' => LinkType::IMAGE,
+                default => LinkType::PRELOAD,
+            };
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: $type,
+                anchorText: null,
+                relation: LinkRelation::FOLLOW,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        // ── Modulepreload (<link rel="modulepreload" href>)
+        $crawler->filter('link[rel="modulepreload"][href]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $href = trim($node->attr('href') ?? '');
+            if ($href === '') {
+                return;
+            }
+
+            $resolved = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
+            if ($resolved === null) {
+                return;
+            }
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: LinkType::MODULEPRELOAD,
+                anchorText: null,
+                relation: LinkRelation::FOLLOW,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        // ── Prefetch (<link rel="prefetch" href>)
+        $crawler->filter('link[rel="prefetch"][href]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $href = trim($node->attr('href') ?? '');
+            if ($href === '') {
+                return;
+            }
+
+            $resolved = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
+            if ($resolved === null) {
+                return;
+            }
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: LinkType::PREFETCH,
+                anchorText: null,
+                relation: LinkRelation::FOLLOW,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        // ── Srcset images (<img srcset>, <source srcset>)
+        $crawler->filter('img[srcset], source[srcset]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $srcset = trim($node->attr('srcset') ?? '');
+            if ($srcset === '') {
+                return;
+            }
+
+            foreach ($this->parseSrcset($srcset) as $src) {
+                $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+                if ($resolved === null) {
+                    continue;
+                }
+
+                $links[] = new Link(
+                    targetUrl: $resolved,
+                    type: LinkType::IMAGE,
+                    anchorText: $node->attr('alt') ?: null,
+                    relation: LinkRelation::FOLLOW,
+                    isInternal: $resolved->isInternalTo($baseUrl),
+                );
+            }
+        });
+
+        // ── Picture source (<picture><source src>)
+        $crawler->filter('picture > source[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $src = trim($node->attr('src') ?? '');
+            if ($src === '' || str_starts_with($src, 'data:')) {
+                return;
+            }
+
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            if ($resolved === null) {
+                return;
+            }
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: LinkType::IMAGE,
+                anchorText: null,
+                relation: LinkRelation::FOLLOW,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        // ── Video (<video src>, <video><source src>)
+        $crawler->filter('video[src], video > source[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $src = trim($node->attr('src') ?? '');
+            if ($src === '') {
+                return;
+            }
+
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            if ($resolved === null) {
+                return;
+            }
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: LinkType::VIDEO,
+                anchorText: null,
+                relation: LinkRelation::FOLLOW,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        // ── Video poster (<video poster>)
+        $crawler->filter('video[poster]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $poster = trim($node->attr('poster') ?? '');
+            if ($poster === '' || str_starts_with($poster, 'data:')) {
+                return;
+            }
+
+            $resolved = Url::tryFromString($poster) ?? $this->tryResolve($baseUrl, $poster);
+            if ($resolved === null) {
+                return;
+            }
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: LinkType::IMAGE,
+                anchorText: null,
+                relation: LinkRelation::FOLLOW,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        // ── Audio (<audio src>, <audio><source src>)
+        $crawler->filter('audio[src], audio > source[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+            $src = trim($node->attr('src') ?? '');
+            if ($src === '') {
+                return;
+            }
+
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            if ($resolved === null) {
+                return;
+            }
+
+            $links[] = new Link(
+                targetUrl: $resolved,
+                type: LinkType::AUDIO,
+                anchorText: null,
+                relation: LinkRelation::FOLLOW,
+                isInternal: $resolved->isInternalTo($baseUrl),
+            );
+        });
+
+        return $this->deduplicateLinks($links);
+    }
+
+    /**
+     * Remove duplicate links by URL + type combination.
+     * Keeps the first occurrence (which typically has anchor text for images).
+     *
+     * @param Link[] $links
+     * @return Link[]
+     */
+    private function deduplicateLinks(array $links): array
+    {
+        $seen = [];
+        $unique = [];
+
+        foreach ($links as $link) {
+            $key = $link->targetUrl()->toString() . '|' . $link->type()->value;
+            if (!isset($seen[$key])) {
+                $seen[$key] = true;
+                $unique[] = $link;
+            }
+        }
+
+        return $unique;
+    }
+
+    /** @return string[] */
+    private function parseSrcset(string $srcset): array
+    {
+        $urls = [];
+        $candidates = preg_split('/\s*,\s*/', $srcset, -1, PREG_SPLIT_NO_EMPTY);
+
+        if (empty($candidates)) {
+            return [];
+        }
+
+        foreach ($candidates as $candidate) {
+            $parts = preg_split('/\s+/', trim($candidate), 2);
+            if ($parts !== false && count($parts) >= 1 && $parts[0] !== '') {
+                $urls[] = $parts[0];
+            }
+        }
+
+        return array_unique($urls);
     }
 
     /** @return Hreflang[] */

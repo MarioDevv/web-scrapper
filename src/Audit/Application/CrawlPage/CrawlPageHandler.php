@@ -140,7 +140,13 @@ final readonly class CrawlPageHandler
 
         $newUrls = 0;
         foreach ($page->internalLinks() as $link) {
-            if (!$link->isAnchor() || !$link->isFollowable()) {
+            // Siempre encolar anchors followables
+            $isEnqueuableAnchor = $link->isAnchor() && $link->isFollowable();
+
+            // Opcionalmente encolar recursos (CSS, JS, imágenes, etc.)
+            $isEnqueuableResource = $config->crawlResources && $link->isResource();
+
+            if (!$isEnqueuableAnchor && !$isEnqueuableResource) {
                 continue;
             }
 

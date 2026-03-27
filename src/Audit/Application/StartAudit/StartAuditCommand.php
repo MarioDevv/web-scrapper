@@ -22,6 +22,7 @@ final readonly class StartAuditCommand
         public array $includePatterns = [],
         public bool $followExternalLinks = false,
         public bool $crawlSubdomains = false,
+        public bool $crawlResources = false,
     ) {
     }
 }

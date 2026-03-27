@@ -121,6 +121,12 @@
         /* Input */
         input:focus { outline: none; }
         .tabular-nums { font-variant-numeric: tabular-nums; }
+
+        /* Alpine cloak */
+        [x-cloak] { display: none !important; }
+
+        /* Custom checkbox visual (peer-checked handled inline) */
+        .peer:checked ~ div svg { opacity: 1; }
     </style>
     @livewireStyles
 </head>

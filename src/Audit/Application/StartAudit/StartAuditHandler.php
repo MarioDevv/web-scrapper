@@ -38,6 +38,7 @@ final readonly class StartAuditHandler
                 includePatterns: $command->includePatterns,
                 followExternalLinks: $command->followExternalLinks,
                 crawlSubdomains: $command->crawlSubdomains,
+                crawlResources: $command->crawlResources,
             ),
         );
 

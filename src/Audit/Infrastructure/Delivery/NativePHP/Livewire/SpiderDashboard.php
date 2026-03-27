@@ -31,6 +31,11 @@ class SpiderDashboard extends Component
     public int $maxPages = 500;
     public int $maxDepth = 10;
 
+    // ── Advanced options
+    public bool $crawlResources = false;
+    public bool $crawlSubdomains = false;
+    public bool $followExternalLinks = false;
+
     // ── Audit state
     public ?string $auditId = null;
 
@@ -110,6 +115,9 @@ class SpiderDashboard extends Component
             seedUrl: $this->url,
             maxPages: $this->maxPages,
             maxDepth: $this->maxDepth,
+            crawlResources: $this->crawlResources,
+            crawlSubdomains: $this->crawlSubdomains,
+            followExternalLinks: $this->followExternalLinks,
         ));
 
         $this->auditId = $response->auditId;
