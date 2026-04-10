@@ -12,7 +12,7 @@ class NativeAppServiceProvider
     public function boot(): void
     {
         Window::open()
-            ->title('SEO Spider v1.1.0')
+            ->title('SEO Spider')
             ->width(1280)
             ->height(800)
             ->minWidth(900)
