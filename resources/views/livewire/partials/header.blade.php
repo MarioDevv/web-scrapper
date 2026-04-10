@@ -155,6 +155,9 @@
             </div>
         </div>
 
+        {{-- Updater --}}
+        <livewire:app-updater />
+
         {{-- Actions --}}
         @if($crawling)
             <button wire:click="pauseCrawl"
