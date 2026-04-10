@@ -90,7 +90,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-[12px] font-mono text-tertiary w-8">{{ $code }}</span>
                         <div class="flex-1 h-4 bg-app3 rounded overflow-hidden">
-                            <div class="h-full rounded" style="width:{{ ($cnt / $maxSc) * 100 }}%;background:{{ $scColor }};opacity:0.7"></div>
+                            <div class="h-full rounded" style="width:{{ ($cnt / $maxSc) * 100 }}%;background:{{ $scColor }};opacity:0.8"></div>
                         </div>
                         <span class="text-[12px] font-mono tabular-nums text-secondary w-8 text-right">{{ $cnt }}</span>
                     </div>
@@ -108,7 +108,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-[11px] font-mono text-tertiary w-16 truncate">{{ $bucket }}</span>
                         <div class="flex-1 h-4 bg-app3 rounded overflow-hidden">
-                            <div class="h-full rounded" style="width:{{ ($cnt / $maxRt) * 100 }}%;background:{{ $rtColor }};opacity:0.7"></div>
+                            <div class="h-full rounded" style="width:{{ ($cnt / $maxRt) * 100 }}%;background:{{ $rtColor }};opacity:0.8"></div>
                         </div>
                         <span class="text-[12px] font-mono tabular-nums text-secondary w-8 text-right">{{ $cnt }}</span>
                     </div>
@@ -125,7 +125,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-[12px] font-mono text-tertiary w-8">d={{ $depth }}</span>
                         <div class="flex-1 h-4 bg-app3 rounded overflow-hidden">
-                            <div class="h-full rounded" style="width:{{ ($cnt / $maxDp) * 100 }}%;background:var(--c-accent);opacity:0.6"></div>
+                            <div class="h-full rounded" style="width:{{ ($cnt / $maxDp) * 100 }}%;background:var(--c-accent);opacity:0.75"></div>
                         </div>
                         <span class="text-[12px] font-mono tabular-nums text-secondary w-8 text-right">{{ $cnt }}</span>
                     </div>
@@ -145,7 +145,7 @@
                     <div class="flex items-center gap-2 cursor-pointer hover:bg-panel3 rounded px-1 -mx-1" wire:click="setTab('issues')">
                         <span class="text-[12px] text-tertiary w-24 truncate capitalize">{{ $cat }}</span>
                         <div class="flex-1 h-4 bg-app3 rounded overflow-hidden">
-                            <div class="h-full rounded" style="width:{{ ($cnt / $maxIc) * 100 }}%;background:var(--c-warn);opacity:0.7"></div>
+                            <div class="h-full rounded" style="width:{{ ($cnt / $maxIc) * 100 }}%;background:var(--c-warn);opacity:0.8"></div>
                         </div>
                         <span class="text-[12px] font-mono tabular-nums text-secondary w-8 text-right">{{ $cnt }}</span>
                     </div>
@@ -174,7 +174,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-[12px] text-tertiary w-40 truncate">{{ $checkLabel }}</span>
                         <div class="flex-1 h-4 bg-app3 rounded overflow-hidden">
-                            <div class="h-full rounded" style="width:{{ max($checkPct, 1) }}%;background:{{ $checkBad > 0 ? 'var(--c-err)' : 'var(--c-ok)' }};opacity:0.6"></div>
+                            <div class="h-full rounded" style="width:{{ max($checkPct, 1) }}%;background:{{ $checkBad > 0 ? 'var(--c-err)' : 'var(--c-ok)' }};opacity:0.75"></div>
                         </div>
                         <span class="text-[12px] font-mono tabular-nums w-16 text-right {{ $checkBad > 0 ? 'c-err font-medium' : 'text-tertiary' }}">{{ $checkBad }}/{{ $checkTotal }}</span>
                     </div>
@@ -382,7 +382,7 @@
                         <span class="text-muted text-[11px]">—</span>
                     @else
                         <span class="w-2.5 h-2.5 rounded-full inline-block"
-                            style="background:{{ $page['isIndexable'] ? 'var(--c-ok)' : 'var(--c-err)' }};opacity:{{ $page['isIndexable'] ? '0.6' : '0.4' }}"></span>
+                            style="background:{{ $page['isIndexable'] ? 'var(--c-ok)' : 'var(--c-err)' }};opacity:{{ $page['isIndexable'] ? '0.7' : '0.6' }}"></span>
                     @endif
                 </td>
             </tr>
