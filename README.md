@@ -1,52 +1,84 @@
 # SEO Spider
 
-Free, open-source desktop app for technical SEO auditing. Crawl any website and get a full breakdown of issues, just like Screaming Frog — but free and with no crawl limits.
+[![Latest Release](https://img.shields.io/github/v/release/MarioDevv/web-scrapper?color=blue)](https://github.com/MarioDevv/web-scrapper/releases)
+[![PHP](https://img.shields.io/badge/php-%3E%3D8.5-8892BF)](composer.json)
+[![PHPStan](https://img.shields.io/badge/phpstan-level%202-brightgreen)](phpstan.neon)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-green)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Linux-orange)]()
 
-Available for **Linux**. Windows and macOS coming soon.
+App de escritorio gratuita y open-source para auditorias SEO tecnicas. Rastrea cualquier web y obtiene un desglose completo de problemas — como Screaming Frog, pero gratis y sin limites de rastreo.
 
-## What it does
+> Construido con [NativePHP](https://nativephp.com) + [Laravel](https://laravel.com) + [Livewire](https://livewire.laravel.com) + [Tailwind CSS](https://tailwindcss.com). Sin dependencias externas de pago.
 
-SEO Spider crawls your website and analyzes every page for technical SEO problems. It finds broken links, missing meta tags, duplicate content, slow pages, security header gaps, and much more.
+## Por que SEO Spider?
 
-### 10 built-in analyzers
+| | **SEO Spider** | Screaming Frog |
+|---|---|---|
+| Precio | Gratis y open-source | 259 $/year |
+| Limite de rastreo | Sin limites | 500 URLs (free) |
+| Codigo | AGPL-3.0 | Propietario |
+| Plataforma | Linux (Windows/macOS pronto) | Windows, macOS, Linux |
+| Tecnologia | PHP 8.5 + NativePHP + Livewire | Java |
 
-- **Broken Links** — HTTP errors, redirect chains and loops, mixed protocols
-- **Meta Data** — Missing or bad titles, descriptions, H1 tags, viewport
-- **Directives** — noindex, nofollow, canonical conflicts
-- **Headings** — Hierarchy issues, missing H2s, heading order
-- **Content** — Thin pages, empty pages
-- **Images** — Missing alt text, overly long alt attributes
-- **Performance** — Slow responses, oversized pages
-- **Security Headers** — CSP, X-Frame-Options, HSTS, Referrer-Policy
-- **Hreflang** — Invalid language/region codes, missing self-references
-- **Duplicates** — Exact duplicates (SHA-256) and near-duplicates (SimHash)
+## Descarga
 
-### Dashboard and tools
+Descarga la ultima version desde la [pagina de releases](https://github.com/MarioDevv/web-scrapper/releases).
 
-- Overview with charts for status codes, response times, crawl depth, and issues
-- Sortable table with 14 columns across 9 filterable tabs
-- Detail panel with SEO info, SERP snippet preview, and link analysis
-- External link verification via HEAD requests
-- CSV export per tab
-- Folders to organize your audits
-- Pause and resume crawling at any time
-- Light and dark mode
-- Configurable crawl limits and robots.txt policy
-
-## Download
-
-Grab the latest release from the [Releases page](https://github.com/MarioDevv/web-scrapper/releases).
-
-| Platform | Format |
+| Plataforma | Formato |
 |----------|--------|
 | Linux | `.AppImage`, `.deb` |
-| Windows | Coming soon |
-| macOS | Coming soon |
+| Windows | Proximamente |
+| macOS | Proximamente |
 
-## Development
+## 10 analizadores integrados
+
+```
+Broken Links     — Errores HTTP, cadenas de redireccion, protocolos mixtos
+Meta Data        — Titles, descriptions, H1, viewport faltantes o incorrectos
+Directives       — noindex, nofollow, conflictos de canonical
+Headings         — Jerarquia, H2 faltantes, orden de encabezados
+Content          — Paginas finas, paginas vacias
+Images           — Alt text faltante, atributos alt demasiado largos
+Performance      — Respuestas lentas, paginas sobredimensionadas
+Security Headers — CSP, X-Frame-Options, HSTS, Referrer-Policy
+Hreflang         — Codigos de idioma/region invalidos, self-references faltantes
+Duplicates       — Duplicados exactos (SHA-256) y cercanos (SimHash)
+```
+
+## Dashboard y herramientas
+
+- Vista general con graficos de codigos de estado, tiempos de respuesta, profundidad de rastreo e issues
+- Tabla ordenable con 14 columnas en 9 pestanas filtrables
+- Panel de detalle con info SEO, preview de SERP y analisis de enlaces
+- Verificacion de enlaces externos via peticiones HEAD
+- Exportacion CSV por pestana
+- Carpetas para organizar tus auditorias
+- Pausa y reanudacion del rastreo en cualquier momento
+- Modo claro y oscuro
+- Limites de rastreo configurables y politica de robots.txt
+
+## Features
+
+- [x] Rastreo completo de sitios web sin limites
+- [x] 10 analizadores SEO integrados
+- [x] Dashboard con graficos y metricas
+- [x] Deteccion de duplicados exactos (SHA-256) y cercanos (SimHash)
+- [x] Verificacion de enlaces externos
+- [x] Preview de SERP en panel de detalle
+- [x] Exportacion CSV
+- [x] Modo claro y oscuro
+- [x] Carpetas para organizar auditorias
+- [x] Pausa / reanudacion de rastreo
+- [x] Auto-actualizador integrado
+- [ ] Soporte Windows
+- [ ] Soporte macOS
+- [ ] Rastreo de JavaScript rendering (SPA)
+- [ ] Informes PDF exportables
+
+## Desarrollo
 
 ```bash
-# Requirements: PHP 8.5+, Node 22+, Composer
+# Requisitos: PHP 8.5+, Node 22+, Composer
 
 git clone https://github.com/MarioDevv/web-scrapper.git
 cd web-scrapper
@@ -55,8 +87,19 @@ npm install
 composer run native:dev
 ```
 
-## License
+## Contribuir
 
-AGPL-3.0 — Free to use, modify, and distribute. Any derivative work must also be open source under AGPL-3.0.
+Encontraste un bug? [Abre un issue](https://github.com/MarioDevv/web-scrapper/issues).
+Quieres aportar codigo? Los PRs son bienvenidos.
 
-Commercial licensing available for proprietary use or SaaS integration. Contact perezmario.info@gmail.com.
+```bash
+vendor/bin/phpunit
+vendor/bin/phpstan analyse src
+vendor/bin/pint
+```
+
+## Licencia
+
+[AGPL-3.0](LICENSE) © Mario Perez
+
+Licencia comercial disponible para uso propietario o integracion SaaS. Contacto: perezmario.info@gmail.com.
