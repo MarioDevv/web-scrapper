@@ -61,7 +61,7 @@ return [
     'cleanup_env_keys' => [
         'AWS_*',
         'AZURE_*',
-        'GITHUB_*',
+        'GITHUB_TOKEN',
         'DO_SPACES_*',
         '*_SECRET',
         'ZEPHPYR_*',
@@ -86,6 +86,8 @@ return [
         'content',
         'node_modules',
         '*/tests',
+        '.env.production',
+        '.env.example',
     ],
 
     /**
@@ -154,7 +156,7 @@ return [
      * Define your own scripts to run before and after the build process.
      */
     'prebuild' => [
-        'php8.5 artisan optimize',
+        //
     ],
 
     'postbuild' => [
