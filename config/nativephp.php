@@ -13,7 +13,7 @@ return [
      * usually in the form of a reverse domain name.
      * For example: com.nativephp.app
      */
-    'app_id' => env('NATIVEPHP_APP_ID', 'com.nativephp.app'),
+    'app_id' => env('NATIVEPHP_APP_ID', 'com.mariodev.seospider'),
 
     /**
      * If your application allows deep linking, you can specify the scheme
@@ -103,7 +103,7 @@ return [
          * The updater provider to use.
          * Supported: "github", "s3", "spaces"
          */
-        'default' => env('NATIVEPHP_UPDATER_PROVIDER', 'spaces'),
+        'default' => env('NATIVEPHP_UPDATER_PROVIDER', 'github'),
 
         'providers' => [
             'github' => [
@@ -154,11 +154,11 @@ return [
      * Define your own scripts to run before and after the build process.
      */
     'prebuild' => [
-        // 'npm run build',
+        'php8.5 artisan optimize',
     ],
 
     'postbuild' => [
-        // 'rm -rf public/build',
+        //
     ],
 
     /**

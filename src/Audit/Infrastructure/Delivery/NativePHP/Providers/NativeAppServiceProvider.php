@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use Native\Laravel\Facades\Window;
+use Native\Laravel\Facades\AutoUpdater;
 
 class NativeAppServiceProvider
 {
@@ -16,5 +17,7 @@ class NativeAppServiceProvider
             ->height(800)
             ->minWidth(900)
             ->minHeight(600);
+
+        AutoUpdater::checkForUpdates();
     }
 }
