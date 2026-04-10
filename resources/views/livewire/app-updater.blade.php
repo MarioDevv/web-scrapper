@@ -85,8 +85,9 @@
                 @case('available')
                     <div class="flex flex-col gap-3">
                         <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-panel3 text-tertiary">v{{ config('nativephp.version', '1.0.0') }}</span>
+                            <svg class="w-3 h-3 text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 5l7 7-7 7"/></svg>
                             <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent-s c-accent">v{{ $newVersion }}</span>
-                            <span class="text-2xs text-tertiary">disponible</span>
                         </div>
                         @if($releaseNotes)
                         <p class="text-2xs text-secondary leading-relaxed bg-panel2 rounded-lg p-2.5 max-h-24 overflow-y-auto">{{ $releaseNotes }}</p>
@@ -109,7 +110,7 @@
                     @break
 
                 @case('downloading')
-                    <div class="flex flex-col gap-3 py-1">
+                    <div class="flex flex-col gap-3 py-1" wire:poll.500ms>
                         <div class="flex items-center justify-between">
                             <p class="text-[13px] text-secondary">Descargando...</p>
                             <span class="text-[13px] font-mono font-medium text-primary tabular-nums">{{ $downloadPercent }}%</span>
