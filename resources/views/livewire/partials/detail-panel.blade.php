@@ -29,9 +29,9 @@
     <div class="flex items-center border-b border-line bg-panel px-1">
         @foreach([
             'seo' => 'SEO',
-            'technical' => 'Técnico',
-            'links' => 'Enlaces (' . count($intLinks) . '/' . count($extLinks) . ')',
-            'issues' => 'Problemas (' . count($selectedPage['issues']) . ')',
+            'technical' => 'Technical',
+            'links' => 'Links (' . count($intLinks) . '/' . count($extLinks) . ')',
+            'issues' => 'Issues (' . count($selectedPage['issues']) . ')',
         ] as $tKey => $tLabel)
         <button wire:click="setDetailTab('{{ $tKey }}')"
             class="relative px-3 py-1.5 text-2xs font-medium transition-colors
@@ -52,7 +52,7 @@
             {{-- Title --}}
             <div>
                 <div class="flex items-center gap-2 mb-1">
-                    <span class="text-2xs text-tertiary font-semibold uppercase tracking-wider">Título</span>
+                    <span class="text-2xs text-tertiary font-semibold uppercase tracking-wider">Title</span>
                     @if($selectedPage['titleLength'])
                         @php $tl = $selectedPage['titleLength']; @endphp
                         <span class="text-2xs" style="color:{{ $tl > 60 || $tl < 30 ? 'var(--c-warn)' : 'var(--c-ok)' }}">{{ $tl }} chars</span>
@@ -86,14 +86,14 @@
                     @forelse($selectedPage['h1s'] as $h1)
                         <div class="text-[13px] text-secondary">{{ $h1 }}</div>
                     @empty
-                        <div class="text-[13px] c-err font-medium">Falta H1</div>
+                        <div class="text-[13px] c-err font-medium">Missing H1</div>
                     @endforelse
                 </div>
                 <div class="flex gap-5 text-2xs shrink-0">
                     @foreach([
-                        ['Palabras', $selectedPage['wordCount']],
-                        ['Internos', $selectedPage['internalLinkCount']],
-                        ['Externos', $selectedPage['externalLinkCount']],
+                        ['Words', $selectedPage['wordCount']],
+                        ['Internal', $selectedPage['internalLinkCount']],
+                        ['External', $selectedPage['externalLinkCount']],
                     ] as [$metricLabel, $metricValue])
                     <div>
                         <div class="text-tertiary mb-0.5">{{ $metricLabel }}</div>
@@ -104,7 +104,7 @@
                         <div class="text-tertiary mb-0.5">Canonical</div>
                         @php $cs = $selectedPage['canonicalStatus']; @endphp
                         <div class="font-medium {{ match($cs) { 'self' => 'c-ok', 'other' => 'c-warn', default => 'c-err' } }}">
-                            {{ match($cs) { 'self' => 'Auto-referente', 'other' => 'Canonicalizada', default => 'Falta' } }}
+                            {{ match($cs) { 'self' => 'Self-referencing', 'other' => 'Canonicalized', default => 'Missing' } }}
                         </div>
                     </div>
                 </div>
@@ -112,7 +112,7 @@
 
             @if($selectedPage['canonicalStatus'] === 'other' && $selectedPage['canonical'])
             <div>
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-1">Canonical destino</div>
+                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-1">Canonical target</div>
                 <div class="text-[12px] font-mono text-secondary truncate">{{ $selectedPage['canonical'] }}</div>
             </div>
             @endif
@@ -131,7 +131,7 @@
             {{-- SERP Snippet Preview --}}
             @if($selectedPage['title'] || $selectedPage['metaDescription'])
             <div>
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-2">Vista previa SERP</div>
+                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-2">SERP preview</div>
                 <div class="bg-app2 rounded-lg border border-line p-3 max-w-[600px]">
                     <div class="text-[16px] leading-snug truncate" style="color:#1a0dab">
                         {{ \Illuminate\Support\Str::limit($selectedPage['title'] ?? $selectedPage['url'], 60) }}
@@ -154,11 +154,11 @@
             <div class="grid grid-cols-3 gap-3">
                 @foreach([
                     ['Content-Type', $selectedPage['contentType'], null],
-                    ['Tamaño', number_format($selectedPage['bodySize']/1024, 1) . ' KB', null],
-                    ['Tiempo respuesta', number_format($selectedPage['responseTime'], 0) . 'ms', $selectedPage['responseTime'] > 1000 ? 'var(--c-warn)' : null],
-                    ['Profundidad', (string)$selectedPage['crawlDepth'], null],
-                    ['Enlaces internos', (string)$selectedPage['internalLinkCount'], null],
-                    ['Enlaces externos', (string)$selectedPage['externalLinkCount'], null],
+                    ['Size', number_format($selectedPage['bodySize']/1024, 1) . ' KB', null],
+                    ['Response time', number_format($selectedPage['responseTime'], 0) . 'ms', $selectedPage['responseTime'] > 1000 ? 'var(--c-warn)' : null],
+                    ['Depth', (string)$selectedPage['crawlDepth'], null],
+                    ['Internal links', (string)$selectedPage['internalLinkCount'], null],
+                    ['External links', (string)$selectedPage['externalLinkCount'], null],
                 ] as [$tLabel, $tVal, $tColor])
                 <div class="bg-app2 rounded-lg px-3 py-2 border border-line">
                     <div class="text-2xs text-tertiary mb-0.5">{{ $tLabel }}</div>
@@ -169,7 +169,7 @@
 
             @if(count($selectedPage['redirectChain']) > 0)
             <div class="mt-3">
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-2">Cadena de redirección</div>
+                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-2">Redirect chain</div>
                 @foreach($selectedPage['redirectChain'] as $hop)
                 <div class="flex items-center gap-2 text-[11px] font-mono mb-1">
                     <span class="badge badge-warn">{{ $hop['statusCode'] }}</span>
@@ -187,9 +187,9 @@
             {{-- Sub-tabs --}}
             <div class="flex items-center gap-0.5 px-3 pt-2 pb-1">
                 @foreach([
-                    'internal' => 'Internos (' . count($intLinks) . ')',
-                    'external' => 'Salientes (' . count($extLinks) . ')',
-                    'images' => 'Imágenes (' . count($imgLinks) . ')',
+                    'internal' => 'Internal (' . count($intLinks) . ')',
+                    'external' => 'Outgoing (' . count($extLinks) . ')',
+                    'images' => 'Images (' . count($imgLinks) . ')',
                 ] as $ltKey => $ltLabel)
                 <button @click="linkTab = '{{ $ltKey }}'"
                     class="px-2.5 py-1 rounded-md text-2xs font-medium transition-all"
@@ -205,7 +205,7 @@
                 <table class="w-full text-[12px] border-collapse" style="min-width:600px">
                     <thead>
                         <tr class="border-b border-line bg-panel2">
-                            <th class="text-left px-3 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider">URL destino</th>
+                            <th class="text-left px-3 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider">Target URL</th>
                             <th class="text-left px-2 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider w-[180px]">Anchor text</th>
                             <th class="text-center px-2 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider w-16">Rel</th>
                         </tr>
@@ -227,7 +227,7 @@
                     </tbody>
                 </table>
                 @else
-                <div class="flex items-center justify-center py-6 text-tertiary text-[13px]">No se encontraron enlaces internos</div>
+                <div class="flex items-center justify-center py-6 text-tertiary text-[13px]">No internal links found</div>
                 @endif
             </div>
 
@@ -237,7 +237,7 @@
                 <table class="w-full text-[12px] border-collapse" style="min-width:600px">
                     <thead>
                         <tr class="border-b border-line bg-panel2">
-                            <th class="text-left px-3 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider">URL destino</th>
+                            <th class="text-left px-3 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider">Target URL</th>
                             <th class="text-left px-2 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider w-[180px]">Anchor text</th>
                             <th class="text-center px-2 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider w-16">Rel</th>
                         </tr>
@@ -259,7 +259,7 @@
                     </tbody>
                 </table>
                 @else
-                <div class="flex items-center justify-center py-6 text-tertiary text-[13px]">No se encontraron enlaces salientes</div>
+                <div class="flex items-center justify-center py-6 text-tertiary text-[13px]">No outgoing links found</div>
                 @endif
             </div>
 
@@ -269,7 +269,7 @@
                 <table class="w-full text-[12px] border-collapse" style="min-width:600px">
                     <thead>
                         <tr class="border-b border-line bg-panel2">
-                            <th class="text-left px-3 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider">URL imagen</th>
+                            <th class="text-left px-3 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider">Image URL</th>
                             <th class="text-left px-2 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider w-[220px]">Alt text</th>
                         </tr>
                     </thead>
@@ -281,7 +281,7 @@
                                 @if($link['anchor'])
                                     <span class="text-muted">{{ $link['anchor'] }}</span>
                                 @else
-                                    <span class="c-warn font-medium">Falta alt</span>
+                                    <span class="c-warn font-medium">Missing alt</span>
                                 @endif
                             </td>
                         </tr>
@@ -289,7 +289,7 @@
                     </tbody>
                 </table>
                 @else
-                <div class="flex items-center justify-center py-6 text-tertiary text-[13px]">No se encontraron imágenes</div>
+                <div class="flex items-center justify-center py-6 text-tertiary text-[13px]">No images found</div>
                 @endif
             </div>
         </div>
@@ -338,7 +338,7 @@
             @else
                 <div class="flex items-center justify-center py-8 gap-2 text-tertiary">
                     <svg class="w-4 h-4" style="color:var(--c-ok);opacity:0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span class="text-[13px]">No se detectaron problemas</span>
+                    <span class="text-[13px]">No issues detected</span>
                 </div>
             @endif
         </div>
