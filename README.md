@@ -6,79 +6,79 @@
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux-orange)]()
 
-App de escritorio gratuita y open-source para auditorias SEO tecnicas. Rastrea cualquier web y obtiene un desglose completo de problemas — como Screaming Frog, pero gratis y sin limites de rastreo.
+Free and open-source desktop app for technical SEO audits. Crawl any website and get a full breakdown of issues — like Screaming Frog, but free and with no crawl limits.
 
-> Construido con [NativePHP](https://nativephp.com) + [Laravel](https://laravel.com) + [Livewire](https://livewire.laravel.com) + [Tailwind CSS](https://tailwindcss.com). Sin dependencias externas de pago.
+> Built with [NativePHP](https://nativephp.com) + [Laravel](https://laravel.com) + [Livewire](https://livewire.laravel.com) + [Tailwind CSS](https://tailwindcss.com). No paid external dependencies.
 
-## Por que SEO Spider?
+## Why SEO Spider?
 
 | | **SEO Spider** | Screaming Frog |
 |---|---|---|
-| Precio | Gratis y open-source | 259 $/year |
-| Limite de rastreo | Sin limites | 500 URLs (free) |
-| Codigo | AGPL-3.0 | Propietario |
-| Plataforma | Linux (Windows/macOS pronto) | Windows, macOS, Linux |
-| Tecnologia | PHP 8.5 + NativePHP + Livewire | Java |
+| Price | Free and open-source | $259/year |
+| Crawl limit | No limits | 500 URLs (free) |
+| Code | AGPL-3.0 | Proprietary |
+| Platform | Linux (Windows/macOS coming soon) | Windows, macOS, Linux |
+| Technology | PHP 8.5 + NativePHP + Livewire | Java |
 
-## Descarga
+## Download
 
-Descarga la ultima version desde la [pagina de releases](https://github.com/MarioDevv/web-scrapper/releases).
+Download the latest version from the [releases page](https://github.com/MarioDevv/web-scrapper/releases).
 
-| Plataforma | Formato |
+| Platform | Format |
 |----------|--------|
 | Linux | `.AppImage`, `.deb` |
-| Windows | Proximamente |
-| macOS | Proximamente |
+| Windows | Coming soon |
+| macOS | Coming soon |
 
-## 10 analizadores integrados
+## 10 built-in analyzers
 
 ```
-Broken Links     — Errores HTTP, cadenas de redireccion, protocolos mixtos
-Meta Data        — Titles, descriptions, H1, viewport faltantes o incorrectos
-Directives       — noindex, nofollow, conflictos de canonical
-Headings         — Jerarquia, H2 faltantes, orden de encabezados
-Content          — Paginas finas, paginas vacias
-Images           — Alt text faltante, atributos alt demasiado largos
-Performance      — Respuestas lentas, paginas sobredimensionadas
+Broken Links     — HTTP errors, redirect chains, mixed protocols
+Meta Data        — Missing or incorrect titles, descriptions, H1, viewport
+Directives       — noindex, nofollow, canonical conflicts
+Headings         — Hierarchy, missing H2s, heading order
+Content          — Thin pages, empty pages
+Images           — Missing alt text, overly long alt attributes
+Performance      — Slow responses, oversized pages
 Security Headers — CSP, X-Frame-Options, HSTS, Referrer-Policy
-Hreflang         — Codigos de idioma/region invalidos, self-references faltantes
-Duplicates       — Duplicados exactos (SHA-256) y cercanos (SimHash)
+Hreflang         — Invalid language/region codes, missing self-references
+Duplicates       — Exact (SHA-256) and near (SimHash) duplicates
 ```
 
-## Dashboard y herramientas
+## Dashboard and tools
 
-- Vista general con graficos de codigos de estado, tiempos de respuesta, profundidad de rastreo e issues
-- Tabla ordenable con 14 columnas en 9 pestanas filtrables
-- Panel de detalle con info SEO, preview de SERP y analisis de enlaces
-- Verificacion de enlaces externos via peticiones HEAD
-- Exportacion CSV por pestana
-- Carpetas para organizar tus auditorias
-- Pausa y reanudacion del rastreo en cualquier momento
-- Modo claro y oscuro
-- Limites de rastreo configurables y politica de robots.txt
+- Overview with status code, response time, crawl depth, and issue charts
+- Sortable table with 14 columns across 9 filterable tabs
+- Detail panel with SEO info, SERP preview, and link analysis
+- External link verification via HEAD requests
+- CSV export per tab
+- Folders to organize your audits
+- Pause and resume crawling at any time
+- Light and dark mode
+- Configurable crawl limits and robots.txt policy
 
 ## Features
 
-- [x] Rastreo completo de sitios web sin limites
-- [x] 10 analizadores SEO integrados
-- [x] Dashboard con graficos y metricas
-- [x] Deteccion de duplicados exactos (SHA-256) y cercanos (SimHash)
-- [x] Verificacion de enlaces externos
-- [x] Preview de SERP en panel de detalle
-- [x] Exportacion CSV
-- [x] Modo claro y oscuro
-- [x] Carpetas para organizar auditorias
-- [x] Pausa / reanudacion de rastreo
-- [x] Auto-actualizador integrado
-- [ ] Soporte Windows
-- [ ] Soporte macOS
-- [ ] Rastreo de JavaScript rendering (SPA)
-- [ ] Informes PDF exportables
+- [x] Full website crawling with no limits
+- [x] 10 built-in SEO analyzers
+- [x] Dashboard with charts and metrics
+- [x] Exact (SHA-256) and near (SimHash) duplicate detection
+- [x] External link verification
+- [x] SERP preview in detail panel
+- [x] CSV export
+- [x] Light and dark mode
+- [x] Folders to organize audits
+- [x] Pause / resume crawling
+- [x] Built-in auto-updater
+- [ ] Windows support
+- [ ] macOS support
+- [ ] JavaScript rendering crawl (SPA)
+- [ ] Exportable PDF reports
 
-## Desarrollo
+## Development
 
 ```bash
-# Requisitos: PHP 8.5+, Node 22+, Composer
+# Requirements: PHP 8.5+, Node 22+, Composer
 
 git clone https://github.com/MarioDevv/web-scrapper.git
 cd web-scrapper
@@ -87,10 +87,10 @@ npm install
 composer run native:dev
 ```
 
-## Contribuir
+## Contributing
 
-Encontraste un bug? [Abre un issue](https://github.com/MarioDevv/web-scrapper/issues).
-Quieres aportar codigo? Los PRs son bienvenidos.
+Found a bug? [Open an issue](https://github.com/MarioDevv/web-scrapper/issues).
+Want to contribute code? PRs are welcome.
 
 ```bash
 vendor/bin/phpunit
@@ -98,8 +98,8 @@ vendor/bin/phpstan analyse src
 vendor/bin/pint
 ```
 
-## Licencia
+## License
 
 [AGPL-3.0](LICENSE) © Mario Perez
 
-Licencia comercial disponible para uso propietario o integracion SaaS. Contacto: perezmario.info@gmail.com.
+Commercial license available for proprietary use or SaaS integration. Contact: perezmario.info@gmail.com.
