@@ -34,7 +34,7 @@
         <div class="relative">
             <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path stroke-linecap="round" d="m21 21-4.35-4.35"/></svg>
             <input type="text" wire:model.live.debounce.300ms="searchQuery"
-                placeholder="Filtrar páginas…"
+                placeholder="Filter pages…"
                 class="h-7 w-40 bg-app2 border border-line rounded-md pl-7 pr-2 text-2xs text-primary placeholder:text-muted focus:border-[var(--c-accent)] focus:w-56 transition-all duration-200">
         </div>
         @endif
@@ -66,11 +66,11 @@
         {{-- Summary cards --}}
         <div class="grid grid-cols-5 gap-3">
             @foreach([
-                ['Páginas', $ov['totalPages'], null],
-                ['Externos', $ov['totalExternal'], null],
-                ['Problemas', $ov['totalIssues'], $ov['totalIssues'] > 0 ? 'var(--c-warn)' : 'var(--c-ok)'],
-                ['Tiempo medio', $ov['avgResponseTime'] . 'ms', $ov['avgResponseTime'] > 1000 ? 'var(--c-warn)' : null],
-                ['Imágenes', $ov['totalImages'], null],
+                ['Pages', $ov['totalPages'], null],
+                ['External', $ov['totalExternal'], null],
+                ['Issues', $ov['totalIssues'], $ov['totalIssues'] > 0 ? 'var(--c-warn)' : 'var(--c-ok)'],
+                ['Avg. time', $ov['avgResponseTime'] . 'ms', $ov['avgResponseTime'] > 1000 ? 'var(--c-warn)' : null],
+                ['Images', $ov['totalImages'], null],
             ] as [$ovLabel, $ovVal, $ovColor])
             <div class="bg-app2 rounded-lg px-3 py-2.5 border border-line">
                 <div class="text-2xs text-tertiary mb-1">{{ $ovLabel }}</div>
@@ -82,7 +82,7 @@
         <div class="grid grid-cols-3 gap-5">
             {{-- Status codes --}}
             <div class="bg-app2 rounded-lg border border-line p-3">
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-3">Códigos de respuesta</div>
+                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-3">Response codes</div>
                 @php $maxSc = max(1, max($ov['statusGroups'])); @endphp
                 <div class="space-y-2">
                     @foreach($ov['statusGroups'] as $code => $cnt)
@@ -100,7 +100,7 @@
 
             {{-- Response times --}}
             <div class="bg-app2 rounded-lg border border-line p-3">
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-3">Tiempos de respuesta</div>
+                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-3">Response times</div>
                 @php $maxRt = max(1, max($ov['responseTimeBuckets'])); @endphp
                 <div class="space-y-2">
                     @foreach($ov['responseTimeBuckets'] as $bucket => $cnt)
@@ -118,7 +118,7 @@
 
             {{-- Depth --}}
             <div class="bg-app2 rounded-lg border border-line p-3">
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-3">Profundidad</div>
+                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-3">Depth</div>
                 @php $maxDp = max(1, !empty($ov['depthDistribution']) ? max($ov['depthDistribution']) : 1); @endphp
                 <div class="space-y-2">
                     @foreach($ov['depthDistribution'] as $depth => $cnt)
@@ -137,7 +137,7 @@
         <div class="grid grid-cols-2 gap-5">
             {{-- Issues by category --}}
             <div class="bg-app2 rounded-lg border border-line p-3">
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-3">Problemas por categoría</div>
+                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-3">Issues by category</div>
                 @if(!empty($ov['issuesByCategory']))
                 @php $maxIc = max(1, max($ov['issuesByCategory'])); @endphp
                 <div class="space-y-2">
@@ -154,21 +154,21 @@
                 @else
                 <div class="flex items-center gap-2 py-4 justify-center text-tertiary">
                     <svg class="w-4 h-4" style="color:var(--c-ok);opacity:0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span class="text-[13px]">Sin problemas</span>
+                    <span class="text-[13px]">No issues</span>
                 </div>
                 @endif
             </div>
 
             {{-- SEO quick check --}}
             <div class="bg-app2 rounded-lg border border-line p-3">
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-3">Verificación SEO</div>
+                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-3">SEO check</div>
                 <div class="space-y-2">
                     @foreach([
-                        ['Sin título', $ov['pagesWithoutTitle'], $ov['totalPages']],
-                        ['Sin meta description', $ov['pagesWithoutDesc'], $ov['totalPages']],
-                        ['Sin H1', $ov['pagesWithoutH1'], $ov['totalPages']],
-                        ['Errores (4xx/5xx)', $ov['statusGroups']['4xx'] + $ov['statusGroups']['5xx'], $ov['totalPages']],
-                        ['Redirecciones (3xx)', $ov['statusGroups']['3xx'], $ov['totalPages']],
+                        ['Missing title', $ov['pagesWithoutTitle'], $ov['totalPages']],
+                        ['Missing meta description', $ov['pagesWithoutDesc'], $ov['totalPages']],
+                        ['Missing H1', $ov['pagesWithoutH1'], $ov['totalPages']],
+                        ['Errors (4xx/5xx)', $ov['statusGroups']['4xx'] + $ov['statusGroups']['5xx'], $ov['totalPages']],
+                        ['Redirects (3xx)', $ov['statusGroups']['3xx'], $ov['totalPages']],
                     ] as [$checkLabel, $checkBad, $checkTotal])
                     @php $checkPct = $checkTotal > 0 ? round(($checkBad / $checkTotal) * 100) : 0; @endphp
                     <div class="flex items-center gap-2">
@@ -188,10 +188,10 @@
         <div class="w-12 h-12 rounded-xl bg-accent-s flex items-center justify-center">
             <div class="w-6 h-6 border-2 border-line rounded-full animate-spin" style="border-top-color:var(--c-accent)"></div>
         </div>
-        <p class="text-[14px] text-secondary">Rastreando… el resumen aparecerá cuando termine</p>
+        <p class="text-[14px] text-secondary">Crawling… the summary will appear when finished</p>
     </div>
     @else
-    <div class="flex items-center justify-center h-full text-muted text-[14px]">Lanza un crawl para ver el resumen</div>
+    <div class="flex items-center justify-center h-full text-muted text-[14px]">Start a crawl to see the summary</div>
     @endif
 </div>
 
@@ -203,11 +203,11 @@
     <table class="w-full text-[13px] border-collapse" style="min-width:900px">
         <thead class="sticky top-0 z-10">
             <tr class="bg-panel2 border-b border-line">
-                <th class="text-left px-3 py-2 font-medium text-tertiary text-2xs uppercase tracking-wider min-w-[300px]">URL Externa</th>
-                <th class="text-center px-2 py-2 font-medium text-tertiary text-2xs uppercase tracking-wider w-16">Estado</th>
-                <th class="text-right px-2 py-2 font-medium text-tertiary text-2xs uppercase tracking-wider w-16">Tiempo</th>
+                <th class="text-left px-3 py-2 font-medium text-tertiary text-2xs uppercase tracking-wider min-w-[300px]">External URL</th>
+                <th class="text-center px-2 py-2 font-medium text-tertiary text-2xs uppercase tracking-wider w-16">Status</th>
+                <th class="text-right px-2 py-2 font-medium text-tertiary text-2xs uppercase tracking-wider w-16">Time</th>
                 <th class="text-left px-2 py-2 font-medium text-tertiary text-2xs uppercase tracking-wider min-w-[120px]">Anchor</th>
-                <th class="text-left px-2 py-2 font-medium text-tertiary text-2xs uppercase tracking-wider min-w-[200px]">Página origen</th>
+                <th class="text-left px-2 py-2 font-medium text-tertiary text-2xs uppercase tracking-wider min-w-[200px]">Source page</th>
                 <th class="text-left px-2 py-2 font-medium text-tertiary text-2xs uppercase tracking-wider">Error</th>
             </tr>
         </thead>
@@ -240,12 +240,12 @@
         <div class="w-12 h-12 rounded-xl bg-accent-s flex items-center justify-center">
             <div class="w-6 h-6 border-2 border-line rounded-full animate-spin" style="border-top-color:var(--c-accent)"></div>
         </div>
-        <p class="text-[14px] text-secondary">Verificando enlaces externos…</p>
+        <p class="text-[14px] text-secondary">Verifying external links…</p>
     </div>
     @elseif($auditId)
-    <div class="flex items-center justify-center h-full text-tertiary text-[14px]">No se encontraron enlaces externos</div>
+    <div class="flex items-center justify-center h-full text-tertiary text-[14px]">No external links found</div>
     @else
-    <div class="flex items-center justify-center h-full text-muted text-[14px]">Lanza un crawl para verificar enlaces externos</div>
+    <div class="flex items-center justify-center h-full text-muted text-[14px]">Start a crawl to verify external links</div>
     @endif
 </div>
 
@@ -260,18 +260,18 @@
                 @php
                     $cols = [
                         ['url',               'URL',         'text-left',   'px-3 min-w-[260px]'],
-                        ['statusCode',        'Estado',      'text-center', 'px-2 w-16'],
-                        ['title',             'Título',      'text-left',   'px-2 min-w-[180px]'],
-                        ['wordCount',         'Palabras',    'text-right',  'px-2 w-[70px]'],
+                        ['statusCode',        'Status',      'text-center', 'px-2 w-16'],
+                        ['title',             'Title',       'text-left',   'px-2 min-w-[180px]'],
+                        ['wordCount',         'Words',       'text-right',  'px-2 w-[70px]'],
                         ['h1Count',           'H1',          'text-center', 'px-2 w-10'],
                         ['internalLinkCount', 'Int.',        'text-right',  'px-2 w-12'],
                         ['externalLinkCount', 'Ext.',        'text-right',  'px-2 w-12'],
                         ['imageCount',        'Imgs',        'text-right',  'px-2 w-12'],
                         ['canonicalStatus',   'Canonical',   'text-center', 'px-2 w-[90px]'],
-                        ['bodySize',          'Tamaño',      'text-right',  'px-2 w-16'],
-                        ['responseTime',      'Tiempo',      'text-right',  'px-2 w-16'],
-                        ['crawlDepth',        'Prof.',       'text-center', 'px-2 w-12'],
-                        ['errorCount',        'Problemas',   'text-center', 'px-2 w-20'],
+                        ['bodySize',          'Size',        'text-right',  'px-2 w-16'],
+                        ['responseTime',      'Time',        'text-right',  'px-2 w-16'],
+                        ['crawlDepth',        'Depth',       'text-center', 'px-2 w-12'],
+                        ['errorCount',        'Issues',      'text-center', 'px-2 w-20'],
                         ['isIndexable',       'Idx',         'text-center', 'px-2 w-10'],
                     ];
                 @endphp
@@ -343,7 +343,7 @@
                     @else
                         @php $cs = $page['canonicalStatus']; @endphp
                         <span class="text-[11px] font-medium {{ match($cs) { 'self' => 'c-ok', 'other' => 'c-warn', default => 'c-err' } }}">
-                            {{ match($cs) { 'self' => 'Auto-ref.', 'other' => 'Canonical.', default => 'Falta' } }}
+                            {{ match($cs) { 'self' => 'Self-ref.', 'other' => 'Canonical.', default => 'Missing' } }}
                         </span>
                     @endif
                 </td>
@@ -397,13 +397,13 @@
             <div class="w-6 h-6 border-2 border-line rounded-full animate-spin" style="border-top-color:var(--c-accent)"></div>
         </div>
         <div class="text-center">
-            <p class="text-[14px] text-secondary font-medium">Descubriendo páginas…</p>
-            <p class="text-2xs text-muted mt-1">Las páginas aparecerán aquí a medida que se rastreen</p>
+            <p class="text-[14px] text-secondary font-medium">Discovering pages…</p>
+            <p class="text-2xs text-muted mt-1">Pages will appear here as they are crawled</p>
         </div>
     </div>
 
     @elseif($auditId)
-    <div class="flex items-center justify-center h-full text-tertiary text-[14px]">No hay páginas que coincidan con este filtro</div>
+    <div class="flex items-center justify-center h-full text-tertiary text-[14px]">No pages match this filter</div>
 
     @else
     <div class="flex flex-col items-center justify-center h-full gap-4">
@@ -414,8 +414,8 @@
             </svg>
         </div>
         <div class="text-center">
-            <p class="text-[14px] text-secondary">Introduce una URL y pulsa <span class="c-accent font-semibold">Crawl</span> para empezar</p>
-            <p class="text-2xs text-muted mt-1">Las páginas aparecerán en tiempo real</p>
+            <p class="text-[14px] text-secondary">Enter a URL and press <span class="c-accent font-semibold">Crawl</span> to start</p>
+            <p class="text-2xs text-muted mt-1">Pages will appear in real time</p>
         </div>
     </div>
     @endif
