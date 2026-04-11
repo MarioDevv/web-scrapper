@@ -476,9 +476,9 @@ class SpiderDashboard extends Component
             }
 
             fputcsv($out, [
-                'URL', 'Estado', 'Título', 'Palabras', 'H1', 'Int. Links', 'Ext. Links',
-                'Imágenes', 'Canonical', 'Tamaño (B)', 'Tiempo (ms)', 'Profundidad',
-                'Errores', 'Avisos', 'Indexable',
+                'URL', 'Status', 'Title', 'Words', 'H1', 'Int. Links', 'Ext. Links',
+                'Images', 'Canonical', 'Size (B)', 'Time (ms)', 'Depth',
+                'Errors', 'Warnings', 'Indexable',
             ]);
 
             foreach ($pages as $page) {
@@ -497,7 +497,7 @@ class SpiderDashboard extends Component
                     $page['crawlDepth'],
                     $page['errorCount'],
                     $page['warningCount'],
-                    ($page['isIndexable'] ?? false) ? 'Sí' : 'No',
+                    ($page['isIndexable'] ?? false) ? 'Yes' : 'No',
                 ]);
             }
 
@@ -517,7 +517,7 @@ class SpiderDashboard extends Component
                 return;
             }
 
-            fputcsv($out, ['URL Externa', 'Estado', 'Tiempo (ms)', 'Error', 'Anchor Text', 'Página origen']);
+            fputcsv($out, ['External URL', 'Status', 'Time (ms)', 'Error', 'Anchor Text', 'Source page']);
 
             foreach ($links as $link) {
                 fputcsv($out, [
