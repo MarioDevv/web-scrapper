@@ -38,7 +38,7 @@ final class HeadingAnalyzer implements Analyzer
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::NOTICE,
                 code: 'h2_missing',
-                message: 'La página no tiene encabezados H2.',
+                message: 'Page has no H2 headings.',
             ));
         }
 
@@ -48,7 +48,7 @@ final class HeadingAnalyzer implements Analyzer
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::NOTICE,
                 code: 'h2_excessive',
-                message: sprintf('La página tiene %d encabezados H2.', count($h2s)),
+                message: sprintf('Page has %d H2 headings.', count($h2s)),
             ));
         }
     }
@@ -67,7 +67,7 @@ final class HeadingAnalyzer implements Analyzer
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::WARNING,
                 code: 'h1_not_first',
-                message: sprintf('El primer encabezado es un H%d en lugar de H1.', $first['level']),
+                message: sprintf('First heading is H%d instead of H1.', $first['level']),
                 context: $first['text'],
             ));
         }
@@ -80,7 +80,7 @@ final class HeadingAnalyzer implements Analyzer
                     category: IssueCategory::METADATA,
                     severity: IssueSeverity::NOTICE,
                     code: 'heading_skip',
-                    message: sprintf('Salto en jerarquía de encabezados: H%d → H%d.', $prevLevel, $heading['level']),
+                    message: sprintf('Heading hierarchy skip: H%d → H%d.', $prevLevel, $heading['level']),
                     context: $heading['text'],
                 ));
                 break;

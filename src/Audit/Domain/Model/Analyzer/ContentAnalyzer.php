@@ -32,7 +32,7 @@ final class ContentAnalyzer implements Analyzer
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::WARNING,
                 code: 'content_empty',
-                message: sprintf('Página con muy poco contenido (%d palabras).', $wordCount),
+                message: sprintf('Page with very little content (%d words).', $wordCount),
             ));
         } elseif ($wordCount < self::THIN_CONTENT_THRESHOLD) {
             $page->addIssue(new Issue(
@@ -40,7 +40,7 @@ final class ContentAnalyzer implements Analyzer
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::NOTICE,
                 code: 'content_thin',
-                message: sprintf('Contenido ligero: %d palabras (recomendado: mín. %d).', $wordCount, self::THIN_CONTENT_THRESHOLD),
+                message: sprintf('Thin content: %d words (recommended: min %d).', $wordCount, self::THIN_CONTENT_THRESHOLD),
             ));
         }
     }

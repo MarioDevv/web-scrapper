@@ -38,7 +38,7 @@ final class HreflangAnalyzer implements Analyzer
                     category: IssueCategory::HREFLANG,
                     severity: IssueSeverity::ERROR,
                     code: 'hreflang_invalid_language',
-                    message: sprintf('Código de idioma hreflang inválido: "%s".', $hreflang->language()),
+                    message: sprintf('Invalid hreflang language code: "%s".', $hreflang->language()),
                     context: $hreflang->href()->toString(),
                 ));
             }
@@ -54,7 +54,7 @@ final class HreflangAnalyzer implements Analyzer
                     category: IssueCategory::HREFLANG,
                     severity: IssueSeverity::ERROR,
                     code: 'hreflang_invalid_region',
-                    message: sprintf('Código de región hreflang inválido: "%s".', $hreflang->region()),
+                    message: sprintf('Invalid hreflang region code: "%s".', $hreflang->region()),
                     context: $hreflang->languageRegionCode() . ' → ' . $hreflang->href()->toString(),
                 ));
             }
@@ -77,7 +77,7 @@ final class HreflangAnalyzer implements Analyzer
                 category: IssueCategory::HREFLANG,
                 severity: IssueSeverity::WARNING,
                 code: 'hreflang_missing_self',
-                message: 'Falta auto-referencia hreflang. La página debe incluirse a sí misma en las anotaciones hreflang.',
+                message: 'Missing hreflang self-reference. The page should include itself in hreflang annotations.',
             ));
         }
     }
@@ -93,7 +93,7 @@ final class HreflangAnalyzer implements Analyzer
                     category: IssueCategory::HREFLANG,
                     severity: IssueSeverity::WARNING,
                     code: 'hreflang_duplicate',
-                    message: sprintf('Hreflang duplicado para "%s".', $code),
+                    message: sprintf('Duplicate hreflang for "%s".', $code),
                     context: $hreflang->href()->toString(),
                 ));
                 break; // Report only once

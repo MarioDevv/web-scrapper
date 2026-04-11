@@ -43,7 +43,7 @@ final class ImageAnalyzer implements Analyzer
                     category: IssueCategory::CONTENT,
                     severity: IssueSeverity::NOTICE,
                     code: 'img_alt_too_long',
-                    message: sprintf('Atributo alt de imagen demasiado largo (%d caracteres, máx. %d).', mb_strlen($alt), self::ALT_MAX_LENGTH),
+                    message: sprintf('Image alt attribute too long (%d characters, max %d).', mb_strlen($alt), self::ALT_MAX_LENGTH),
                     context: $image->targetUrl()->toString(),
                 ));
             }
@@ -55,7 +55,7 @@ final class ImageAnalyzer implements Analyzer
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::WARNING,
                 code: 'img_alt_missing',
-                message: sprintf('%d imagen(es) sin atributo alt.', $missingAlt),
+                message: sprintf('%d image(s) missing alt attribute.', $missingAlt),
             ));
         }
     }
