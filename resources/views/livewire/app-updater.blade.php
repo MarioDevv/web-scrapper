@@ -26,7 +26,7 @@
     <button @click="open = !open; if(open && $wire.state === 'idle') { $wire.checkForUpdates() }"
             class="h-9 w-9 rounded-lg bg-app2 border flex items-center justify-center transition-all relative
                    {{ in_array($state, ['available', 'ready']) ? 'border-[var(--c-accent)] text-[var(--c-accent)]' : 'border-line text-tertiary hover:text-secondary hover:border-line2' }}"
-            title="Actualizaciones">
+            title="Updates">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
         </svg>
@@ -52,7 +52,7 @@
                 <svg class="w-4 h-4 text-tertiary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                 </svg>
-                Actualizaciones
+                Updates
             </h3>
             <p class="text-2xs text-tertiary mt-0.5">v{{ config('nativephp.version', '1.0.0') }}</p>
         </div>
@@ -64,7 +64,7 @@
                 @case('checking')
                     <div class="flex flex-col items-center gap-3 py-2">
                         <div class="w-5 h-5 border-2 border-line border-t-[var(--c-accent)] rounded-full animate-spin"></div>
-                        <p class="text-[13px] text-secondary">Buscando actualizaciones...</p>
+                        <p class="text-[13px] text-secondary">Checking for updates...</p>
                     </div>
                     @break
 
@@ -73,11 +73,11 @@
                         <svg class="w-8 h-8" style="color: var(--c-ok)" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
-                        <p class="text-[13px] font-medium text-primary">Estás al día</p>
-                        <p class="text-2xs text-tertiary">No hay actualizaciones disponibles</p>
+                        <p class="text-[13px] font-medium text-primary">You're up to date</p>
+                        <p class="text-2xs text-tertiary">No updates available</p>
                         <button wire:click="checkForUpdates"
                                 class="mt-1 text-2xs text-link hover:underline">
-                            Comprobar de nuevo
+                            Check again
                         </button>
                     </div>
                     @break
@@ -99,11 +99,11 @@
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                                 </svg>
-                                Descargar
+                                Download
                             </button>
                             <button wire:click="dismiss" @click="open = false"
                                     class="h-8 px-3 rounded-lg text-[13px] text-secondary bg-app2 border border-line hover:border-line2 transition-all">
-                                Ahora no
+                                Not now
                             </button>
                         </div>
                     </div>
@@ -112,7 +112,7 @@
                 @case('downloading')
                     <div class="flex flex-col gap-3 py-1" wire:poll.500ms>
                         <div class="flex items-center justify-between">
-                            <p class="text-[13px] text-secondary">Descargando...</p>
+                            <p class="text-[13px] text-secondary">Downloading...</p>
                             <span class="text-[13px] font-mono font-medium text-primary tabular-nums">{{ $downloadPercent }}%</span>
                         </div>
                         <div class="w-full h-1.5 bg-app3 rounded-full overflow-hidden">
@@ -126,17 +126,17 @@
                         <svg class="w-8 h-8 c-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
-                        <p class="text-[13px] font-medium text-primary">Listo para instalar</p>
-                        <p class="text-2xs text-tertiary text-center">La app se reiniciará para aplicar la actualización</p>
+                        <p class="text-[13px] font-medium text-primary">Ready to install</p>
+                        <p class="text-2xs text-tertiary text-center">The app will restart to apply the update</p>
                         <div class="flex gap-2 w-full mt-1">
                             <button wire:click="installUpdate"
                                     class="flex-1 h-8 rounded-lg text-[13px] font-semibold text-white transition-all flex items-center justify-center gap-1.5"
                                     style="background: var(--c-accent)">
-                                Reiniciar y actualizar
+                                Restart and update
                             </button>
                             <button wire:click="dismiss" @click="open = false"
                                     class="h-8 px-3 rounded-lg text-[13px] text-secondary bg-app2 border border-line hover:border-line2 transition-all">
-                                Luego
+                                Later
                             </button>
                         </div>
                     </div>
@@ -147,13 +147,13 @@
                         <svg class="w-8 h-8 c-err" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
                         </svg>
-                        <p class="text-[13px] font-medium text-primary">Error al buscar actualizaciones</p>
+                        <p class="text-[13px] font-medium text-primary">Error checking for updates</p>
                         @if($errorMessage)
                         <p class="text-2xs text-tertiary text-center">{{ $errorMessage }}</p>
                         @endif
                         <button wire:click="checkForUpdates"
                                 class="mt-1 text-2xs text-link hover:underline">
-                            Reintentar
+                            Retry
                         </button>
                     </div>
                     @break
