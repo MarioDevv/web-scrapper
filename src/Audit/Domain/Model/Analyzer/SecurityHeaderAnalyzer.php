@@ -15,15 +15,15 @@ final class SecurityHeaderAnalyzer implements Analyzer
     private const array REQUIRED_HEADERS = [
         'csp_missing' => [
             'header' => 'Content-Security-Policy',
-            'message' => 'Falta el encabezado Content-Security-Policy (protección contra XSS).',
+            'message' => 'Missing Content-Security-Policy header (XSS protection).',
         ],
         'x_frame_missing' => [
             'header' => 'X-Frame-Options',
-            'message' => 'Falta el encabezado X-Frame-Options (protección contra clickjacking).',
+            'message' => 'Missing X-Frame-Options header (clickjacking protection).',
         ],
         'x_content_type_missing' => [
             'header' => 'X-Content-Type-Options',
-            'message' => 'Falta el encabezado X-Content-Type-Options (previene MIME sniffing).',
+            'message' => 'Missing X-Content-Type-Options header (prevents MIME sniffing).',
         ],
     ];
 
@@ -71,7 +71,7 @@ final class SecurityHeaderAnalyzer implements Analyzer
                 category: IssueCategory::DIRECTIVES,
                 severity: IssueSeverity::NOTICE,
                 code: 'referrer_policy_missing',
-                message: 'Falta el encabezado Referrer-Policy (protección de datos en navegación).',
+                message: 'Missing Referrer-Policy header (navigation data protection).',
             ));
             return;
         }
@@ -83,8 +83,8 @@ final class SecurityHeaderAnalyzer implements Analyzer
                 category: IssueCategory::DIRECTIVES,
                 severity: IssueSeverity::NOTICE,
                 code: 'referrer_policy_insecure',
-                message: sprintf('Referrer-Policy "%s" puede filtrar datos entre orígenes.', $policy),
-                context: 'Recomendado: strict-origin-when-cross-origin',
+                message: sprintf('Referrer-Policy "%s" may leak data across origins.', $policy),
+                context: 'Recommended: strict-origin-when-cross-origin',
             ));
         }
     }

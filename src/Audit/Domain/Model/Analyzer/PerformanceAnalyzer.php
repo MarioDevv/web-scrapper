@@ -37,7 +37,7 @@ final class PerformanceAnalyzer implements Analyzer
                 category: IssueCategory::PERFORMANCE,
                 severity: IssueSeverity::ERROR,
                 code: 'response_very_slow',
-                message: sprintf('Tiempo de respuesta muy alto: %.0fms (máx. recomendado: %.0fms).', $time, self::SLOW_THRESHOLD_MS),
+                message: sprintf('Very slow response time: %.0fms (recommended max: %.0fms).', $time, self::SLOW_THRESHOLD_MS),
             ));
         } elseif ($time >= self::SLOW_THRESHOLD_MS) {
             $page->addIssue(new Issue(
@@ -45,7 +45,7 @@ final class PerformanceAnalyzer implements Analyzer
                 category: IssueCategory::PERFORMANCE,
                 severity: IssueSeverity::WARNING,
                 code: 'response_slow',
-                message: sprintf('Tiempo de respuesta alto: %.0fms (máx. recomendado: %.0fms).', $time, self::SLOW_THRESHOLD_MS),
+                message: sprintf('Slow response time: %.0fms (recommended max: %.0fms).', $time, self::SLOW_THRESHOLD_MS),
             ));
         }
     }
@@ -64,7 +64,7 @@ final class PerformanceAnalyzer implements Analyzer
                 category: IssueCategory::PERFORMANCE,
                 severity: IssueSeverity::WARNING,
                 code: 'page_too_large',
-                message: sprintf('Página HTML muy pesada: %s (máx. recomendado: 512KB).', $this->formatBytes($size)),
+                message: sprintf('HTML page too large: %s (recommended max: 512KB).', $this->formatBytes($size)),
             ));
         }
     }

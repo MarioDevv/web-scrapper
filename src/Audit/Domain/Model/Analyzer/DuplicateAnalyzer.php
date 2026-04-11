@@ -52,9 +52,9 @@ final class DuplicateAnalyzer implements Analyzer
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::WARNING,
                 code: 'exact_duplicate',
-                message: sprintf('Contenido duplicado exacto con %d página(s).', count($exactDuplicates)),
+                message: sprintf('Exact duplicate content with %d page(s).', count($exactDuplicates)),
                 context: implode(', ', array_slice($exactDuplicates, 0, 3))
-                    . (count($exactDuplicates) > 3 ? sprintf(' (+%d más)', count($exactDuplicates) - 3) : ''),
+                    . (count($exactDuplicates) > 3 ? sprintf(' (+%d more)', count($exactDuplicates) - 3) : ''),
             ));
         }
 
@@ -64,9 +64,9 @@ final class DuplicateAnalyzer implements Analyzer
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::NOTICE,
                 code: 'near_duplicate',
-                message: sprintf('Contenido casi duplicado con %d página(s).', count($nearDuplicates)),
+                message: sprintf('Near-duplicate content with %d page(s).', count($nearDuplicates)),
                 context: implode(', ', array_slice($nearDuplicates, 0, 3))
-                    . (count($nearDuplicates) > 3 ? sprintf(' (+%d más)', count($nearDuplicates) - 3) : ''),
+                    . (count($nearDuplicates) > 3 ? sprintf(' (+%d more)', count($nearDuplicates) - 3) : ''),
             ));
         }
     }

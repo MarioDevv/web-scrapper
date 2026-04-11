@@ -99,7 +99,7 @@ final class BrokenLinkAnalyzer implements Analyzer
             category: IssueCategory::LINKS,
             severity: IssueSeverity::WARNING,
             code: 'mixed_protocol_redirect',
-            message: 'La cadena de redirección mezcla HTTP y HTTPS.',
+            message: 'Redirect chain mixes HTTP and HTTPS.',
         ));
     }
 
@@ -130,8 +130,8 @@ final class BrokenLinkAnalyzer implements Analyzer
             category: IssueCategory::LINKS,
             severity: IssueSeverity::NOTICE,
             code: 'internal_nofollow',
-            message: sprintf('%d enlace(s) interno(s) con rel="nofollow". Esto bloquea el flujo de autoridad dentro del sitio.', $count),
-            context: implode(', ', $urls) . ($count > 5 ? sprintf(' (+%d más)', $count - 5) : ''),
+            message: sprintf('%d internal link(s) with rel="nofollow". This blocks authority flow within the site.', $count),
+            context: implode(', ', $urls) . ($count > 5 ? sprintf(' (+%d more)', $count - 5) : ''),
         ));
     }
 }
