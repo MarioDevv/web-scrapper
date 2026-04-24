@@ -23,7 +23,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
     {
         $html = '<html><head><link rel="canonical" href="https://example.com/canonical"></head></html>';
 
-        $directive = $this->parser->extractDirectives($html, $this->baseUrl);
+        $directive = $this->parser->parse($html, $this->baseUrl)->directive;
 
         $this->assertNotNull($directive->canonical());
         $this->assertSame('https://example.com/canonical', $directive->canonical()->toString());
@@ -33,7 +33,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
     {
         $html = '<html><head><link rel="canonical" href="/es/foo"></head></html>';
 
-        $directive = $this->parser->extractDirectives($html, $this->baseUrl);
+        $directive = $this->parser->parse($html, $this->baseUrl)->directive;
 
         $this->assertNotNull($directive->canonical());
         $this->assertSame('https://example.com/es/foo', $directive->canonical()->toString());
@@ -43,7 +43,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
     {
         $html = '<html><head><link rel="canonical" href="other"></head></html>';
 
-        $directive = $this->parser->extractDirectives($html, $this->baseUrl);
+        $directive = $this->parser->parse($html, $this->baseUrl)->directive;
 
         $this->assertNotNull($directive->canonical());
         $this->assertSame('https://example.com/es/other', $directive->canonical()->toString());
@@ -53,7 +53,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
     {
         $html = '<html><head><title>no canonical</title></head></html>';
 
-        $directive = $this->parser->extractDirectives($html, $this->baseUrl);
+        $directive = $this->parser->parse($html, $this->baseUrl)->directive;
 
         $this->assertNull($directive->canonical());
     }
@@ -62,7 +62,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
     {
         $html = '<html><head><link rel="canonical" href="   "></head></html>';
 
-        $directive = $this->parser->extractDirectives($html, $this->baseUrl);
+        $directive = $this->parser->parse($html, $this->baseUrl)->directive;
 
         $this->assertNull($directive->canonical());
     }
@@ -73,7 +73,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
             . '<link rel="alternate" hreflang="en" href="https://example.com/en/page">'
             . '</head></html>';
 
-        $hreflangs = $this->parser->extractHreflangs($html, $this->baseUrl);
+        $hreflangs = $this->parser->parse($html, $this->baseUrl)->hreflangs;
 
         $this->assertCount(1, $hreflangs);
         $this->assertSame('en', $hreflangs[0]->language());
@@ -88,7 +88,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
             . '<link rel="alternate" hreflang="es" href="/es/page">'
             . '</head></html>';
 
-        $hreflangs = $this->parser->extractHreflangs($html, $this->baseUrl);
+        $hreflangs = $this->parser->parse($html, $this->baseUrl)->hreflangs;
 
         $this->assertCount(2, $hreflangs);
         $this->assertSame('en', $hreflangs[0]->language());
@@ -104,7 +104,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
             . '<link rel="alternate" hreflang="fr" href="">'
             . '</head></html>';
 
-        $hreflangs = $this->parser->extractHreflangs($html, $this->baseUrl);
+        $hreflangs = $this->parser->parse($html, $this->baseUrl)->hreflangs;
 
         $this->assertSame([], $hreflangs);
     }
@@ -117,7 +117,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
             . '<a href="foo">link</a>'
             . '</body></html>';
 
-        $links = $this->parser->extractLinks($html, $this->baseUrl);
+        $links = $this->parser->parse($html, $this->baseUrl)->links;
 
         $this->assertCount(1, $links);
         $this->assertSame('https://cdn.other.com/app/foo', $links[0]->targetUrl()->toString());
@@ -132,7 +132,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
             . '<a href="foo">link</a>'
             . '</body></html>';
 
-        $links = $this->parser->extractLinks($html, $this->baseUrl);
+        $links = $this->parser->parse($html, $this->baseUrl)->links;
 
         $this->assertCount(1, $links);
         $this->assertSame('https://example.com/app/foo', $links[0]->targetUrl()->toString());
@@ -147,7 +147,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
             . '<a href="foo">link</a>'
             . '</body></html>';
 
-        $links = $this->parser->extractLinks($html, $this->baseUrl);
+        $links = $this->parser->parse($html, $this->baseUrl)->links;
 
         $this->assertCount(1, $links);
         $this->assertSame('https://example.com/es/foo', $links[0]->targetUrl()->toString());
@@ -160,7 +160,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
             . '<link rel="canonical" href="page">'
             . '</head></html>';
 
-        $directive = $this->parser->extractDirectives($html, $this->baseUrl);
+        $directive = $this->parser->parse($html, $this->baseUrl)->directive;
 
         $this->assertNotNull($directive->canonical());
         $this->assertSame('https://other.com/page', $directive->canonical()->toString());
@@ -173,7 +173,7 @@ final class DomCrawlerHtmlParserTest extends TestCase
             . '<link rel="alternate" hreflang="en" href="en/page">'
             . '</head></html>';
 
-        $hreflangs = $this->parser->extractHreflangs($html, $this->baseUrl);
+        $hreflangs = $this->parser->parse($html, $this->baseUrl)->hreflangs;
 
         $this->assertCount(1, $hreflangs);
         $this->assertSame('https://other.com/intl/en/page', $hreflangs[0]->href()->toString());

@@ -13,15 +13,38 @@ use SeoSpider\Audit\Domain\Model\Page\Link;
 use SeoSpider\Audit\Domain\Model\Page\LinkRelation;
 use SeoSpider\Audit\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\PageMetadata;
+use SeoSpider\Audit\Domain\Model\Page\ParsedPage;
 use SeoSpider\Audit\Domain\Model\Url;
 use Symfony\Component\DomCrawler\Crawler;
 
 final class DomCrawlerHtmlParser implements HtmlParser
 {
-    public function extractMetadata(string $html): PageMetadata
+    public function parse(string $html, Url $baseUrl): ParsedPage
     {
         $crawler = new Crawler($html);
+        $effectiveBase = $this->resolveBase($crawler, $baseUrl);
 
+        // Read-only passes first — the order among them does not matter.
+        $links = $this->collectLinks($crawler, $baseUrl, $effectiveBase);
+        $hreflangs = $this->collectHreflangs($crawler, $effectiveBase);
+        $directive = $this->collectDirectives($crawler, $effectiveBase);
+        $metadata = $this->collectMetadata($crawler);
+
+        // DOM-mutating pass last so the removed nodes (script/style/nav/...) do
+        // not hide links, directives or metadata from the earlier passes.
+        $cleanContent = $this->collectCleanContent($crawler);
+
+        return new ParsedPage(
+            metadata: $metadata->withWordCount($this->countWords($cleanContent)),
+            links: $links,
+            hreflangs: $hreflangs,
+            directive: $directive,
+            cleanContent: $cleanContent,
+        );
+    }
+
+    private function collectMetadata(Crawler $crawler): PageMetadata
+    {
         $h1s = $crawler->filter('h1')->each(fn(Crawler $node) => trim($node->text('', false)));
         $h2s = $crawler->filter('h2')->each(fn(Crawler $node) => trim($node->text('', false)));
 
@@ -42,21 +65,18 @@ final class DomCrawlerHtmlParser implements HtmlParser
             ogTitle: $this->extractMetaProperty($crawler, 'og:title'),
             ogDescription: $this->extractMetaProperty($crawler, 'og:description'),
             ogImage: $this->extractMetaProperty($crawler, 'og:image'),
-            wordCount: $this->countWords($this->extractCleanContent($html)),
+            wordCount: 0, // replaced by parse() once clean content is available
             lang: $this->extractLang($crawler),
         );
     }
 
-    public function extractDirectives(string $html, Url $baseUrl): Directive
+    private function collectDirectives(Crawler $crawler, Url $effectiveBase): Directive
     {
-        $crawler = new Crawler($html);
-
         $robotsContent = $this->extractMetaContent($crawler, 'robots')
             ?? $this->extractMetaContent($crawler, 'googlebot')
             ?? '';
 
         $lower = strtolower($robotsContent);
-        $canonical = $this->extractCanonical($crawler, $this->resolveBase($crawler, $baseUrl));
 
         return new Directive(
             noindex: str_contains($lower, 'noindex'),
@@ -67,19 +87,16 @@ final class DomCrawlerHtmlParser implements HtmlParser
             maxSnippet: $this->extractMaxDirective($lower, 'max-snippet'),
             maxImagePreview: $this->extractStringDirective($lower, 'max-image-preview'),
             maxVideoPreview: $this->extractMaxDirective($lower, 'max-video-preview'),
-            canonical: $canonical,
+            canonical: $this->extractCanonical($crawler, $effectiveBase),
             source: DirectiveSource::META_TAG,
         );
     }
 
     /** @return Link[] */
-    public function extractLinks(string $html, Url $baseUrl): array
+    private function collectLinks(Crawler $crawler, Url $baseUrl, Url $effectiveBase): array
     {
-        $crawler = new Crawler($html);
-        $effectiveBase = $this->resolveBase($crawler, $baseUrl);
         $links = [];
 
-        // ── Anchors (<a href>)
         $crawler->filter('a[href]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
 
@@ -111,7 +128,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Images (<img src>)
         $crawler->filter('img[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '' || str_starts_with($src, 'data:')) {
@@ -132,7 +148,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Scripts (<script src>)
         $crawler->filter('script[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '') {
@@ -153,7 +168,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Stylesheets (<link rel="stylesheet" href>)
         $crawler->filter('link[rel="stylesheet"][href]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
             if ($href === '') {
@@ -174,7 +188,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Iframes (<iframe src>)
         $crawler->filter('iframe[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '' || str_starts_with($src, 'about:')) {
@@ -195,7 +208,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Preload (<link rel="preload" href>)
         $crawler->filter('link[rel="preload"][href]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
             if ($href === '') {
@@ -225,7 +237,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Modulepreload (<link rel="modulepreload" href>)
         $crawler->filter('link[rel="modulepreload"][href]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
             if ($href === '') {
@@ -246,7 +257,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Prefetch (<link rel="prefetch" href>)
         $crawler->filter('link[rel="prefetch"][href]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
             if ($href === '') {
@@ -267,7 +277,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Srcset images (<img srcset>, <source srcset>)
         $crawler->filter('img[srcset], source[srcset]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $srcset = trim($node->attr('srcset') ?? '');
             if ($srcset === '') {
@@ -290,7 +299,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             }
         });
 
-        // ── Picture source (<picture><source src>)
         $crawler->filter('picture > source[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '' || str_starts_with($src, 'data:')) {
@@ -311,7 +319,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Video (<video src>, <video><source src>)
         $crawler->filter('video[src], video > source[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '') {
@@ -332,7 +339,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Video poster (<video poster>)
         $crawler->filter('video[poster]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $poster = trim($node->attr('poster') ?? '');
             if ($poster === '' || str_starts_with($poster, 'data:')) {
@@ -353,7 +359,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
             );
         });
 
-        // ── Audio (<audio src>, <audio><source src>)
         $crawler->filter('audio[src], audio > source[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '') {
@@ -378,9 +383,6 @@ final class DomCrawlerHtmlParser implements HtmlParser
     }
 
     /**
-     * Remove duplicate links by URL + type combination.
-     * Keeps the first occurrence (which typically has anchor text for images).
-     *
      * @param Link[] $links
      * @return Link[]
      */
@@ -421,10 +423,8 @@ final class DomCrawlerHtmlParser implements HtmlParser
     }
 
     /** @return Hreflang[] */
-    public function extractHreflangs(string $html, Url $baseUrl): array
+    private function collectHreflangs(Crawler $crawler, Url $effectiveBase): array
     {
-        $crawler = new Crawler($html);
-        $effectiveBase = $this->resolveBase($crawler, $baseUrl);
         $hreflangs = [];
 
         $crawler->filter('link[rel="alternate"][hreflang]')->each(function (Crawler $node) use ($effectiveBase, &$hreflangs) {
@@ -453,10 +453,8 @@ final class DomCrawlerHtmlParser implements HtmlParser
         return $hreflangs;
     }
 
-    public function extractCleanContent(string $html): string
+    private function collectCleanContent(Crawler $crawler): string
     {
-        $crawler = new Crawler($html);
-
         $crawler->filter('script, style, nav, header, footer, aside, noscript, iframe')->each(
             function (Crawler $node): void {
                 $domNode = $node->getNode(0);

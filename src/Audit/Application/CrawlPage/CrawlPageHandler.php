@@ -97,17 +97,17 @@ final readonly class CrawlPageHandler
 
     private function enrichHtmlPage(Page $page, string $html, Url $pageUrl): void
     {
-        $page->enrichWithMetadata($this->htmlParser->extractMetadata($html));
-        $page->enrichWithLinks($this->htmlParser->extractLinks($html, $pageUrl));
-        $page->enrichWithHreflangs($this->htmlParser->extractHreflangs($html, $pageUrl));
+        $parsed = $this->htmlParser->parse($html, $pageUrl);
 
-        $htmlDirective = $this->htmlParser->extractDirectives($html, $pageUrl);
+        $page->enrichWithMetadata($parsed->metadata);
+        $page->enrichWithLinks($parsed->links);
+        $page->enrichWithHreflangs($parsed->hreflangs);
+
         $headerDirective = $this->extractDirectivesFromHeaders($page);
-        $page->enrichWithDirectives(Directive::merge($htmlDirective, $headerDirective));
+        $page->enrichWithDirectives(Directive::merge($parsed->directive, $headerDirective));
 
-        $cleanContent = $this->htmlParser->extractCleanContent($html);
-        if ($cleanContent !== '') {
-            $page->enrichWithFingerprint(Fingerprint::fromContent($cleanContent));
+        if ($parsed->cleanContent !== '') {
+            $page->enrichWithFingerprint(Fingerprint::fromContent($parsed->cleanContent));
         }
     }
 
