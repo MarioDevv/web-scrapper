@@ -429,7 +429,7 @@
                 class="border-b border-line
                        {{ $isExt ? 'row-hover opacity-70' : 'cursor-pointer row-hover' }}
                        {{ $isSel ? 'row-selected' : '' }}
-                       {{ $isNew ? 'anim-fade' : '' }}">
+                       {{ $isNew ? 'row-new' : '' }}">
 
                 {{-- URL --}}
                 <td class="px-3 py-[6px] truncate max-w-0">

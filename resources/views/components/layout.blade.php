@@ -182,6 +182,11 @@
             96%           { opacity: 0.85; }
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes row-new {
+            0%   { background: rgba(166,226,46,0.22); box-shadow: inset 2px 0 0 var(--c-accent); }
+            60%  { background: rgba(166,226,46,0.07); box-shadow: inset 2px 0 0 rgba(166,226,46,0.45); }
+            100% { background: transparent;           box-shadow: inset 2px 0 0 transparent; }
+        }
 
         /* ── Animation utilities ── */
         .cursor-blink::after {
@@ -234,6 +239,7 @@
         .row-hover:hover { background: var(--c-row-hover); }
         .row-selected    { background: var(--c-row-sel) !important; }
         tbody tr         { transition: background 0.08s ease; }
+        .row-new         { animation: row-new 900ms ease-out forwards; }
 
         /* ── Badge (terminal-tag style) ── */
         .badge {
@@ -273,6 +279,7 @@
             .cursor-blink::after { animation: none; opacity: 1; }
             .ellipsis::after     { animation: none; clip-path: none; }
             .progress-fill.is-active::after { animation: none; opacity: 0; }
+            .row-new             { animation: none; }
         }
     </style>
     @livewireStyles
