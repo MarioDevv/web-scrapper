@@ -26,7 +26,7 @@
     {{-- ── TRIGGER BUTTON ─────────────────────────────────────── --}}
     @php $hasUpdate = in_array($state, ['available', 'ready']); @endphp
     <button @click="open = !open; if(open && $wire.state === 'idle') { $wire.checkForUpdates() }"
-            class="h-9 w-9 bg-app2 border flex items-center justify-center transition-colors relative font-mono text-[13px] leading-none
+            class="h-9 w-9 bg-app2 border flex items-center justify-center transition-all duration-100 active:scale-[0.95] relative font-mono text-[13px] leading-none
                    {{ $hasUpdate
                         ? 'border-line3 c-accent'
                         : 'border-line text-tertiary hover:text-secondary hover:border-line2' }}"
@@ -74,7 +74,7 @@
                         </div>
                         <div class="text-[10px] text-muted uppercase tracking-[0.14em]">no updates available</div>
                         <button wire:click="checkForUpdates"
-                                class="self-start mt-1 text-[10px] uppercase tracking-[0.14em] text-tertiary hover:c-accent transition-colors flex items-center gap-1">
+                                class="self-start mt-1 text-[10px] uppercase tracking-[0.14em] text-tertiary hover:c-accent transition-all duration-100 active:scale-[0.97] flex items-center gap-1">
                             <span>↻</span>
                             <span>check again</span>
                         </button>
@@ -101,13 +101,13 @@
 
                         <div class="flex gap-2">
                             <button wire:click="downloadUpdate"
-                                    class="flex-1 h-8 text-[10px] uppercase tracking-[0.14em] font-semibold flex items-center justify-center gap-1.5 transition-[filter,box-shadow] hover:brightness-110"
+                                    class="flex-1 h-8 text-[10px] uppercase tracking-[0.14em] font-semibold flex items-center justify-center gap-1.5 transition-all duration-100 hover:brightness-110 active:scale-[0.97] active:brightness-90"
                                     style="background: var(--c-accent); color: #0a0c0a; box-shadow: 0 0 12px var(--c-accent-glow);">
                                 <span>↓</span>
                                 <span>download</span>
                             </button>
                             <button wire:click="dismiss" @click="open = false"
-                                    class="h-8 px-3 text-[10px] uppercase tracking-[0.14em] text-tertiary bg-app2 border border-line hover:border-line2 hover:text-secondary transition-colors">
+                                    class="h-8 px-3 text-[10px] uppercase tracking-[0.14em] text-tertiary bg-app2 border border-line hover:border-line2 hover:text-secondary transition-all duration-100 active:scale-[0.97]">
                                 later
                             </button>
                         </div>
@@ -142,13 +142,13 @@
                         </div>
                         <div class="flex gap-2 w-full mt-1">
                             <button wire:click="installUpdate"
-                                    class="flex-1 h-8 text-[10px] uppercase tracking-[0.14em] font-semibold flex items-center justify-center gap-1.5 transition-[filter,box-shadow] hover:brightness-110"
+                                    class="flex-1 h-8 text-[10px] uppercase tracking-[0.14em] font-semibold flex items-center justify-center gap-1.5 transition-all duration-100 hover:brightness-110 active:scale-[0.97] active:brightness-90"
                                     style="background: var(--c-accent); color: #0a0c0a; box-shadow: 0 0 12px var(--c-accent-glow);">
                                 <span>▶</span>
                                 <span>restart &amp; update</span>
                             </button>
                             <button wire:click="dismiss" @click="open = false"
-                                    class="h-8 px-3 text-[10px] uppercase tracking-[0.14em] text-tertiary bg-app2 border border-line hover:border-line2 hover:text-secondary transition-colors">
+                                    class="h-8 px-3 text-[10px] uppercase tracking-[0.14em] text-tertiary bg-app2 border border-line hover:border-line2 hover:text-secondary transition-all duration-100 active:scale-[0.97]">
                                 later
                             </button>
                         </div>
@@ -168,7 +168,7 @@
                         </div>
                         @endif
                         <button wire:click="checkForUpdates"
-                                class="self-start mt-1 text-[10px] uppercase tracking-[0.14em] text-tertiary hover:c-accent transition-colors flex items-center gap-1">
+                                class="self-start mt-1 text-[10px] uppercase tracking-[0.14em] text-tertiary hover:c-accent transition-all duration-100 active:scale-[0.97] flex items-center gap-1">
                             <span>↻</span>
                             <span>retry</span>
                         </button>

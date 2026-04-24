@@ -96,7 +96,7 @@
             <div x-data="{ open: false }" class="relative">
                 <button @click="open = !open"
                         :disabled="@js($crawling || $paused)"
-                        class="h-9 px-3 bg-app2 border flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.12em] transition-colors
+                        class="h-9 px-3 bg-app2 border flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.12em] transition-all duration-100 active:scale-[0.95] disabled:active:scale-100
                                {{ $hasAdvanced ? 'border-line3 c-accent' : 'border-line text-tertiary hover:text-secondary hover:border-line2' }}
                                {{ ($crawling || $paused) ? 'opacity-50 cursor-not-allowed' : '' }}"
                         :class="{ 'border-line3 c-accent': open }"
@@ -195,13 +195,13 @@
             {{-- actions --}}
             @if($crawling)
                 <button wire:click="pauseCrawl"
-                        class="h-9 px-3 text-[11px] font-mono uppercase tracking-[0.14em] bg-app2 border border-line text-secondary hover:text-primary hover:border-line2 transition-colors flex items-center gap-1.5"
+                        class="h-9 px-3 text-[11px] font-mono uppercase tracking-[0.14em] bg-app2 border border-line text-secondary hover:text-primary hover:border-line2 transition-all duration-100 active:scale-[0.97] flex items-center gap-1.5"
                         title="Pause">
                     <span class="c-warn text-[10px]">❚❚</span>
                     <span>pause</span>
                 </button>
                 <button wire:click="cancelCrawl"
-                        class="h-9 px-3 text-[11px] font-mono uppercase tracking-[0.14em] bg-app2 border c-err hover:bg-err-s transition-colors flex items-center gap-1.5"
+                        class="h-9 px-3 text-[11px] font-mono uppercase tracking-[0.14em] bg-app2 border c-err hover:bg-err-s transition-all duration-100 active:scale-[0.97] flex items-center gap-1.5"
                         style="border-color: var(--c-err);">
                     <span>■</span>
                     <span>stop</span>
@@ -209,13 +209,13 @@
 
             @elseif($paused)
                 <button wire:click="resumeCrawl"
-                        class="h-9 px-4 text-[11px] font-mono uppercase tracking-[0.14em] font-semibold flex items-center gap-1.5 transition-[filter,box-shadow] hover:brightness-110"
+                        class="h-9 px-4 text-[11px] font-mono uppercase tracking-[0.14em] font-semibold flex items-center gap-1.5 transition-all duration-100 hover:brightness-110 active:scale-[0.97] active:brightness-90"
                         style="background: var(--c-accent); color: #0a0c0a; box-shadow: 0 0 16px var(--c-accent-glow);">
                     <span>▶</span>
                     <span>resume</span>
                 </button>
                 <button wire:click="cancelCrawl"
-                        class="h-9 px-3 text-[11px] font-mono uppercase tracking-[0.14em] bg-app2 border c-err hover:bg-err-s transition-colors flex items-center gap-1.5"
+                        class="h-9 px-3 text-[11px] font-mono uppercase tracking-[0.14em] bg-app2 border c-err hover:bg-err-s transition-all duration-100 active:scale-[0.97] flex items-center gap-1.5"
                         style="border-color: var(--c-err);">
                     <span>■</span>
                     <span>stop</span>
@@ -225,7 +225,7 @@
                 <button wire:click="startCrawl"
                         wire:loading.attr="disabled"
                         wire:target="startCrawl"
-                        class="group h-9 px-5 text-[11px] font-mono uppercase tracking-[0.14em] font-semibold flex items-center gap-2 transition-[filter,box-shadow,opacity] hover:brightness-110 disabled:opacity-60"
+                        class="group h-9 px-5 text-[11px] font-mono uppercase tracking-[0.14em] font-semibold flex items-center gap-2 transition-all duration-100 hover:brightness-110 active:scale-[0.97] active:brightness-90 disabled:opacity-60 disabled:active:scale-100"
                         style="background: var(--c-accent); color: #0a0c0a; box-shadow: 0 0 16px var(--c-accent-glow);">
                     <span class="transition-transform group-hover:translate-x-0.5">▶</span>
                     <span wire:loading.remove wire:target="startCrawl">exec</span>
