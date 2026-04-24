@@ -14,9 +14,11 @@ use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\PageFetcher;
+use SeoSpider\Audit\Domain\Model\FrontierUrlDiscoverer;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
 use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
+use SeoSpider\Audit\Domain\Model\UrlDiscoverer;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteExternalLinkRepository;
 use SeoSpider\Audit\Infrastructure\Robots\RobotsTxtPolicy;
 use SeoSpider\Shared\Domain\Bus\EventBus;
@@ -104,12 +106,16 @@ final class AuditServiceProvider extends ServiceProvider
             DuplicateAnalyzer::class,
         ], 'analyzers');
 
+        $this->app->singleton(UrlDiscoverer::class, fn($app) => new FrontierUrlDiscoverer(
+            $app->make(Frontier::class),
+        ));
+
         $this->app->singleton(CrawlPageHandler::class, fn($app) => new CrawlPageHandler(
             auditRepository: $app->make(AuditRepository::class),
             pageRepository: $app->make(PageRepository::class),
             httpClient: $app->make(HttpClient::class),
             htmlParser: $app->make(HtmlParser::class),
-            frontier: $app->make(Frontier::class),
+            urlDiscoverer: $app->make(UrlDiscoverer::class),
             eventBus: $app->make(EventBus::class),
             analyzers: iterator_to_array($app->tagged('analyzers')),
         ));

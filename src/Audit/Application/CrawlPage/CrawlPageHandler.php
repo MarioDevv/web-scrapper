@@ -8,8 +8,6 @@ use SeoSpider\Audit\Domain\Model\Analyzer\Analyzer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Audit\Domain\Model\DiscoverySource;
-use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Audit\Domain\Model\HttpRequestFailed;
@@ -23,6 +21,7 @@ use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
 use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Audit\Domain\Model\UrlDiscoverer;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 use DateTimeImmutable;
 
@@ -34,7 +33,7 @@ final readonly class CrawlPageHandler
         private PageRepository $pageRepository,
         private HttpClient $httpClient,
         private HtmlParser $htmlParser,
-        private Frontier $frontier,
+        private UrlDiscoverer $urlDiscoverer,
         private EventBus $eventBus,
         private array $analyzers = [],
     ) {}
@@ -48,8 +47,6 @@ final readonly class CrawlPageHandler
         if ($audit === null || !$audit->canAcceptMorePages()) {
             return;
         }
-
-        $this->frontier->markVisited($auditId, $url);
 
         try {
             $result = $this->httpClient->followRedirects(
@@ -93,7 +90,12 @@ final readonly class CrawlPageHandler
 
         if ($page->isHtml() && $response->body() !== null) {
             $this->enrichHtmlPage($page, $response->body(), $url);
-            $newUrls = $this->discoverUrls($page, $auditId, $command->depth, $audit->configuration());
+            $newUrls = $this->urlDiscoverer->discoverFrom(
+                $page,
+                $auditId,
+                $command->depth,
+                $audit->configuration(),
+            );
         } else {
             $newUrls = 0;
         }
@@ -156,35 +158,6 @@ final readonly class CrawlPageHandler
             noimageindex: str_contains($lower, 'noimageindex'),
             source: DirectiveSource::HTTP_HEADER,
         );
-    }
-
-    private function discoverUrls(Page $page, AuditId $auditId, int $currentDepth, AuditConfiguration $config): int
-    {
-        $nextDepth = $currentDepth + 1;
-
-        if ($nextDepth > $config->maxDepth) {
-            return 0;
-        }
-
-        $newUrls = 0;
-        foreach ($page->internalLinks() as $link) {
-            // Always enqueue followable anchors
-            $isEnqueuableAnchor = $link->isAnchor() && $link->isFollowable();
-
-            // Optionally enqueue resources (CSS, JS, images, etc.)
-            $isEnqueuableResource = $config->crawlResources && $link->isResource();
-
-            if (!$isEnqueuableAnchor && !$isEnqueuableResource) {
-                continue;
-            }
-
-            $enqueued = $this->frontier->enqueue($auditId, $link->targetUrl(), $nextDepth, DiscoverySource::LINK);
-            if ($enqueued) {
-                $newUrls++;
-            }
-        }
-
-        return $newUrls;
     }
 
     private function runAnalyzers(Page $page): void

@@ -21,6 +21,7 @@ use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
 use SeoSpider\Audit\Domain\Model\Page\PageFailed;
 use SeoSpider\Audit\Domain\Model\Page\PageMetadata;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
+use SeoSpider\Audit\Domain\Model\FrontierUrlDiscoverer;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
@@ -54,7 +55,7 @@ final class CrawlPageHandlerTest extends TestCase
             pageRepository: $this->pageRepository,
             httpClient: $this->httpClient,
             htmlParser: $this->htmlParser,
-            frontier: $this->frontier,
+            urlDiscoverer: new FrontierUrlDiscoverer($this->frontier),
             eventBus: $this->eventBus,
             analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer()],
         );
