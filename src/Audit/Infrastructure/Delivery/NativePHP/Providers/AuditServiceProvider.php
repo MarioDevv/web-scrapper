@@ -13,6 +13,7 @@ use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
+use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteExternalLinkRepository;
 use SeoSpider\Audit\Infrastructure\Robots\RobotsTxtPolicy;
 use SeoSpider\Shared\Domain\Bus\EventBus;
@@ -68,7 +69,12 @@ final class AuditServiceProvider extends ServiceProvider
 
         $this->app->singleton(ExternalLinkRepository::class, fn($app) => new SqliteExternalLinkRepository($app->make(PDO::class)));
 
-        $this->app->singleton(Frontier::class, fn($app) => new SqliteFrontier($app->make(PDO::class)));
+        $this->app->singleton(UrlCanonicalizer::class, fn() => new UrlCanonicalizer());
+
+        $this->app->singleton(Frontier::class, fn($app) => new SqliteFrontier(
+            $app->make(PDO::class),
+            $app->make(UrlCanonicalizer::class),
+        ));
 
         $this->app->singleton(HttpClient::class, fn() => new SymfonyHttpClient());
         $this->app->singleton(HtmlParser::class, fn() => new DomCrawlerHtmlParser());

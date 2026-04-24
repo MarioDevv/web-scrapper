@@ -11,28 +11,6 @@ use Uri\UriComparisonMode;
 
 final readonly class Url implements Stringable
 {
-    /**
-     * Query parameter keys that identify a session/campaign rather than the
-     * underlying resource. Stripped during normalization so that the same
-     * canonical URL is not crawled once per tracking variant.
-     */
-    private const array TRACKING_PARAMS = [
-        'fbclid',
-        'gclid',
-        'gclsrc',
-        'dclid',
-        'msclkid',
-        'yclid',
-        'mc_cid',
-        'mc_eid',
-        '_ga',
-        '_gl',
-        'igshid',
-        'mkt_tok',
-    ];
-
-    private const array TRACKING_PARAM_PREFIXES = ['utm_'];
-
     private function __construct(private PhpUri $uri)
     {
     }
@@ -150,56 +128,9 @@ final readonly class Url implements Stringable
     }
 
     #[\NoDiscard('Url is immutable — use the returned instance')]
-    public function normalized(): self
+    public function withPort(?int $port): self
     {
-        $uri = $this->uri->withFragment(null);
-
-        $scheme = strtolower($uri->getScheme() ?? '');
-        $port = $uri->getPort();
-        if (($scheme === 'http' && $port === 80) || ($scheme === 'https' && $port === 443)) {
-            $uri = $uri->withPort(null);
-        }
-
-        if ($uri->getPath() === '' && ($uri->getHost() ?? '') !== '') {
-            $uri = $uri->withPath('/');
-        }
-
-        $query = $uri->getQuery();
-        if ($query !== null && $query !== '') {
-            $filtered = self::stripTrackingParams($query);
-            $uri = $uri->withQuery($filtered === '' ? null : $filtered);
-        }
-
-        return new self($uri);
-    }
-
-    private static function stripTrackingParams(string $query): string
-    {
-        $kept = [];
-
-        foreach (explode('&', $query) as $pair) {
-            if ($pair === '') {
-                continue;
-            }
-
-            $eq = strpos($pair, '=');
-            $rawKey = $eq === false ? $pair : substr($pair, 0, $eq);
-            $key = strtolower(rawurldecode($rawKey));
-
-            if (in_array($key, self::TRACKING_PARAMS, true)) {
-                continue;
-            }
-
-            foreach (self::TRACKING_PARAM_PREFIXES as $prefix) {
-                if (str_starts_with($key, $prefix)) {
-                    continue 2;
-                }
-            }
-
-            $kept[] = $pair;
-        }
-
-        return implode('&', $kept);
+        return new self($this->uri->withPort($port));
     }
 
     public function toString(): string

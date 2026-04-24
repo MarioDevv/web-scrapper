@@ -10,6 +10,7 @@ use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
 use SeoSpider\Audit\Domain\Model\Page\InvalidUrl;
+use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
@@ -24,7 +25,7 @@ final class StartAuditHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->auditRepository = new InMemoryAuditRepository();
-        $this->frontier = new InMemoryFrontier();
+        $this->frontier = new InMemoryFrontier(new UrlCanonicalizer());
         $this->eventBus = new InMemoryEventBus();
 
         $this->handler = new StartAuditHandler(

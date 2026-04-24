@@ -7,11 +7,19 @@ namespace SeoSpider\Tests\Audit\Domain\Model;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 
-final class UrlTest extends TestCase
+final class UrlCanonicalizerTest extends TestCase
 {
+    private UrlCanonicalizer $canonicalizer;
+
+    protected function setUp(): void
+    {
+        $this->canonicalizer = new UrlCanonicalizer();
+    }
+
     /** @return iterable<string, array{string, string}> */
-    public static function normalizationCases(): iterable
+    public static function canonicalizationCases(): iterable
     {
         yield 'lowercases scheme and host' => [
             'HTTPS://Example.COM/Path',
@@ -74,17 +82,37 @@ final class UrlTest extends TestCase
         ];
     }
 
-    #[DataProvider('normalizationCases')]
-    public function test_normalized(string $input, string $expected): void
+    #[DataProvider('canonicalizationCases')]
+    public function test_canonicalize(string $input, string $expected): void
     {
-        $this->assertSame($expected, Url::fromString($input)->normalized()->toString());
+        $this->assertSame(
+            $expected,
+            $this->canonicalizer->canonicalize(Url::fromString($input))->toString(),
+        );
     }
 
-    public function test_normalized_is_idempotent(): void
+    public function test_canonicalize_is_idempotent(): void
     {
-        $once = Url::fromString('https://Example.com:443/a?utm_source=x&b=1#frag')->normalized();
-        $twice = $once->normalized();
+        $once = $this->canonicalizer->canonicalize(
+            Url::fromString('https://Example.com:443/a?utm_source=x&b=1#frag'),
+        );
+        $twice = $this->canonicalizer->canonicalize($once);
 
         $this->assertSame($once->toString(), $twice->toString());
+    }
+
+    public function test_policy_can_be_customized_via_constructor(): void
+    {
+        $canonicalizer = new UrlCanonicalizer(
+            trackingParams: ['ref'],
+            trackingParamPrefixes: [],
+        );
+
+        $input = Url::fromString('https://example.com/page?ref=x&utm_source=y');
+
+        $this->assertSame(
+            'https://example.com/page?utm_source=y',
+            $canonicalizer->canonicalize($input)->toString(),
+        );
     }
 }

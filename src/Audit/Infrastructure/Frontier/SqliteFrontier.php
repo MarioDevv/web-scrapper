@@ -9,11 +9,14 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\FrontierEntry;
 use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 
 final readonly class SqliteFrontier implements Frontier
 {
-    public function __construct(private PDO $pdo)
-    {
+    public function __construct(
+        private PDO $pdo,
+        private UrlCanonicalizer $canonicalizer,
+    ) {
     }
 
     public function enqueue(AuditId $auditId, Url $url, int $depth): bool
@@ -25,7 +28,7 @@ final readonly class SqliteFrontier implements Frontier
 
         $stmt->execute([
             'audit_id' => $auditId->value(),
-            'url' => $url->normalized()->toString(),
+            'url' => $this->canonicalizer->canonicalize($url)->toString(),
             'depth' => $depth,
             'status' => 'pending',
         ]);
@@ -63,7 +66,7 @@ final readonly class SqliteFrontier implements Frontier
 
     public function markVisited(AuditId $auditId, Url $url): void
     {
-        $normalized = $url->normalized()->toString();
+        $canonical = $this->canonicalizer->canonicalize($url)->toString();
 
         $stmt = $this->pdo->prepare('
             UPDATE frontier SET status = :status
@@ -73,7 +76,7 @@ final readonly class SqliteFrontier implements Frontier
         $stmt->execute([
             'status' => 'visited',
             'audit_id' => $auditId->value(),
-            'url' => $normalized,
+            'url' => $canonical,
         ]);
 
         if ($stmt->rowCount() === 0) {
@@ -82,7 +85,7 @@ final readonly class SqliteFrontier implements Frontier
                 VALUES (:audit_id, :url, 0, :status)
             ')->execute([
                 'audit_id' => $auditId->value(),
-                'url' => $normalized,
+                'url' => $canonical,
                 'status' => 'visited',
             ]);
         }
@@ -96,7 +99,7 @@ final readonly class SqliteFrontier implements Frontier
 
         $stmt->execute([
             'audit_id' => $auditId->value(),
-            'url' => $url->normalized()->toString(),
+            'url' => $this->canonicalizer->canonicalize($url)->toString(),
         ]);
 
         return $stmt->fetch() !== false;
