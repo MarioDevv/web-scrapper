@@ -8,6 +8,7 @@ use SeoSpider\Audit\Application\CrawlPage\CrawlPageCommand;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
 use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;
@@ -20,6 +21,7 @@ final readonly class CrawlerEngine
         private CrawlPageHandler $crawlPageHandler,
         private RobotsPolicy $robotsPolicy,
         private SitemapIngester $sitemapIngester,
+        private ExternalLinkVerifier $externalLinkVerifier,
     ) {
     }
 
@@ -59,6 +61,7 @@ final readonly class CrawlerEngine
 
             $entry = $this->frontier->dequeue($id);
             if ($entry === null) {
+                $this->externalLinkVerifier->verify($id, $audit->configuration()->customUserAgent);
                 $audit->complete();
                 $this->auditRepository->save($audit);
                 break;
