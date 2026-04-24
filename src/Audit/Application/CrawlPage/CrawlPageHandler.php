@@ -20,6 +20,8 @@ use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageFailed;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Audit\Domain\Model\Page\PageResponse;
+use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 use DateTimeImmutable;
@@ -55,7 +57,28 @@ final readonly class CrawlPageHandler
                 $audit->configuration()->customUserAgent,
             );
         } catch (HttpRequestFailed $e) {
-            $this->handleFailure($auditId, $url, $e->getMessage());
+            $this->handleFetchFailure($command, $e->getMessage());
+            return;
+        }
+
+        $this->processFetchedPage($command, $result['response'], $result['chain']);
+    }
+
+    /**
+     * Post-fetch pipeline. Called by __invoke after a sequential fetch, and
+     * by the concurrent engine path after a parallel batch fetch, so the
+     * processing stays identical regardless of how the bytes arrived.
+     */
+    public function processFetchedPage(
+        CrawlPageCommand $command,
+        PageResponse $response,
+        RedirectChain $chain,
+    ): void {
+        $auditId = new AuditId($command->auditId);
+        $url = Url::fromString($command->url);
+
+        $audit = $this->auditRepository->findById($auditId);
+        if ($audit === null || !$audit->canAcceptMorePages()) {
             return;
         }
 
@@ -63,13 +86,13 @@ final readonly class CrawlPageHandler
             id: $this->pageRepository->nextId(),
             auditId: $auditId,
             url: $url,
-            response: $result['response'],
-            redirectChain: $result['chain'],
+            response: $response,
+            redirectChain: $chain,
             crawlDepth: $command->depth,
         );
 
-        if ($page->isHtml() && $result['response']->body() !== null) {
-            $this->enrichHtmlPage($page, $result['response']->body(), $url);
+        if ($page->isHtml() && $response->body() !== null) {
+            $this->enrichHtmlPage($page, $response->body(), $url);
             $newUrls = $this->discoverUrls($page, $auditId, $command->depth, $audit->configuration());
         } else {
             $newUrls = 0;
@@ -90,6 +113,14 @@ final readonly class CrawlPageHandler
             ...$page->pullDomainEvents(),
             ...$audit->pullDomainEvents(),
         );
+    }
+
+    public function handleFetchFailure(CrawlPageCommand $command, string $reason): void
+    {
+        $auditId = new AuditId($command->auditId);
+        $url = Url::fromString($command->url);
+
+        $this->handleFailure($auditId, $url, $reason);
     }
 
     private function enrichHtmlPage(Page $page, string $html, Url $pageUrl): void
