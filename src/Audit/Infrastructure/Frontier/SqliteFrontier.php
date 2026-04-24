@@ -25,7 +25,7 @@ final readonly class SqliteFrontier implements Frontier
 
         $stmt->execute([
             'audit_id' => $auditId->value(),
-            'url' => $url->toString(),
+            'url' => $url->normalized()->toString(),
             'depth' => $depth,
             'status' => 'pending',
         ]);
@@ -63,6 +63,8 @@ final readonly class SqliteFrontier implements Frontier
 
     public function markVisited(AuditId $auditId, Url $url): void
     {
+        $normalized = $url->normalized()->toString();
+
         $stmt = $this->pdo->prepare('
             UPDATE frontier SET status = :status
             WHERE audit_id = :audit_id AND url = :url
@@ -71,7 +73,7 @@ final readonly class SqliteFrontier implements Frontier
         $stmt->execute([
             'status' => 'visited',
             'audit_id' => $auditId->value(),
-            'url' => $url->toString(),
+            'url' => $normalized,
         ]);
 
         if ($stmt->rowCount() === 0) {
@@ -80,7 +82,7 @@ final readonly class SqliteFrontier implements Frontier
                 VALUES (:audit_id, :url, 0, :status)
             ')->execute([
                 'audit_id' => $auditId->value(),
-                'url' => $url->toString(),
+                'url' => $normalized,
                 'status' => 'visited',
             ]);
         }
@@ -94,7 +96,7 @@ final readonly class SqliteFrontier implements Frontier
 
         $stmt->execute([
             'audit_id' => $auditId->value(),
-            'url' => $url->toString(),
+            'url' => $url->normalized()->toString(),
         ]);
 
         return $stmt->fetch() !== false;

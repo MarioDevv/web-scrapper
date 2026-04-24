@@ -69,7 +69,7 @@ final class StartAuditHandlerTest extends TestCase
         $this->assertSame(1, $this->frontier->pendingCount($auditId));
 
         $entry = $this->frontier->dequeue($auditId);
-        $this->assertSame('https://example.com', $entry->url->toString());
+        $this->assertSame('https://example.com/', $entry->url->toString());
         $this->assertSame(0, $entry->depth);
     }
 
