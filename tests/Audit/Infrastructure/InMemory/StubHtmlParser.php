@@ -69,7 +69,7 @@ final class StubHtmlParser implements HtmlParser
         );
     }
 
-    public function extractDirectives(string $html): Directive
+    public function extractDirectives(string $html, Url $baseUrl): Directive
     {
         return $this->directives ?? new Directive();
     }
@@ -81,7 +81,7 @@ final class StubHtmlParser implements HtmlParser
     }
 
     /** @return Hreflang[] */
-    public function extractHreflangs(string $html): array
+    public function extractHreflangs(string $html, Url $baseUrl): array
     {
         return $this->hreflangs;
     }

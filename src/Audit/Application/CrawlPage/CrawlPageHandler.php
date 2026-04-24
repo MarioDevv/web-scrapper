@@ -99,9 +99,9 @@ final readonly class CrawlPageHandler
     {
         $page->enrichWithMetadata($this->htmlParser->extractMetadata($html));
         $page->enrichWithLinks($this->htmlParser->extractLinks($html, $pageUrl));
-        $page->enrichWithHreflangs($this->htmlParser->extractHreflangs($html));
+        $page->enrichWithHreflangs($this->htmlParser->extractHreflangs($html, $pageUrl));
 
-        $htmlDirective = $this->htmlParser->extractDirectives($html);
+        $htmlDirective = $this->htmlParser->extractDirectives($html, $pageUrl);
         $headerDirective = $this->extractDirectivesFromHeaders($page);
         $page->enrichWithDirectives(Directive::merge($htmlDirective, $headerDirective));
 

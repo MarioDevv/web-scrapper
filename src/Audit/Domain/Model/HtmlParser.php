@@ -13,13 +13,13 @@ interface HtmlParser
 {
     public function extractMetadata(string $html): PageMetadata;
 
-    public function extractDirectives(string $html): Directive;
+    public function extractDirectives(string $html, Url $baseUrl): Directive;
 
     /** @return Link[] */
     public function extractLinks(string $html, Url $baseUrl): array;
 
     /** @return Hreflang[] */
-    public function extractHreflangs(string $html): array;
+    public function extractHreflangs(string $html, Url $baseUrl): array;
 
     public function extractCleanContent(string $html): string;
 }
