@@ -8,6 +8,7 @@ use SeoSpider\Audit\Application\AuditNotFound;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Page\IssueRuleCatalog;
+use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 
 /**
@@ -18,13 +19,6 @@ use SeoSpider\Audit\Domain\Model\Page\PageRepository;
  */
 final readonly class GetAuditIssueReportHandler
 {
-    private const array SEVERITY_ORDER = [
-        'error'   => 0,
-        'warning' => 1,
-        'notice'  => 2,
-        'info'    => 3,
-    ];
-
     public function __construct(
         private AuditRepository $auditRepository,
         private PageRepository $pageRepository,
@@ -101,7 +95,7 @@ final readonly class GetAuditIssueReportHandler
         }
 
         usort($groups, static function (IssueGroup $a, IssueGroup $b): int {
-            $byRank = (self::SEVERITY_ORDER[$a->severity] ?? 99) <=> (self::SEVERITY_ORDER[$b->severity] ?? 99);
+            $byRank = IssueSeverity::from($a->severity)->rank() <=> IssueSeverity::from($b->severity)->rank();
             if ($byRank !== 0) {
                 return $byRank;
             }

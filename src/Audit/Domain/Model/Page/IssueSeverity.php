@@ -15,4 +15,14 @@ enum IssueSeverity: string
     {
         return $this === self::ERROR;
     }
+
+    public function rank(): int
+    {
+        return match ($this) {
+            self::ERROR   => 0,
+            self::WARNING => 1,
+            self::NOTICE  => 2,
+            self::INFO    => 3,
+        };
+    }
 }
