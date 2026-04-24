@@ -7,13 +7,14 @@ namespace SeoSpider\Tests\Audit\Infrastructure\Frontier;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 
 final class InMemoryFrontierTest extends TestCase
 {
     public function test_dedupes_urls_that_normalize_to_the_same_key(): void
     {
-        $frontier = new InMemoryFrontier();
+        $frontier = new InMemoryFrontier(new UrlCanonicalizer());
         $auditId = AuditId::generate();
 
         $first = $frontier->enqueue($auditId, Url::fromString('https://example.com/page'), 1);
@@ -32,7 +33,7 @@ final class InMemoryFrontierTest extends TestCase
 
     public function test_stores_normalized_url_in_the_entry(): void
     {
-        $frontier = new InMemoryFrontier();
+        $frontier = new InMemoryFrontier(new UrlCanonicalizer());
         $auditId = AuditId::generate();
 
         $frontier->enqueue($auditId, Url::fromString('HTTPS://Example.COM:443/path?fbclid=abc#frag'), 0);

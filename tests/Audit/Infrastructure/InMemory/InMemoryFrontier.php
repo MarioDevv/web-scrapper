@@ -8,6 +8,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\FrontierEntry;
 use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 
 final class InMemoryFrontier implements Frontier
 {
@@ -17,17 +18,21 @@ final class InMemoryFrontier implements Frontier
     /** @var array<string, array<string, true>> */
     private array $known = [];
 
+    public function __construct(private readonly UrlCanonicalizer $canonicalizer)
+    {
+    }
+
     public function enqueue(AuditId $auditId, Url $url, int $depth): bool
     {
         $key = $auditId->value();
-        $normalized = $url->normalized();
-        $urlString = $normalized->toString();
+        $canonical = $this->canonicalizer->canonicalize($url);
+        $urlString = $canonical->toString();
 
-        if ($this->isKnown($auditId, $normalized)) {
+        if ($this->isKnown($auditId, $canonical)) {
             return false;
         }
 
-        $this->queues[$key][] = new FrontierEntry($normalized, $depth);
+        $this->queues[$key][] = new FrontierEntry($canonical, $depth);
         $this->known[$key][$urlString] = true;
 
         return true;
@@ -46,12 +51,12 @@ final class InMemoryFrontier implements Frontier
 
     public function markVisited(AuditId $auditId, Url $url): void
     {
-        $this->known[$auditId->value()][$url->normalized()->toString()] = true;
+        $this->known[$auditId->value()][$this->canonicalizer->canonicalize($url)->toString()] = true;
     }
 
     public function isKnown(AuditId $auditId, Url $url): bool
     {
-        return isset($this->known[$auditId->value()][$url->normalized()->toString()]);
+        return isset($this->known[$auditId->value()][$this->canonicalizer->canonicalize($url)->toString()]);
     }
 
     public function isEmpty(AuditId $auditId): bool

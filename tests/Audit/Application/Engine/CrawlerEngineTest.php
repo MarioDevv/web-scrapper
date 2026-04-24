@@ -19,6 +19,7 @@ use SeoSpider\Audit\Domain\Model\Page\Link;
 use SeoSpider\Audit\Domain\Model\Page\LinkRelation;
 use SeoSpider\Audit\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryExternalLinkRepository;
@@ -44,7 +45,7 @@ final class CrawlerEngineTest extends TestCase
     {
         $this->auditRepository = new InMemoryAuditRepository();
         $this->pageRepository = new InMemoryPageRepository();
-        $this->frontier = new InMemoryFrontier();
+        $this->frontier = new InMemoryFrontier(new UrlCanonicalizer());
         $this->eventBus = new InMemoryEventBus();
         $this->externalLinkRepository = new InMemoryExternalLinkRepository();
         $this->httpClient = new StubHttpClient();
