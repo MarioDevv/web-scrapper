@@ -21,9 +21,14 @@ final readonly class FetchOutcome
     ) {
     }
 
+    /**
+     * @phpstan-assert-if-true !null $this->response
+     * @phpstan-assert-if-true !null $this->chain
+     * @phpstan-assert-if-true null $this->error
+     */
     public function isSuccessful(): bool
     {
-        return $this->error === null && $this->response !== null;
+        return $this->error === null && $this->response !== null && $this->chain !== null;
     }
 
     public static function success(Url $url, PageResponse $response, RedirectChain $chain): self

@@ -13,6 +13,7 @@ use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
+use SeoSpider\Audit\Domain\Model\PageFetcher;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
 use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
@@ -23,6 +24,7 @@ use SeoSpider\Audit\Infrastructure\Persistence\SqliteAuditRepository;
 use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageRepository;
 use SeoSpider\Audit\Infrastructure\Frontier\SqliteFrontier;
 use SeoSpider\Audit\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
+use SeoSpider\Audit\Infrastructure\Http\ConcurrentPageFetcher;
 use SeoSpider\Audit\Infrastructure\Sitemap\XmlSitemapIngester;
 use SeoSpider\Audit\Infrastructure\Http\SymfonyHttpClient;
 use SeoSpider\Audit\Infrastructure\Parser\DomCrawlerHtmlParser;
@@ -155,6 +157,8 @@ final class AuditServiceProvider extends ServiceProvider
             pageRepository: $app->make(PageRepository::class),
         ));
 
+        $this->app->singleton(PageFetcher::class, fn() => new ConcurrentPageFetcher());
+
         $this->app->singleton(CrawlerEngine::class, fn($app) => new CrawlerEngine(
             auditRepository: $app->make(AuditRepository::class),
             frontier: $app->make(Frontier::class),
@@ -162,6 +166,7 @@ final class AuditServiceProvider extends ServiceProvider
             robotsPolicy: $app->make(RobotsPolicy::class),
             sitemapIngester: $app->make(SitemapIngester::class),
             externalLinkVerifier: $app->make(ExternalLinkVerifier::class),
+            pageFetcher: $app->make(PageFetcher::class),
         ));
     }
 }

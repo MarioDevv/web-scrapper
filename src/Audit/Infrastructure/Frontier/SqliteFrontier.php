@@ -40,29 +40,58 @@ final readonly class SqliteFrontier implements Frontier
 
     public function dequeue(AuditId $auditId): ?FrontierEntry
     {
-        $stmt = $this->pdo->prepare('
-            SELECT id, url, depth FROM frontier
-            WHERE audit_id = :audit_id AND status = :status
-            ORDER BY id ASC
-            LIMIT 1
-        ');
+        $batch = $this->dequeueBatch($auditId, 1);
 
-        $stmt->execute([
-            'audit_id' => $auditId->value(),
-            'status' => 'pending',
-        ]);
+        return $batch[0] ?? null;
+    }
 
-        $row = $stmt->fetch();
-        if ($row === false) {
-            return null;
+    public function dequeueBatch(AuditId $auditId, int $count): array
+    {
+        if ($count < 1) {
+            return [];
         }
 
-        $this->pdo->prepare('UPDATE frontier SET status = :status WHERE id = :id')
-            ->execute(['status' => 'processing', 'id' => $row['id']]);
+        $this->pdo->beginTransaction();
 
-        return new FrontierEntry(
-            Url::fromString($row['url']),
-            (int) $row['depth'],
+        try {
+            $select = $this->pdo->prepare('
+                SELECT id, url, depth FROM frontier
+                WHERE audit_id = :audit_id AND status = :status
+                ORDER BY id ASC
+                LIMIT :limit
+            ');
+            $select->bindValue(':audit_id', $auditId->value());
+            $select->bindValue(':status', 'pending');
+            $select->bindValue(':limit', $count, PDO::PARAM_INT);
+            $select->execute();
+
+            $rows = $select->fetchAll();
+            if ($rows === []) {
+                $this->pdo->commit();
+
+                return [];
+            }
+
+            $ids = array_map(static fn(array $row) => (int) $row['id'], $rows);
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+            $update = $this->pdo->prepare(
+                "UPDATE frontier SET status = 'processing' WHERE id IN ({$placeholders})"
+            );
+            $update->execute($ids);
+
+            $this->pdo->commit();
+        } catch (\Throwable $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+
+        return array_map(
+            static fn(array $row) => new FrontierEntry(
+                Url::fromString($row['url']),
+                (int) $row['depth'],
+            ),
+            $rows,
         );
     }
 

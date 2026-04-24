@@ -13,6 +13,15 @@ interface Frontier
 
     public function dequeue(AuditId $auditId): ?FrontierEntry;
 
+    /**
+     * Atomically pulls up to $count pending entries and transitions them to
+     * processing. Used by the concurrent engine to launch a parallel fetch
+     * batch without racing between dequeue calls.
+     *
+     * @return FrontierEntry[]
+     */
+    public function dequeueBatch(AuditId $auditId, int $count): array;
+
     public function markVisited(AuditId $auditId, Url $url): void;
 
     public function isKnown(AuditId $auditId, Url $url): bool;
