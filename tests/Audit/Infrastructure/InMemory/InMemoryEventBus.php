@@ -12,10 +12,23 @@ final class InMemoryEventBus implements EventBus
     /** @var DomainEvent[] */
     private array $published = [];
 
+    /** @var array<string, list<callable(DomainEvent): void>> */
+    private array $listeners = [];
+
+    /** @param callable(DomainEvent): void $listener */
+    public function subscribe(string $eventClass, callable $listener): void
+    {
+        $this->listeners[$eventClass][] = $listener;
+    }
+
     public function publish(DomainEvent ...$events): void
     {
         foreach ($events as $event) {
             $this->published[] = $event;
+
+            foreach ($this->listeners[$event::class] ?? [] as $listener) {
+                $listener($event);
+            }
         }
     }
 

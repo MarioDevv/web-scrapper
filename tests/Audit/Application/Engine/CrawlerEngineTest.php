@@ -23,6 +23,8 @@ use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
+use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
+use SeoSpider\Audit\Domain\Model\Page\PageFetched;
 use SeoSpider\Audit\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubPageFetcher;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubSitemapIngester;
@@ -66,8 +68,14 @@ final class CrawlerEngineTest extends TestCase
             htmlParser: $this->htmlParser,
             urlDiscoverer: new FrontierUrlDiscoverer($this->frontier),
             eventBus: $this->eventBus,
-            analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer(), new DirectiveAnalyzer()],
         );
+
+        $this->eventBus->subscribe(PageFetched::class, new AnalyzePageOnPageFetched(
+            pageRepository: $this->pageRepository,
+            auditRepository: $this->auditRepository,
+            eventBus: $this->eventBus,
+            analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer(), new DirectiveAnalyzer()],
+        ));
 
         $verifier = new HttpExternalLinkVerifier(
             pageRepository: $this->pageRepository,
@@ -353,7 +361,6 @@ final class CrawlerEngineTest extends TestCase
             htmlParser: $this->htmlParser,
             urlDiscoverer: new FrontierUrlDiscoverer($this->frontier),
             eventBus: $this->eventBus,
-            analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer(), new DirectiveAnalyzer()],
         );
 
         $verifier = new HttpExternalLinkVerifier(
