@@ -784,6 +784,21 @@ class SpiderDashboard extends Component
      */
     private function externalLinksAsPages(): array
     {
+        // external_url_checks stores one row per (url, source_page_id) by
+        // design, so the broken-link report can show which pages link to a
+        // given url. Tabs that merge externals into the page list want one
+        // entry per url — dedupe by url keeping the first occurrence.
+        $seen = [];
+        $deduped = [];
+        foreach ($this->externalLinks as $ext) {
+            $url = (string) ($ext['url'] ?? '');
+            if (isset($seen[$url])) {
+                continue;
+            }
+            $seen[$url] = true;
+            $deduped[] = $ext;
+        }
+
         return array_map(static fn(array $ext): array => [
             'pageId' => null,
             'url' => $ext['url'],
@@ -803,7 +818,7 @@ class SpiderDashboard extends Component
             'canonicalStatus' => '-',
             'h1Count' => 0,
             'isExternalCheck' => true,
-        ], $this->externalLinks);
+        ], $deduped);
     }
 
     public function render(): View
