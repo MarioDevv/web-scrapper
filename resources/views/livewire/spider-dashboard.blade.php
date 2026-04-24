@@ -50,8 +50,13 @@
                         <span class="text-muted">│</span>
                     @endif
 
+                    @php
+                        $inOverview  = $activeTab === 'overview';
+                        $displayCnt  = $inOverview ? count($pages) : count($this->filteredPages);
+                        $showFilter  = !$inOverview && count($this->filteredPages) !== count($pages);
+                    @endphp
                     <span>
-                        <span class="text-primary">{{ count($this->filteredPages) }}</span>@if(count($this->filteredPages) !== count($pages))<span class="text-muted">/</span><span class="text-tertiary">{{ count($pages) }}</span>@endif
+                        <span class="text-primary">{{ $displayCnt }}</span>@if($showFilter)<span class="text-muted">/</span><span class="text-tertiary">{{ count($pages) }}</span>@endif
                         <span class="text-muted ml-1">pages</span>
                     </span>
 
