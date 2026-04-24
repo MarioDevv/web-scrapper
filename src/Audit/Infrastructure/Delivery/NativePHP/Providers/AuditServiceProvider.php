@@ -186,13 +186,19 @@ final class AuditServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        /** @var EventBus $bus */
-        $bus = $this->app->make(EventBus::class);
-        $reactor = $this->app->make(AnalyzePageOnPageFetched::class);
+        // Lazy: resolving the reactor drags PageRepository → PDO, which opens
+        // the sqlite connection. We cannot do that here because NativePHP
+        // rewrites the database path later, during native:migrate's handle().
+        // The closure defers the container lookup until a PageFetched is
+        // actually published, by which time the DB connection is valid.
+        $app = $this->app;
 
-        $bus->subscribe(PageFetched::class, static function (\SeoSpider\Shared\Domain\DomainEvent $event) use ($reactor): void {
+        /** @var EventBus $bus */
+        $bus = $app->make(EventBus::class);
+
+        $bus->subscribe(PageFetched::class, static function (\SeoSpider\Shared\Domain\DomainEvent $event) use ($app): void {
             if ($event instanceof PageFetched) {
-                $reactor($event);
+                ($app->make(AnalyzePageOnPageFetched::class))($event);
             }
         });
     }
