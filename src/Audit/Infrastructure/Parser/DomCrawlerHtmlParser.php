@@ -440,11 +440,20 @@ final class DomCrawlerHtmlParser implements HtmlParser
                 return;
             }
 
-            $parts = explode('-', $hreflang, 2);
+            // x-default is the whole token per spec; don't split it on '-'
+            // or language/region validation will treat "default" as a region.
+            if (strtolower($hreflang) === 'x-default') {
+                $language = $hreflang;
+                $region = null;
+            } else {
+                $parts = explode('-', $hreflang, 2);
+                $language = $parts[0];
+                $region = $parts[1] ?? null;
+            }
 
             $hreflangs[] = new Hreflang(
-                language: $parts[0],
-                region: $parts[1] ?? null,
+                language: $language,
+                region: $region,
                 href: $url,
                 source: HreflangSource::HTML_HEAD,
             );

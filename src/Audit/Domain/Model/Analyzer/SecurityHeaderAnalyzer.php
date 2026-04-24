@@ -45,7 +45,7 @@ final class SecurityHeaderAnalyzer implements Analyzer
             if ($value === null || trim($value) === '') {
                 $page->addIssue(new Issue(
                     id: IssueId::generate(),
-                    category: IssueCategory::DIRECTIVES,
+                    category: IssueCategory::SECURITY,
                     severity: IssueSeverity::NOTICE,
                     code: $code,
                     message: $config['message'],
@@ -58,7 +58,7 @@ final class SecurityHeaderAnalyzer implements Analyzer
 
     public function category(): IssueCategory
     {
-        return IssueCategory::DIRECTIVES;
+        return IssueCategory::SECURITY;
     }
 
     private function checkReferrerPolicy(Page $page): void
@@ -68,7 +68,7 @@ final class SecurityHeaderAnalyzer implements Analyzer
         if ($value === null || trim($value) === '') {
             $page->addIssue(new Issue(
                 id: IssueId::generate(),
-                category: IssueCategory::DIRECTIVES,
+                category: IssueCategory::SECURITY,
                 severity: IssueSeverity::NOTICE,
                 code: 'referrer_policy_missing',
                 message: 'Missing Referrer-Policy header (navigation data protection).',
@@ -80,7 +80,7 @@ final class SecurityHeaderAnalyzer implements Analyzer
         if (!in_array($policy, self::SECURE_REFERRER_POLICIES, true)) {
             $page->addIssue(new Issue(
                 id: IssueId::generate(),
-                category: IssueCategory::DIRECTIVES,
+                category: IssueCategory::SECURITY,
                 severity: IssueSeverity::NOTICE,
                 code: 'referrer_policy_insecure',
                 message: sprintf('Referrer-Policy "%s" may leak data across origins.', $policy),

@@ -41,9 +41,9 @@ final class ImageAnalyzer implements Analyzer
                 $page->addIssue(new Issue(
                     id: IssueId::generate(),
                     category: IssueCategory::CONTENT,
-                    severity: IssueSeverity::NOTICE,
+                    severity: IssueSeverity::INFO,
                     code: 'img_alt_too_long',
-                    message: sprintf('Image alt attribute too long (%d characters, max %d).', mb_strlen($alt), self::ALT_MAX_LENGTH),
+                    message: sprintf('Image alt is %d chars. Screen readers may truncate past ~%d; tighten for accessibility (not a direct SEO factor).', mb_strlen($alt), self::ALT_MAX_LENGTH),
                     context: $image->targetUrl()->toString(),
                 ));
             }
