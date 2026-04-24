@@ -51,7 +51,7 @@
                     @endif
 
                     @php
-                        $useTotal    = in_array($activeTab, ['overview', 'all'], true);
+                        $useTotal    = in_array($activeTab, ['overview', 'audit', 'all'], true);
                         $displayCnt  = $useTotal ? count($pages) : count($this->filteredPages);
                         $showFilter  = !$useTotal && count($this->filteredPages) !== count($pages);
                     @endphp
