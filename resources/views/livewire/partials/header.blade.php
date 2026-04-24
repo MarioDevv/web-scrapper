@@ -116,56 +116,73 @@
                      x-transition:leave-start="opacity-100 translate-y-0"
                      x-transition:leave-end="opacity-0 -translate-y-1"
                      @click.outside="open = false"
-                     class="absolute right-0 top-full mt-1 w-[340px] bg-panel border border-line2 shadow-2xl z-50 overflow-hidden app-no-drag">
+                     class="absolute right-0 top-full mt-1 w-[400px] bg-panel border border-line2 shadow-2xl z-50 overflow-hidden app-no-drag">
 
-                    <div class="px-3 py-2 border-b border-line bg-panel2 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em]">
+                    {{-- Header --}}
+                    <div class="px-4 py-2.5 border-b border-line bg-panel2 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em]">
                         <span class="c-accent">/etc/crawler.conf</span>
-                        <span class="text-muted">edit</span>
+                        <span class="text-muted">{{ ($crawlResources?1:0)+($crawlSubdomains?1:0)+($followExternalLinks?1:0) }} / 3</span>
                     </div>
 
-                    <div class="p-1">
-                        <label class="flex items-start gap-3 p-3 hover:bg-panel2 cursor-pointer transition-colors">
-                            <input type="checkbox" wire:model.live="crawlResources"
-                                   class="mt-0.5 w-4 h-4 border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
+                    {{-- Options list (divider between rows) --}}
+                    <div class="divide-y divide-[color:var(--c-border)]">
+
+                        {{-- --crawl-resources --}}
+                        <label class="flex items-start gap-3 px-4 py-3 hover:bg-panel2 cursor-pointer transition-colors">
+                            <input type="checkbox" wire:model.live="crawlResources" class="sr-only">
+                            <span x-text="$wire.crawlResources ? '[x]' : '[ ]'"
+                                  :class="$wire.crawlResources ? 'c-accent' : 'text-muted'"
+                                  class="font-mono text-[13px] shrink-0 mt-[1px] leading-none transition-colors"></span>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[13px] font-mono text-primary">crawl_static_resources</span>
-                                    <span class="badge badge-info">css · js · img</span>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[12px] font-mono"
+                                          :class="$wire.crawlResources ? 'c-accent' : 'text-primary'">--crawl-resources</span>
+                                    <span class="badge badge-info">css·js·img</span>
                                 </div>
-                                <p class="text-2xs text-tertiary mt-1 leading-relaxed font-mono">
-                                    <span class="text-muted">#</span> detect 404s and oversized assets
+                                <p class="text-[11px] text-tertiary mt-1.5 leading-snug font-mono">
+                                    <span class="text-muted">#</span> detect 404s and oversized static assets
                                 </p>
                             </div>
                         </label>
 
-                        <label class="flex items-start gap-3 p-3 hover:bg-panel2 cursor-pointer transition-colors">
-                            <input type="checkbox" wire:model.live="crawlSubdomains"
-                                   class="mt-0.5 w-4 h-4 border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
+                        {{-- --include-subdomains --}}
+                        <label class="flex items-start gap-3 px-4 py-3 hover:bg-panel2 cursor-pointer transition-colors">
+                            <input type="checkbox" wire:model.live="crawlSubdomains" class="sr-only">
+                            <span x-text="$wire.crawlSubdomains ? '[x]' : '[ ]'"
+                                  :class="$wire.crawlSubdomains ? 'c-accent' : 'text-muted'"
+                                  class="font-mono text-[13px] shrink-0 mt-[1px] leading-none transition-colors"></span>
                             <div class="flex-1 min-w-0">
-                                <span class="text-[13px] font-mono text-primary">include_subdomains</span>
-                                <p class="text-2xs text-tertiary mt-1 leading-relaxed font-mono">
-                                    <span class="text-muted">#</span> e.g. blog.example.com
+                                <span class="text-[12px] font-mono"
+                                      :class="$wire.crawlSubdomains ? 'c-accent' : 'text-primary'">--include-subdomains</span>
+                                <p class="text-[11px] text-tertiary mt-1.5 leading-snug font-mono">
+                                    <span class="text-muted">#</span> crawl <span class="text-secondary">blog.example.com</span>, <span class="text-secondary">shop.example.com</span>, …
                                 </p>
                             </div>
                         </label>
 
-                        <label class="flex items-start gap-3 p-3 hover:bg-panel2 cursor-pointer transition-colors">
-                            <input type="checkbox" wire:model.live="followExternalLinks"
-                                   class="mt-0.5 w-4 h-4 border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
+                        {{-- --verify-external --}}
+                        <label class="flex items-start gap-3 px-4 py-3 hover:bg-panel2 cursor-pointer transition-colors">
+                            <input type="checkbox" wire:model.live="followExternalLinks" class="sr-only">
+                            <span x-text="$wire.followExternalLinks ? '[x]' : '[ ]'"
+                                  :class="$wire.followExternalLinks ? 'c-accent' : 'text-muted'"
+                                  class="font-mono text-[13px] shrink-0 mt-[1px] leading-none transition-colors"></span>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[13px] font-mono text-primary">verify_external_links</span>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[12px] font-mono"
+                                          :class="$wire.followExternalLinks ? 'c-accent' : 'text-primary'">--verify-external</span>
                                     <span class="badge badge-warn">slow</span>
                                 </div>
-                                <p class="text-2xs text-tertiary mt-1 leading-relaxed font-mono">
-                                    <span class="text-muted">#</span> HEAD request on outbound domains
+                                <p class="text-[11px] text-tertiary mt-1.5 leading-snug font-mono">
+                                    <span class="text-muted">#</span> HEAD request on outbound links to 3rd-party domains
                                 </p>
                             </div>
                         </label>
                     </div>
 
-                    <div class="px-3 py-2 border-t border-line bg-panel2">
-                        <span class="font-mono text-[10px] text-muted">// extra options increase crawl time</span>
+                    {{-- Footer --}}
+                    <div class="px-4 py-2.5 border-t border-line bg-panel2 flex items-center gap-2">
+                        <span class="c-accent font-mono text-[11px]" style="text-shadow: 0 0 4px var(--c-accent-glow);">▲</span>
+                        <span class="font-mono text-[10px] text-muted uppercase tracking-[0.14em]">each flag increases crawl time</span>
                     </div>
                 </div>
             </div>
