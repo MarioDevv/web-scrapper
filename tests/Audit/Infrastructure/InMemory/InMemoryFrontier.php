@@ -52,13 +52,20 @@ final class InMemoryFrontier implements Frontier
 
     public function dequeue(AuditId $auditId): ?FrontierEntry
     {
+        $batch = $this->dequeueBatch($auditId, 1);
+
+        return $batch[0] ?? null;
+    }
+
+    public function dequeueBatch(AuditId $auditId, int $count): array
+    {
         $key = $auditId->value();
 
-        if (!isset($this->queues[$key]) || $this->queues[$key] === []) {
-            return null;
+        if ($count < 1 || !isset($this->queues[$key]) || $this->queues[$key] === []) {
+            return [];
         }
 
-        return array_shift($this->queues[$key]);
+        return array_splice($this->queues[$key], 0, $count);
     }
 
     public function markVisited(AuditId $auditId, Url $url): void

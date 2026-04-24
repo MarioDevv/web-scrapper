@@ -23,6 +23,7 @@ use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Audit\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
+use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubPageFetcher;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubSitemapIngester;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryExternalLinkRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
@@ -80,6 +81,7 @@ final class CrawlerEngineTest extends TestCase
             robotsPolicy: $this->robotsPolicy,
             sitemapIngester: new StubSitemapIngester(),
             externalLinkVerifier: $verifier,
+            pageFetcher: new StubPageFetcher($this->httpClient),
         );
     }
 
@@ -88,6 +90,7 @@ final class CrawlerEngineTest extends TestCase
         int   $maxDepth = 10,
         float $requestDelay = 0.0,
         bool  $respectRobotsTxt = false,
+        int   $concurrency = 5,
     ): string
     {
         $startHandler = new StartAuditHandler(
@@ -100,6 +103,7 @@ final class CrawlerEngineTest extends TestCase
             seedUrl: 'https://example.com',
             maxPages: $maxPages,
             maxDepth: $maxDepth,
+            concurrency: $concurrency,
             requestDelay: $requestDelay,
             respectRobotsTxt: $respectRobotsTxt,
         ));
@@ -303,5 +307,70 @@ final class CrawlerEngineTest extends TestCase
         $this->engine->run(AuditId::generate()->value());
 
         $this->assertEmpty($this->eventBus->published());
+    }
+
+    public function test_concurrency_above_one_routes_fetches_through_the_page_fetcher(): void
+    {
+        $fetcher = $this->replaceFetcherWithTracker();
+
+        $auditId = $this->startAudit(concurrency: 3);
+
+        $this->htmlParser->withLinks([
+            new Link(Url::fromString('https://example.com/a'), LinkType::ANCHOR, 'A', LinkRelation::FOLLOW, true),
+            new Link(Url::fromString('https://example.com/b'), LinkType::ANCHOR, 'B', LinkRelation::FOLLOW, true),
+            new Link(Url::fromString('https://example.com/c'), LinkType::ANCHOR, 'C', LinkRelation::FOLLOW, true),
+            new Link(Url::fromString('https://example.com/d'), LinkType::ANCHOR, 'D', LinkRelation::FOLLOW, true),
+        ]);
+
+        $this->engine->run($auditId);
+
+        $audit = $this->auditRepository->findById(new AuditId($auditId));
+        $this->assertSame(AuditStatus::COMPLETED, $audit->status());
+        $this->assertGreaterThanOrEqual(1, $fetcher->batchesFetched);
+        $this->assertSame(5, $audit->statistics()->pagesCrawled);
+    }
+
+    public function test_concurrency_one_uses_the_serial_handler_and_bypasses_the_page_fetcher(): void
+    {
+        $fetcher = $this->replaceFetcherWithTracker();
+
+        $auditId = $this->startAudit(concurrency: 1);
+
+        $this->engine->run($auditId);
+
+        $this->assertSame(0, $fetcher->batchesFetched, 'serial mode must not call the fetcher');
+    }
+
+    private function replaceFetcherWithTracker(): StubPageFetcher
+    {
+        $fetcher = new StubPageFetcher($this->httpClient);
+
+        $crawlHandler = new CrawlPageHandler(
+            auditRepository: $this->auditRepository,
+            pageRepository: $this->pageRepository,
+            httpClient: $this->httpClient,
+            htmlParser: $this->htmlParser,
+            frontier: $this->frontier,
+            eventBus: $this->eventBus,
+            analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer(), new DirectiveAnalyzer()],
+        );
+
+        $verifier = new HttpExternalLinkVerifier(
+            pageRepository: $this->pageRepository,
+            externalLinkRepository: $this->externalLinkRepository,
+            httpClient: $this->httpClient,
+        );
+
+        $this->engine = new CrawlerEngine(
+            auditRepository: $this->auditRepository,
+            frontier: $this->frontier,
+            crawlPageHandler: $crawlHandler,
+            robotsPolicy: $this->robotsPolicy,
+            sitemapIngester: new StubSitemapIngester(),
+            externalLinkVerifier: $verifier,
+            pageFetcher: $fetcher,
+        );
+
+        return $fetcher;
     }
 }
