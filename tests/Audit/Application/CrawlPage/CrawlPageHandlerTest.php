@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Application\CrawlPage;
 
 use PHPUnit\Framework\TestCase;
+use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageCommand;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
@@ -19,6 +20,7 @@ use SeoSpider\Audit\Domain\Model\Page\LinkRelation;
 use SeoSpider\Audit\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
 use SeoSpider\Audit\Domain\Model\Page\PageFailed;
+use SeoSpider\Audit\Domain\Model\Page\PageFetched;
 use SeoSpider\Audit\Domain\Model\Page\PageMetadata;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\FrontierUrlDiscoverer;
@@ -57,8 +59,14 @@ final class CrawlPageHandlerTest extends TestCase
             htmlParser: $this->htmlParser,
             urlDiscoverer: new FrontierUrlDiscoverer($this->frontier),
             eventBus: $this->eventBus,
-            analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer()],
         );
+
+        $this->eventBus->subscribe(PageFetched::class, new AnalyzePageOnPageFetched(
+            pageRepository: $this->pageRepository,
+            auditRepository: $this->auditRepository,
+            eventBus: $this->eventBus,
+            analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer()],
+        ));
     }
 
     private function startAudit(int $maxPages = 500, int $maxDepth = 10): string

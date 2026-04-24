@@ -15,6 +15,7 @@ use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\PageFetcher;
 use SeoSpider\Audit\Domain\Model\FrontierUrlDiscoverer;
+use SeoSpider\Audit\Domain\Model\Page\PageFetched;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
 use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
@@ -42,6 +43,7 @@ use SeoSpider\Audit\Domain\Model\Analyzer\SecurityHeaderAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\HreflangAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\DuplicateAnalyzer;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
+use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Audit\Application\PauseAudit\PauseAuditHandler;
 use SeoSpider\Audit\Application\ResumeAudit\ResumeAuditHandler;
@@ -117,6 +119,12 @@ final class AuditServiceProvider extends ServiceProvider
             htmlParser: $app->make(HtmlParser::class),
             urlDiscoverer: $app->make(UrlDiscoverer::class),
             eventBus: $app->make(EventBus::class),
+        ));
+
+        $this->app->singleton(AnalyzePageOnPageFetched::class, fn($app) => new AnalyzePageOnPageFetched(
+            pageRepository: $app->make(PageRepository::class),
+            auditRepository: $app->make(AuditRepository::class),
+            eventBus: $app->make(EventBus::class),
             analyzers: iterator_to_array($app->tagged('analyzers')),
         ));
 
@@ -174,5 +182,18 @@ final class AuditServiceProvider extends ServiceProvider
             externalLinkVerifier: $app->make(ExternalLinkVerifier::class),
             pageFetcher: $app->make(PageFetcher::class),
         ));
+    }
+
+    public function boot(): void
+    {
+        /** @var EventBus $bus */
+        $bus = $this->app->make(EventBus::class);
+        $reactor = $this->app->make(AnalyzePageOnPageFetched::class);
+
+        $bus->subscribe(PageFetched::class, static function (\SeoSpider\Shared\Domain\DomainEvent $event) use ($reactor): void {
+            if ($event instanceof PageFetched) {
+                $reactor($event);
+            }
+        });
     }
 }

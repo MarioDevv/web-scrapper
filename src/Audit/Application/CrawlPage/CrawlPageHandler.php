@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\CrawlPage;
 
-use SeoSpider\Audit\Domain\Model\Analyzer\Analyzer;
+use DateTimeImmutable;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\HttpClient;
@@ -16,18 +15,16 @@ use SeoSpider\Audit\Domain\Model\Page\DirectiveSource;
 use SeoSpider\Audit\Domain\Model\Page\Fingerprint;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageFailed;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Audit\Domain\Model\Page\PageFetched;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Audit\Domain\Model\UrlDiscoverer;
 use SeoSpider\Shared\Domain\Bus\EventBus;
-use DateTimeImmutable;
 
 final readonly class CrawlPageHandler
 {
-    /** @param Analyzer[] $analyzers */
     public function __construct(
         private AuditRepository $auditRepository,
         private PageRepository $pageRepository,
@@ -35,8 +32,8 @@ final readonly class CrawlPageHandler
         private HtmlParser $htmlParser,
         private UrlDiscoverer $urlDiscoverer,
         private EventBus $eventBus,
-        private array $analyzers = [],
-    ) {}
+    ) {
+    }
 
     public function __invoke(CrawlPageCommand $command): void
     {
@@ -62,9 +59,11 @@ final readonly class CrawlPageHandler
     }
 
     /**
-     * Post-fetch pipeline. Called by __invoke after a sequential fetch, and
-     * by the concurrent engine path after a parallel batch fetch, so the
-     * processing stays identical regardless of how the bytes arrived.
+     * Post-fetch pipeline. Fetches bytes are already in memory; this step
+     * enriches the page from HTML, enqueues discovered URLs, persists the
+     * page and announces PageFetched. The analyzer pipeline and the audit
+     * stats update live behind that event so adding analyzers doesn't
+     * touch this class and re-analysing doesn't need a fresh fetch.
      */
     public function processFetchedPage(
         CrawlPageCommand $command,
@@ -100,21 +99,14 @@ final readonly class CrawlPageHandler
             $newUrls = 0;
         }
 
-        $this->runAnalyzers($page);
-        $page->markAsAnalyzed();
-
         $this->pageRepository->save($page);
 
-        if ($newUrls > 0) {
-            $audit->registerUrlsDiscovered($newUrls);
-        }
-        $audit->registerPageCrawled($page->errorCount(), $page->warningCount());
-        $this->auditRepository->save($audit);
-
-        $this->eventBus->publish(
-            ...$page->pullDomainEvents(),
-            ...$audit->pullDomainEvents(),
-        );
+        $this->eventBus->publish(new PageFetched(
+            pageId: $page->id(),
+            auditId: $auditId,
+            newUrlsDiscovered: $newUrls,
+            occurredAt: new DateTimeImmutable(),
+        ));
     }
 
     public function handleFetchFailure(CrawlPageCommand $command, string $reason): void
@@ -160,13 +152,6 @@ final readonly class CrawlPageHandler
         );
     }
 
-    private function runAnalyzers(Page $page): void
-    {
-        foreach ($this->analyzers as $analyzer) {
-            $analyzer->analyze($page);
-        }
-    }
-
     private function handleFailure(AuditId $auditId, Url $url, string $reason): void
     {
         $audit = $this->auditRepository->findById($auditId);
@@ -188,5 +173,4 @@ final readonly class CrawlPageHandler
             ...$audit->pullDomainEvents(),
         );
     }
-
 }
