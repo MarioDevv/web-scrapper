@@ -47,7 +47,7 @@ final class DomCrawlerHtmlParser implements HtmlParser
         );
     }
 
-    public function extractDirectives(string $html): Directive
+    public function extractDirectives(string $html, Url $baseUrl): Directive
     {
         $crawler = new Crawler($html);
 
@@ -56,7 +56,7 @@ final class DomCrawlerHtmlParser implements HtmlParser
             ?? '';
 
         $lower = strtolower($robotsContent);
-        $canonical = $this->extractCanonical($crawler);
+        $canonical = $this->extractCanonical($crawler, $baseUrl);
 
         return new Directive(
             noindex: str_contains($lower, 'noindex'),
@@ -420,12 +420,12 @@ final class DomCrawlerHtmlParser implements HtmlParser
     }
 
     /** @return Hreflang[] */
-    public function extractHreflangs(string $html): array
+    public function extractHreflangs(string $html, Url $baseUrl): array
     {
         $crawler = new Crawler($html);
         $hreflangs = [];
 
-        $crawler->filter('link[rel="alternate"][hreflang]')->each(function (Crawler $node) use (&$hreflangs) {
+        $crawler->filter('link[rel="alternate"][hreflang]')->each(function (Crawler $node) use ($baseUrl, &$hreflangs) {
             $hreflang = trim($node->attr('hreflang') ?? '');
             $href = trim($node->attr('href') ?? '');
 
@@ -433,7 +433,7 @@ final class DomCrawlerHtmlParser implements HtmlParser
                 return;
             }
 
-            $url = Url::tryFromString($href);
+            $url = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
             if ($url === null) {
                 return;
             }
@@ -531,7 +531,7 @@ final class DomCrawlerHtmlParser implements HtmlParser
         return $html->count() > 0 ? $html->first()->attr('lang') : null;
     }
 
-    private function extractCanonical(Crawler $crawler): ?Url
+    private function extractCanonical(Crawler $crawler, Url $baseUrl): ?Url
     {
         $node = $crawler->filter('link[rel="canonical"]');
         if ($node->count() === 0) {
@@ -543,7 +543,9 @@ final class DomCrawlerHtmlParser implements HtmlParser
             return null;
         }
 
-        return Url::tryFromString(trim($href));
+        $trimmed = trim($href);
+
+        return Url::tryFromString($trimmed) ?? $this->tryResolve($baseUrl, $trimmed);
     }
 
     private function extractMaxDirective(string $content, string $directive): ?int
