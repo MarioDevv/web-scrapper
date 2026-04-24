@@ -9,7 +9,6 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\DiscoverySource;
-use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\HttpClient;
@@ -35,7 +34,6 @@ final readonly class CrawlPageHandler
         private HtmlParser $htmlParser,
         private Frontier $frontier,
         private EventBus $eventBus,
-        private ExternalLinkRepository $externalLinkRepository,
         private array $analyzers = [],
     ) {}
 
@@ -81,8 +79,6 @@ final readonly class CrawlPageHandler
         $page->markAsAnalyzed();
 
         $this->pageRepository->save($page);
-
-        $this->checkExternalLinks($page, $auditId, $audit->configuration()->customUserAgent);
 
         if ($newUrls > 0) {
             $audit->registerUrlsDiscovered($newUrls);
@@ -189,53 +185,4 @@ final readonly class CrawlPageHandler
         );
     }
 
-    private function checkExternalLinks(Page $page, AuditId $auditId, ?string $userAgent): void
-    {
-        $externalAnchors = array_filter(
-            $page->links(),
-            static fn($link) => $link->isExternal() && $link->isAnchor(),
-        );
-
-        if (count($externalAnchors) === 0) {
-            return;
-        }
-
-        $checked = [];
-
-        foreach ($externalAnchors as $link) {
-            $extUrl = $link->targetUrl()->toString();
-
-            if (isset($checked[$extUrl])) {
-                continue;
-            }
-            $checked[$extUrl] = true;
-
-            if ($this->externalLinkRepository->exists($auditId, $link->targetUrl())) {
-                continue;
-            }
-
-            try {
-                $result = $this->httpClient->head($link->targetUrl(), $userAgent);
-                $this->externalLinkRepository->save(
-                    $auditId,
-                    $link->targetUrl(),
-                    $result['statusCode'],
-                    $result['responseTime'],
-                    null,
-                    $page->id(),
-                    $link->anchorText(),
-                );
-            } catch (HttpRequestFailed $e) {
-                $this->externalLinkRepository->save(
-                    $auditId,
-                    $link->targetUrl(),
-                    0,
-                    0.0,
-                    $e->getMessage(),
-                    $page->id(),
-                    $link->anchorText(),
-                );
-            }
-        }
-    }
 }

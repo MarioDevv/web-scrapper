@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
+use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HttpClient;
@@ -21,6 +22,7 @@ use SeoSpider\Shared\Domain\Bus\EventBus;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteAuditRepository;
 use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageRepository;
 use SeoSpider\Audit\Infrastructure\Frontier\SqliteFrontier;
+use SeoSpider\Audit\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
 use SeoSpider\Audit\Infrastructure\Sitemap\XmlSitemapIngester;
 use SeoSpider\Audit\Infrastructure\Http\SymfonyHttpClient;
 use SeoSpider\Audit\Infrastructure\Parser\DomCrawlerHtmlParser;
@@ -107,8 +109,13 @@ final class AuditServiceProvider extends ServiceProvider
             htmlParser: $app->make(HtmlParser::class),
             frontier: $app->make(Frontier::class),
             eventBus: $app->make(EventBus::class),
-            externalLinkRepository: $app->make(ExternalLinkRepository::class),
             analyzers: iterator_to_array($app->tagged('analyzers')),
+        ));
+
+        $this->app->singleton(ExternalLinkVerifier::class, fn($app) => new HttpExternalLinkVerifier(
+            pageRepository: $app->make(PageRepository::class),
+            externalLinkRepository: $app->make(ExternalLinkRepository::class),
+            httpClient: $app->make(HttpClient::class),
         ));
 
 
@@ -154,6 +161,7 @@ final class AuditServiceProvider extends ServiceProvider
             crawlPageHandler: $app->make(CrawlPageHandler::class),
             robotsPolicy: $app->make(RobotsPolicy::class),
             sitemapIngester: $app->make(SitemapIngester::class),
+            externalLinkVerifier: $app->make(ExternalLinkVerifier::class),
         ));
     }
 }
