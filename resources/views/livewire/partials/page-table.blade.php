@@ -1,25 +1,46 @@
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 {{--  TOP NAV — Segmented control (Dashboard vs Pages) + filter tabs + search  --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
-@php $inPages = $activeTab !== 'overview'; @endphp
+@php
+    $isOverview = $activeTab === 'overview';
+    $isAudit = $activeTab === 'audit';
+    $inPages = !$isOverview && !$isAudit;
+@endphp
 
 <nav class="flex-none bg-panel2 border-b border-line chrome-nosel">
 
     {{-- ── MODE SWITCH ──────────────────────────────────────────── --}}
     <div class="flex items-center h-9 px-1 gap-0.5 border-b border-line">
 
-        {{-- [ dashboard ] --}}
+        {{-- [ overview ] --}}
         <button wire:click="setTab('overview')"
                 class="group h-7 px-3 flex items-center gap-1 text-[11px] font-mono uppercase tracking-[0.14em] transition-colors
-                       {{ !$inPages ? 'c-accent' : 'text-tertiary hover:text-secondary' }}">
-            <span class="{{ !$inPages ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">[</span>
+                       {{ $isOverview ? 'c-accent' : 'text-tertiary hover:text-secondary' }}">
+            <span class="{{ $isOverview ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">[</span>
             <span class="flex items-center gap-1.5">
-                @if(!$inPages)
+                @if($isOverview)
                     <span class="w-1.5 h-1.5 rounded-full dot-pulse" style="background:var(--c-accent); box-shadow:0 0 6px var(--c-accent-glow);"></span>
                 @endif
                 overview
             </span>
-            <span class="{{ !$inPages ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">]</span>
+            <span class="{{ $isOverview ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">]</span>
+        </button>
+
+        {{-- [ audit ] --}}
+        <button wire:click="setTab('audit')"
+                class="group h-7 px-3 flex items-center gap-1 text-[11px] font-mono uppercase tracking-[0.14em] transition-colors
+                       {{ $isAudit ? 'c-accent' : 'text-tertiary hover:text-secondary' }}">
+            <span class="{{ $isAudit ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">[</span>
+            <span class="flex items-center gap-1.5">
+                @if($isAudit)
+                    <span class="w-1.5 h-1.5 rounded-full dot-pulse" style="background:var(--c-accent); box-shadow:0 0 6px var(--c-accent-glow);"></span>
+                @endif
+                audit
+                @if(($this->auditReport['totalIssues'] ?? 0) > 0)
+                    <span class="text-muted font-normal">·{{ $this->auditReport['totalIssues'] }}</span>
+                @endif
+            </span>
+            <span class="{{ $isAudit ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">]</span>
         </button>
 
         {{-- [ pages ] --}}
@@ -117,9 +138,15 @@
 </nav>
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{--  AUDIT PANEL — Site-wide issues grouped by rule                            --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@if($activeTab === 'audit')
+    @include('livewire.partials.audit-report')
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
 {{--  OVERVIEW PANEL — Terminal-style audit dashboard                           --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
-@if($activeTab === 'overview')
+@elseif($activeTab === 'overview')
 <div class="flex-1 overflow-auto min-h-0">
     @php $ov = $this->overview; @endphp
 

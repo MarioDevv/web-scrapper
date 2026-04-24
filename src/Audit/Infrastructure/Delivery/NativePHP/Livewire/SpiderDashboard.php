@@ -14,6 +14,8 @@ use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesHandler;
 use SeoSpider\Audit\Application\GetPageDetail\GetPageDetailQuery;
 use SeoSpider\Audit\Application\GetPageDetail\GetPageDetailHandler;
+use SeoSpider\Audit\Application\GetAuditIssueReport\GetAuditIssueReportQuery;
+use SeoSpider\Audit\Application\GetAuditIssueReport\GetAuditIssueReportHandler;
 use SeoSpider\Audit\Application\CancelAudit\CancelAuditCommand;
 use SeoSpider\Audit\Application\CancelAudit\CancelAuditHandler;
 use SeoSpider\Audit\Application\PauseAudit\PauseAuditCommand;
@@ -614,6 +616,51 @@ class SpiderDashboard extends Component
             )),
             'issues'    => count(array_filter($this->pages, static fn(array $p): bool => $p['errorCount'] > 0 || $p['warningCount'] > 0)),
             'noindex'   => count(array_filter($this->pages, static fn(array $p): bool => !$p['isIndexable'])),
+        ];
+    }
+
+    /**
+     * Site-wide issue report grouped by rule code. Read model backing the
+     * "audit" tab, computed on-demand (Livewire caches per render cycle).
+     *
+     * @return array<string, mixed>
+     */
+    public function getAuditReportProperty(): array
+    {
+        if ($this->auditId === null) {
+            return [
+                'totalIssues' => 0,
+                'affectedPages' => 0,
+                'severityTotals' => [],
+                'categoryTotals' => [],
+                'groups' => [],
+            ];
+        }
+
+        $r = app(GetAuditIssueReportHandler::class)(new GetAuditIssueReportQuery($this->auditId));
+
+        return [
+            'totalIssues' => $r->totalIssues,
+            'affectedPages' => $r->affectedPages,
+            'severityTotals' => $r->severityTotals,
+            'categoryTotals' => $r->categoryTotals,
+            'groups' => array_map(static fn($g): array => [
+                'code' => $g->code,
+                'category' => $g->category,
+                'severity' => $g->severity,
+                'title' => $g->title,
+                'summary' => $g->summary,
+                'why' => $g->why,
+                'how' => $g->how,
+                'source' => $g->source,
+                'count' => $g->count,
+                'affectedPageCount' => $g->affectedPageCount,
+                'affectedPages' => array_map(static fn($p): array => [
+                    'pageId' => $p->pageId,
+                    'url' => $p->url,
+                    'context' => $p->context,
+                ], $g->affectedPages),
+            ], $r->groups),
         ];
     }
 
