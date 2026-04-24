@@ -10,32 +10,6 @@
 
     @if(!$sidebarCollapsed)
 
-    {{-- Stats (when audit loaded) --}}
-    @if($status)
-    <div class="flex-none p-3 border-b border-line">
-        <div class="grid grid-cols-2 gap-1.5">
-            @php
-                $stats = [
-                    ['Crawled',  $status['pagesCrawled'],    null],
-                    ['Failed',   $status['pagesFailed'],     $status['pagesFailed'] > 0 ? 'var(--c-err)' : null],
-                    ['Errors',   $status['errorsFound'],     $status['errorsFound'] > 0 ? 'var(--c-err)' : null],
-                    ['Warnings', $status['warningsFound'],   $status['warningsFound'] > 0 ? 'var(--c-warn)' : null],
-                ];
-            @endphp
-            @foreach($stats as [$label, $value, $color])
-            <div class="stat-card bg-app2 rounded-lg px-2.5 py-2 border border-line">
-                <div class="text-2xs text-tertiary mb-0.5">{{ $label }}</div>
-                <div class="text-[15px] font-bold tabular-nums leading-none" style="{{ $color ? "color:{$color}" : '' }}">{{ $value }}</div>
-            </div>
-            @endforeach
-        </div>
-        <div class="flex gap-4 text-2xs text-tertiary mt-2">
-            <span>Discovered: <span class="text-secondary font-medium tabular-nums">{{ $status['pagesDiscovered'] }}</span></span>
-            @if($status['duration'])<span>{{ number_format($status['duration'], 1) }}s</span>@endif
-        </div>
-    </div>
-    @endif
-
     {{-- History with folders --}}
     <div class="flex-1 overflow-y-auto" x-data="{ openFolders: JSON.parse(localStorage.getItem('sf') || '{}'), movingAudit: null }"
          x-effect="localStorage.setItem('sf', JSON.stringify(openFolders))">
