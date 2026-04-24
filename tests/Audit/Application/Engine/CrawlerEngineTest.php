@@ -18,6 +18,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
 use SeoSpider\Audit\Domain\Model\Page\Link;
 use SeoSpider\Audit\Domain\Model\Page\LinkRelation;
 use SeoSpider\Audit\Domain\Model\Page\LinkType;
+use SeoSpider\Audit\Domain\Model\FrontierUrlDiscoverer;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
@@ -63,7 +64,7 @@ final class CrawlerEngineTest extends TestCase
             pageRepository: $this->pageRepository,
             httpClient: $this->httpClient,
             htmlParser: $this->htmlParser,
-            frontier: $this->frontier,
+            urlDiscoverer: new FrontierUrlDiscoverer($this->frontier),
             eventBus: $this->eventBus,
             analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer(), new DirectiveAnalyzer()],
         );
@@ -350,7 +351,7 @@ final class CrawlerEngineTest extends TestCase
             pageRepository: $this->pageRepository,
             httpClient: $this->httpClient,
             htmlParser: $this->htmlParser,
-            frontier: $this->frontier,
+            urlDiscoverer: new FrontierUrlDiscoverer($this->frontier),
             eventBus: $this->eventBus,
             analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer(), new DirectiveAnalyzer()],
         );

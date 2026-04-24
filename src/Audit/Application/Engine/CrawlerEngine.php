@@ -123,6 +123,8 @@ final readonly class CrawlerEngine
     private function processSerial(string $auditId, array $batch, AuditId $id, ?callable $onProgress): void
     {
         foreach ($batch as $entry) {
+            $this->frontier->markVisited($id, $entry->url);
+
             ($this->crawlPageHandler)(new CrawlPageCommand(
                 auditId: $auditId,
                 url: $entry->url->toString(),
