@@ -17,7 +17,7 @@
                 @if(!$inPages)
                     <span class="w-1.5 h-1.5 rounded-full dot-pulse" style="background:var(--c-accent); box-shadow:0 0 6px var(--c-accent-glow);"></span>
                 @endif
-                dashboard
+                overview
             </span>
             <span class="{{ !$inPages ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">]</span>
         </button>
