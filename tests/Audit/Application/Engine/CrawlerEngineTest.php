@@ -22,6 +22,7 @@ use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
+use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubSitemapIngester;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryExternalLinkRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
@@ -71,6 +72,7 @@ final class CrawlerEngineTest extends TestCase
             frontier: $this->frontier,
             crawlPageHandler: $crawlHandler,
             robotsPolicy: $this->robotsPolicy,
+            sitemapIngester: new StubSitemapIngester(),
         );
     }
 

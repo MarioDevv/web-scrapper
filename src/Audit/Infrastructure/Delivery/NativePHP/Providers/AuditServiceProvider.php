@@ -13,6 +13,7 @@ use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
+use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteExternalLinkRepository;
 use SeoSpider\Audit\Infrastructure\Robots\RobotsTxtPolicy;
@@ -20,6 +21,7 @@ use SeoSpider\Shared\Domain\Bus\EventBus;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteAuditRepository;
 use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageRepository;
 use SeoSpider\Audit\Infrastructure\Frontier\SqliteFrontier;
+use SeoSpider\Audit\Infrastructure\Sitemap\XmlSitemapIngester;
 use SeoSpider\Audit\Infrastructure\Http\SymfonyHttpClient;
 use SeoSpider\Audit\Infrastructure\Parser\DomCrawlerHtmlParser;
 use SeoSpider\Audit\Infrastructure\Bus\SyncEventBus;
@@ -79,6 +81,10 @@ final class AuditServiceProvider extends ServiceProvider
         $this->app->singleton(HttpClient::class, fn() => new SymfonyHttpClient());
         $this->app->singleton(HtmlParser::class, fn() => new DomCrawlerHtmlParser());
         $this->app->singleton(RobotsPolicy::class, fn() => new RobotsTxtPolicy($this->app->make(HttpClient::class)));
+        $this->app->singleton(SitemapIngester::class, fn($app) => new XmlSitemapIngester(
+            $app->make(HttpClient::class),
+            $app->make(Frontier::class),
+        ));
         $this->app->singleton(EventBus::class, fn() => new SyncEventBus());
 
         $this->app->tag([
@@ -147,6 +153,7 @@ final class AuditServiceProvider extends ServiceProvider
             frontier: $app->make(Frontier::class),
             crawlPageHandler: $app->make(CrawlPageHandler::class),
             robotsPolicy: $app->make(RobotsPolicy::class),
+            sitemapIngester: $app->make(SitemapIngester::class),
         ));
     }
 }

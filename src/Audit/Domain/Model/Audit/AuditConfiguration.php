@@ -26,6 +26,7 @@ final readonly class AuditConfiguration
         public bool $followExternalLinks = false,
         public bool $crawlSubdomains = false,
         public bool $crawlResources = false,
+        public bool $ingestSitemaps = true,
     ) {
         if ($this->maxPages < 1) {
             throw new InvalidArgumentException('maxPages must be at least 1.');

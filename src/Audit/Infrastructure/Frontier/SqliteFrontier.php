@@ -6,6 +6,7 @@ namespace SeoSpider\Audit\Infrastructure\Frontier;
 
 use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Audit\Domain\Model\DiscoverySource;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\FrontierEntry;
 use SeoSpider\Audit\Domain\Model\Url;
@@ -19,11 +20,11 @@ final readonly class SqliteFrontier implements Frontier
     ) {
     }
 
-    public function enqueue(AuditId $auditId, Url $url, int $depth): bool
+    public function enqueue(AuditId $auditId, Url $url, int $depth, DiscoverySource $source): bool
     {
         $stmt = $this->pdo->prepare('
-            INSERT OR IGNORE INTO frontier (audit_id, url, depth, status)
-            VALUES (:audit_id, :url, :depth, :status)
+            INSERT OR IGNORE INTO frontier (audit_id, url, depth, status, source)
+            VALUES (:audit_id, :url, :depth, :status, :source)
         ');
 
         $stmt->execute([
@@ -31,6 +32,7 @@ final readonly class SqliteFrontier implements Frontier
             'url' => $this->canonicalizer->canonicalize($url)->toString(),
             'depth' => $depth,
             'status' => 'pending',
+            'source' => $source->value,
         ]);
 
         return $stmt->rowCount() > 0;
@@ -81,12 +83,13 @@ final readonly class SqliteFrontier implements Frontier
 
         if ($stmt->rowCount() === 0) {
             $this->pdo->prepare('
-                INSERT OR IGNORE INTO frontier (audit_id, url, depth, status)
-                VALUES (:audit_id, :url, 0, :status)
+                INSERT OR IGNORE INTO frontier (audit_id, url, depth, status, source)
+                VALUES (:audit_id, :url, 0, :status, :source)
             ')->execute([
                 'audit_id' => $auditId->value(),
                 'url' => $canonical,
                 'status' => 'visited',
+                'source' => DiscoverySource::LINK->value,
             ]);
         }
     }

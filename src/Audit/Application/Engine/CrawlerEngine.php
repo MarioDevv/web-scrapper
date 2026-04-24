@@ -10,6 +10,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
+use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;
 
 final readonly class CrawlerEngine
 {
@@ -18,6 +19,7 @@ final readonly class CrawlerEngine
         private Frontier $frontier,
         private CrawlPageHandler $crawlPageHandler,
         private RobotsPolicy $robotsPolicy,
+        private SitemapIngester $sitemapIngester,
     ) {
     }
 
@@ -33,6 +35,18 @@ final readonly class CrawlerEngine
 
         if ($audit->configuration()->respectRobotsTxt) {
             $this->robotsPolicy->load($audit->configuration()->seedUrl);
+        }
+
+        if ($audit->configuration()->ingestSitemaps) {
+            $added = $this->sitemapIngester->ingest(
+                $id,
+                $audit->configuration()->seedUrl,
+                $audit->configuration()->customUserAgent,
+            );
+            if ($added > 0) {
+                $audit->registerUrlsDiscovered($added);
+                $this->auditRepository->save($audit);
+            }
         }
 
         $delay = $this->effectiveDelay($audit);
