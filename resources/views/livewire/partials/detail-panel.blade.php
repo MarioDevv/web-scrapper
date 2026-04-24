@@ -1,110 +1,152 @@
-{{-- ══ DETAIL PANEL ══ --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{--  DETAIL PANEL — bottom split inspector                                     --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
 @if($detailOpen && $selectedPage)
-<div class="flex-none border-t border-line bg-panel anim-slide" style="height:280px">
+<div class="flex-none border-t-2 border-line2 bg-panel anim-slide" style="height: 280px;">
 
-    {{-- Header --}}
-    <div class="flex items-center justify-between px-3 h-9 border-b border-line bg-panel2">
+    {{-- ── HEADER ─────────────────────────────────────────────── --}}
+    <div class="flex items-center justify-between gap-3 px-3 h-9 border-b border-line bg-panel2 chrome-nosel">
+
         <div class="flex items-center gap-2.5 min-w-0">
+            {{-- Status badge --}}
             @php $sc = $selectedPage['statusCode']; @endphp
-            <span class="badge font-mono text-[11px] {{ $sc >= 200 && $sc < 300 ? 'badge-ok' : ($sc >= 300 && $sc < 400 ? 'badge-warn' : 'badge-err') }}">{{ $sc }}</span>
+            <span class="badge text-[10px] shrink-0
+                {{ $sc >= 200 && $sc < 300 ? 'badge-ok' : ($sc >= 300 && $sc < 400 ? 'badge-warn' : 'badge-err') }}">
+                {{ $sc }}
+            </span>
+
+            {{-- Prompt + URL --}}
+            <span class="c-accent font-mono text-[12px] shrink-0" style="text-shadow: 0 0 4px var(--c-accent-glow);">▸</span>
             <span class="font-mono text-[12px] text-secondary truncate">{{ $selectedPage['url'] }}</span>
+
+            {{-- Flag badges --}}
             <div class="flex items-center gap-1 shrink-0">
-                @if($selectedPage['isIndexable'])<span class="badge badge-ok">Indexable</span>@endif
-                @if($selectedPage['noindex'])<span class="badge badge-err">noindex</span>@endif
-                @if($selectedPage['nofollow'])<span class="badge badge-warn">nofollow</span>@endif
+                @if($selectedPage['isIndexable']) <span class="badge badge-ok">indexable</span>   @endif
+                @if($selectedPage['noindex'])     <span class="badge badge-err">noindex</span>    @endif
+                @if($selectedPage['nofollow'])    <span class="badge badge-warn">nofollow</span>  @endif
             </div>
         </div>
-        <button wire:click="closeDetail" class="text-muted hover:text-secondary transition-colors p-1.5 rounded-md hover:bg-panel3">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18 18 6M6 6l12 12"/></svg>
+
+        <button wire:click="closeDetail"
+                class="shrink-0 h-7 w-7 flex items-center justify-center font-mono text-[12px] text-tertiary hover:c-err hover:bg-panel3 transition-colors"
+                title="Close">
+            ✕
         </button>
     </div>
 
-    {{-- Detail tabs --}}
+    {{-- ── TAB STRIP ──────────────────────────────────────────── --}}
     @php
         $allLinks = $selectedPage['links'] ?? [];
         $intLinks = array_values(array_filter($allLinks, fn($l) => $l['internal'] && $l['type'] === 'anchor'));
         $extLinks = array_values(array_filter($allLinks, fn($l) => !$l['internal'] && $l['type'] === 'anchor'));
         $imgLinks = array_values(array_filter($allLinks, fn($l) => $l['type'] === 'image'));
+        $detailTabs = [
+            'seo'       => ['seo',       null],
+            'technical' => ['technical', null],
+            'links'     => ['links',     count($intLinks) . '/' . count($extLinks)],
+            'issues'    => ['issues',    count($selectedPage['issues'])],
+        ];
     @endphp
-    <div class="flex items-center border-b border-line bg-panel px-1">
-        @foreach([
-            'seo' => 'SEO',
-            'technical' => 'Technical',
-            'links' => 'Links (' . count($intLinks) . '/' . count($extLinks) . ')',
-            'issues' => 'Issues (' . count($selectedPage['issues']) . ')',
-        ] as $tKey => $tLabel)
+    <div class="flex items-center gap-0 h-8 border-b border-line bg-panel chrome-nosel">
+        @foreach($detailTabs as $tKey => [$tLabel, $tCount])
         <button wire:click="setDetailTab('{{ $tKey }}')"
-            class="relative px-3 py-1.5 text-2xs font-medium transition-colors
-                {{ $detailTab === $tKey ? 'text-primary' : 'text-tertiary hover:text-secondary' }}">
-            {{ $tLabel }}
+                class="relative h-full px-3 text-[11px] font-mono uppercase tracking-[0.14em] transition-colors
+                       {{ $detailTab === $tKey ? 'text-primary' : 'text-tertiary hover:text-secondary' }}">
+            <span class="inline-flex items-center gap-1.5">
+                @if($detailTab === $tKey)
+                    <span class="c-accent">▸</span>
+                @endif
+                <span>{{ $tLabel }}</span>
+                @if($tCount !== null)
+                    <span class="text-muted font-normal">·{{ $tCount }}</span>
+                @endif
+            </span>
             @if($detailTab === $tKey)
-                <span class="absolute bottom-0 left-1 right-1 h-[1.5px] rounded-full" style="background:var(--c-accent)"></span>
+                <span class="absolute bottom-0 left-0 right-0 h-[2px]" style="background: var(--c-accent); box-shadow: 0 0 6px var(--c-accent-glow);"></span>
             @endif
         </button>
         @endforeach
     </div>
 
-    {{-- Content --}}
-    <div class="h-[calc(280px-36px-30px)] overflow-y-auto">
+    {{-- ── CONTENT ────────────────────────────────────────────── --}}
+    <div class="h-[calc(280px-36px-32px)] overflow-y-auto">
 
+        {{-- ═══ SEO ═══ --}}
         @if($detailTab === 'seo')
         <div class="p-4 space-y-4 anim-fade">
+
             {{-- Title --}}
             <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-2xs text-tertiary font-semibold uppercase tracking-wider">Title</span>
+                <div class="flex items-center gap-2 mb-1.5 font-mono text-[10px] uppercase tracking-[0.16em]">
+                    <span class="c-accent">▸</span>
+                    <span class="text-muted">title</span>
                     @if($selectedPage['titleLength'])
                         @php $tl = $selectedPage['titleLength']; @endphp
-                        <span class="text-2xs" style="color:{{ $tl > 60 || $tl < 30 ? 'var(--c-warn)' : 'var(--c-ok)' }}">{{ $tl }} chars</span>
-                        <div class="flex-1 h-1 bg-app3 rounded-full max-w-[140px] overflow-hidden">
-                            <div class="h-full rounded-full" style="width:{{ min(($tl / 70) * 100, 100) }}%;background:{{ $tl > 60 || $tl < 30 ? 'var(--c-warn)' : 'var(--c-ok)' }}"></div>
+                        @php $tlBad = $tl > 60 || $tl < 30; @endphp
+                        <span class="text-tertiary">│</span>
+                        <span style="color: {{ $tlBad ? 'var(--c-warn)' : 'var(--c-ok)' }};">{{ $tl }} chars</span>
+                        <div class="flex-1 h-[3px] progress-track max-w-[140px]">
+                            <div class="h-full" style="width: {{ min(($tl / 70) * 100, 100) }}%;
+                                                        background: {{ $tlBad ? 'var(--c-warn)' : 'var(--c-ok)' }};
+                                                        box-shadow: 0 0 4px {{ $tlBad ? 'var(--c-warn)' : 'var(--c-ok)' }};"></div>
                         </div>
                     @endif
                 </div>
-                <div class="text-[13px] text-primary">{{ $selectedPage['title'] ?? '—' }}</div>
+                <div class="font-sans text-[13px] text-primary leading-snug">{{ $selectedPage['title'] ?? '—' }}</div>
             </div>
 
             {{-- Meta description --}}
             <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-2xs text-tertiary font-semibold uppercase tracking-wider">Meta Description</span>
+                <div class="flex items-center gap-2 mb-1.5 font-mono text-[10px] uppercase tracking-[0.16em]">
+                    <span class="c-accent">▸</span>
+                    <span class="text-muted">meta_description</span>
                     @if($selectedPage['metaDescriptionLength'])
                         @php $ml = $selectedPage['metaDescriptionLength']; @endphp
-                        <span class="text-2xs" style="color:{{ $ml > 160 || $ml < 70 ? 'var(--c-warn)' : 'var(--c-ok)' }}">{{ $ml }} chars</span>
-                        <div class="flex-1 h-1 bg-app3 rounded-full max-w-[140px] overflow-hidden">
-                            <div class="h-full rounded-full" style="width:{{ min(($ml / 170) * 100, 100) }}%;background:{{ $ml > 160 || $ml < 70 ? 'var(--c-warn)' : 'var(--c-ok)' }}"></div>
+                        @php $mlBad = $ml > 160 || $ml < 70; @endphp
+                        <span class="text-tertiary">│</span>
+                        <span style="color: {{ $mlBad ? 'var(--c-warn)' : 'var(--c-ok)' }};">{{ $ml }} chars</span>
+                        <div class="flex-1 h-[3px] progress-track max-w-[140px]">
+                            <div class="h-full" style="width: {{ min(($ml / 170) * 100, 100) }}%;
+                                                        background: {{ $mlBad ? 'var(--c-warn)' : 'var(--c-ok)' }};
+                                                        box-shadow: 0 0 4px {{ $mlBad ? 'var(--c-warn)' : 'var(--c-ok)' }};"></div>
                         </div>
                     @endif
                 </div>
-                <div class="text-[12px] text-secondary leading-relaxed">{{ \Illuminate\Support\Str::limit($selectedPage['metaDescription'] ?? '—', 220) }}</div>
+                <div class="font-sans text-[12px] text-secondary leading-relaxed">
+                    {{ \Illuminate\Support\Str::limit($selectedPage['metaDescription'] ?? '—', 220) }}
+                </div>
             </div>
 
-            {{-- H1 + Metrics --}}
+            {{-- H1 + inline metrics --}}
             <div class="flex gap-6">
-                <div class="flex-1">
-                    <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-1">H1</div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1.5 font-mono text-[10px] uppercase tracking-[0.16em]">
+                        <span class="c-accent">▸</span>
+                        <span class="text-muted">h1</span>
+                    </div>
                     @forelse($selectedPage['h1s'] as $h1)
-                        <div class="text-[13px] text-secondary">{{ $h1 }}</div>
+                        <div class="font-sans text-[13px] text-secondary leading-snug">{{ $h1 }}</div>
                     @empty
-                        <div class="text-[13px] c-err font-medium">Missing H1</div>
+                        <div class="font-mono text-[12px] c-err">✗ missing h1</div>
                     @endforelse
                 </div>
-                <div class="flex gap-5 text-2xs shrink-0">
+
+                <div class="flex gap-5 text-[11px] shrink-0 font-mono">
                     @foreach([
-                        ['Words', $selectedPage['wordCount']],
-                        ['Internal', $selectedPage['internalLinkCount']],
-                        ['External', $selectedPage['externalLinkCount']],
+                        ['words',    $selectedPage['wordCount']],
+                        ['internal', $selectedPage['internalLinkCount']],
+                        ['external', $selectedPage['externalLinkCount']],
                     ] as [$metricLabel, $metricValue])
                     <div>
-                        <div class="text-tertiary mb-0.5">{{ $metricLabel }}</div>
-                        <div class="text-primary font-medium tabular-nums">{{ $metricValue }}</div>
+                        <div class="text-muted uppercase tracking-[0.14em] mb-0.5">{{ $metricLabel }}</div>
+                        <div class="text-primary tabular-nums text-[14px]">{{ number_format($metricValue) }}</div>
                     </div>
                     @endforeach
                     <div>
-                        <div class="text-tertiary mb-0.5">Canonical</div>
+                        <div class="text-muted uppercase tracking-[0.14em] mb-0.5">canonical</div>
                         @php $cs = $selectedPage['canonicalStatus']; @endphp
-                        <div class="font-medium {{ match($cs) { 'self' => 'c-ok', 'other' => 'c-warn', default => 'c-err' } }}">
-                            {{ match($cs) { 'self' => 'Self-referencing', 'other' => 'Canonicalized', default => 'Missing' } }}
+                        <div class="{{ match($cs) { 'self' => 'c-ok', 'other' => 'c-warn', default => 'c-err' } }}">
+                            {{ match($cs) { 'self' => 'self-ref', 'other' => 'canon', default => 'missing' } }}
                         </div>
                     </div>
                 </div>
@@ -112,14 +154,20 @@
 
             @if($selectedPage['canonicalStatus'] === 'other' && $selectedPage['canonical'])
             <div>
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-1">Canonical target</div>
-                <div class="text-[12px] font-mono text-secondary truncate">{{ $selectedPage['canonical'] }}</div>
+                <div class="flex items-center gap-2 mb-1 font-mono text-[10px] uppercase tracking-[0.16em]">
+                    <span class="c-accent">▸</span>
+                    <span class="text-muted">canonical_target</span>
+                </div>
+                <div class="font-mono text-[11px] text-secondary truncate">{{ $selectedPage['canonical'] }}</div>
             </div>
             @endif
 
             @if(count($selectedPage['hreflangs']) > 0)
             <div>
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-1">Hreflangs</div>
+                <div class="flex items-center gap-2 mb-1.5 font-mono text-[10px] uppercase tracking-[0.16em]">
+                    <span class="c-accent">▸</span>
+                    <span class="text-muted">hreflangs</span>
+                </div>
                 <div class="flex flex-wrap gap-1">
                     @foreach($selectedPage['hreflangs'] as $hl)
                         <span class="badge badge-info">{{ $hl['language'] }}{{ $hl['region'] ? '-'.$hl['region'] : '' }}</span>
@@ -128,19 +176,24 @@
             </div>
             @endif
 
-            {{-- SERP Snippet Preview --}}
+            {{-- SERP PREVIEW — keep Google colors intentionally, framed as a file --}}
             @if($selectedPage['title'] || $selectedPage['metaDescription'])
             <div>
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-2">SERP preview</div>
-                <div class="bg-app2 rounded-lg border border-line p-3 max-w-[600px]">
-                    <div class="text-[16px] leading-snug truncate" style="color:#1a0dab">
+                <div class="flex items-center gap-2 mb-1.5 font-mono text-[10px] uppercase tracking-[0.16em]">
+                    <span class="c-accent">▸</span>
+                    <span class="text-muted">serp_preview</span>
+                    <span class="text-tertiary">·</span>
+                    <span class="text-muted">google.html</span>
+                </div>
+                <div class="bg-white border border-line2 p-3 max-w-[600px]" style="font-family: arial, sans-serif;">
+                    <div class="text-[16px] leading-snug truncate" style="color:#1a0dab;">
                         {{ \Illuminate\Support\Str::limit($selectedPage['title'] ?? $selectedPage['url'], 60) }}
                     </div>
-                    <div class="text-[13px] font-mono truncate mt-0.5" style="color:#006621">
+                    <div class="text-[13px] truncate mt-0.5" style="color:#006621;">
                         {{ $selectedPage['url'] }}
                     </div>
                     @if($selectedPage['metaDescription'])
-                    <div class="text-[13px] leading-relaxed mt-0.5 line-clamp-2" style="color:#545454">
+                    <div class="text-[13px] leading-relaxed mt-0.5 line-clamp-2" style="color:#545454;">
                         {{ \Illuminate\Support\Str::limit($selectedPage['metaDescription'], 160) }}
                     </div>
                     @endif
@@ -149,52 +202,77 @@
             @endif
         </div>
 
+        {{-- ═══ TECHNICAL ═══ --}}
         @elseif($detailTab === 'technical')
         <div class="p-4 anim-fade">
-            <div class="grid grid-cols-3 gap-3">
-                @foreach([
-                    ['Content-Type', $selectedPage['contentType'], null],
-                    ['Size', number_format($selectedPage['bodySize']/1024, 1) . ' KB', null],
-                    ['Response time', number_format($selectedPage['responseTime'], 0) . 'ms', $selectedPage['responseTime'] > 1000 ? 'var(--c-warn)' : null],
-                    ['Depth', (string)$selectedPage['crawlDepth'], null],
-                    ['Internal links', (string)$selectedPage['internalLinkCount'], null],
-                    ['External links', (string)$selectedPage['externalLinkCount'], null],
-                ] as [$tLabel, $tVal, $tColor])
-                <div class="bg-app2 rounded-lg px-3 py-2 border border-line">
-                    <div class="text-2xs text-tertiary mb-0.5">{{ $tLabel }}</div>
-                    <div class="text-[13px] font-mono" style="{{ $tColor ? "color:{$tColor}" : 'color:var(--c-fg2)' }}">{{ $tVal }}</div>
+
+            {{-- key=value grid --}}
+            <div class="grid grid-cols-3 gap-0 border border-line bg-app2">
+                @php
+                    $techFields = [
+                        ['content_type', $selectedPage['contentType'] ?: '—', null],
+                        ['size',         number_format($selectedPage['bodySize']/1024, 1) . ' KB', null],
+                        ['response_ms',  number_format($selectedPage['responseTime'], 0), $selectedPage['responseTime'] > 1000 ? 'var(--c-warn)' : null],
+                        ['depth',        (string)$selectedPage['crawlDepth'], null],
+                        ['links_int',    (string)$selectedPage['internalLinkCount'], null],
+                        ['links_ext',    (string)$selectedPage['externalLinkCount'], null],
+                    ];
+                @endphp
+                @foreach($techFields as $i => [$tLabel, $tVal, $tColor])
+                <div class="px-3 py-2 {{ $i % 3 !== 2 ? 'border-r border-line' : '' }} {{ $i < 3 ? 'border-b border-line' : '' }}">
+                    <div class="text-[10px] font-mono uppercase tracking-[0.16em] text-muted mb-0.5">{{ $tLabel }}</div>
+                    <div class="font-mono text-[13px] tabular-nums" style="{{ $tColor ? 'color:'.$tColor : 'color: var(--c-fg)' }}">{{ $tVal }}</div>
                 </div>
                 @endforeach
             </div>
 
+            {{-- Redirect chain --}}
             @if(count($selectedPage['redirectChain']) > 0)
-            <div class="mt-3">
-                <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-2">Redirect chain</div>
-                @foreach($selectedPage['redirectChain'] as $hop)
-                <div class="flex items-center gap-2 text-[11px] font-mono mb-1">
-                    <span class="badge badge-warn">{{ $hop['statusCode'] }}</span>
-                    <span class="text-muted truncate">{{ \Illuminate\Support\Str::limit($hop['from'], 50) }}</span>
-                    <svg class="w-3 h-3 text-muted shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M13 7l5 5-5 5m5-5H6"/></svg>
-                    <span class="text-secondary truncate">{{ \Illuminate\Support\Str::limit($hop['to'], 50) }}</span>
+            <div class="mt-4">
+                <div class="flex items-center gap-2 mb-2 font-mono text-[10px] uppercase tracking-[0.16em]">
+                    <span class="c-accent">▸</span>
+                    <span class="text-muted">redirect_chain</span>
+                    <span class="text-tertiary">·{{ count($selectedPage['redirectChain']) }}</span>
                 </div>
-                @endforeach
+                <div class="space-y-1">
+                    @foreach($selectedPage['redirectChain'] as $hop)
+                    <div class="flex items-center gap-2 text-[11px] font-mono">
+                        <span class="badge badge-warn text-[9px]">{{ $hop['statusCode'] }}</span>
+                        <span class="text-muted truncate">{{ \Illuminate\Support\Str::limit($hop['from'], 50) }}</span>
+                        <span class="c-accent shrink-0">→</span>
+                        <span class="text-secondary truncate">{{ \Illuminate\Support\Str::limit($hop['to'], 50) }}</span>
+                    </div>
+                    @endforeach
+                </div>
             </div>
             @endif
         </div>
 
+        {{-- ═══ LINKS ═══ --}}
         @elseif($detailTab === 'links')
         <div class="anim-fade" x-data="{ linkTab: 'internal' }">
+
             {{-- Sub-tabs --}}
-            <div class="flex items-center gap-0.5 px-3 pt-2 pb-1">
+            <div class="flex items-center gap-0 px-3 pt-2 pb-1 border-b border-line">
                 @foreach([
-                    'internal' => 'Internal (' . count($intLinks) . ')',
-                    'external' => 'Outgoing (' . count($extLinks) . ')',
-                    'images' => 'Images (' . count($imgLinks) . ')',
-                ] as $ltKey => $ltLabel)
+                    'internal' => ['internal', count($intLinks)],
+                    'external' => ['outgoing', count($extLinks)],
+                    'images'   => ['images',   count($imgLinks)],
+                ] as $ltKey => [$ltLabel, $ltCount])
                 <button @click="linkTab = '{{ $ltKey }}'"
-                    class="px-2.5 py-1 rounded-md text-2xs font-medium transition-all"
-                    :class="linkTab === '{{ $ltKey }}' ? 'bg-accent-s c-accent' : 'text-tertiary hover:text-secondary hover:bg-panel3'">
-                    {{ $ltLabel }}
+                        class="h-6 px-2.5 flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors"
+                        :class="linkTab === '{{ $ltKey }}'
+                                ? 'c-accent'
+                                : 'text-tertiary hover:text-secondary'">
+                    <span class="text-muted" :class="linkTab === '{{ $ltKey }}' ? 'text-muted' : 'text-muted'">[</span>
+                    <span class="flex items-center gap-1.5">
+                        <template x-if="linkTab === '{{ $ltKey }}'">
+                            <span class="c-accent">▸</span>
+                        </template>
+                        <span>{{ $ltLabel }}</span>
+                        <span class="text-muted font-normal">·{{ $ltCount }}</span>
+                    </span>
+                    <span class="text-muted">]</span>
                 </button>
                 @endforeach
             </div>
@@ -202,19 +280,19 @@
             {{-- Internal links --}}
             <div x-show="linkTab === 'internal'" class="overflow-x-auto">
                 @if(count($intLinks) > 0)
-                <table class="w-full text-[12px] border-collapse" style="min-width:600px">
+                <table class="w-full text-[11px] border-collapse font-mono" style="min-width:600px">
                     <thead>
                         <tr class="border-b border-line bg-panel2">
-                            <th class="text-left px-3 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider">Target URL</th>
-                            <th class="text-left px-2 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider w-[180px]">Anchor text</th>
-                            <th class="text-center px-2 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider w-16">Rel</th>
+                            <th class="text-left px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted">target_url</th>
+                            <th class="text-left px-2 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted w-[180px]">anchor</th>
+                            <th class="text-center px-2 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted w-16">rel</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($intLinks as $link)
                         <tr class="border-b border-line row-hover">
-                            <td class="px-3 py-[5px] font-mono text-secondary truncate max-w-0">{{ $link['url'] }}</td>
-                            <td class="px-2 py-[5px] text-muted truncate max-w-0">{{ $link['anchor'] ?? '—' }}</td>
+                            <td class="px-3 py-[5px] text-secondary truncate max-w-0">{{ $link['url'] }}</td>
+                            <td class="px-2 py-[5px] text-muted truncate max-w-0 font-sans">{{ $link['anchor'] ?? '—' }}</td>
                             <td class="px-2 py-[5px] text-center">
                                 @if($link['relation'] !== 'follow')
                                     <span class="badge badge-warn">{{ $link['relation'] }}</span>
@@ -227,26 +305,28 @@
                     </tbody>
                 </table>
                 @else
-                <div class="flex items-center justify-center py-6 text-tertiary text-[13px]">No internal links found</div>
+                <div class="flex items-center justify-center py-6 font-mono text-[12px] text-muted">
+                    <span class="c-accent mr-2">$</span>no internal links
+                </div>
                 @endif
             </div>
 
             {{-- External links --}}
             <div x-show="linkTab === 'external'" class="overflow-x-auto">
                 @if(count($extLinks) > 0)
-                <table class="w-full text-[12px] border-collapse" style="min-width:600px">
+                <table class="w-full text-[11px] border-collapse font-mono" style="min-width:600px">
                     <thead>
                         <tr class="border-b border-line bg-panel2">
-                            <th class="text-left px-3 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider">Target URL</th>
-                            <th class="text-left px-2 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider w-[180px]">Anchor text</th>
-                            <th class="text-center px-2 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider w-16">Rel</th>
+                            <th class="text-left px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted">target_url</th>
+                            <th class="text-left px-2 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted w-[180px]">anchor</th>
+                            <th class="text-center px-2 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted w-16">rel</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($extLinks as $link)
                         <tr class="border-b border-line row-hover">
-                            <td class="px-3 py-[5px] font-mono text-secondary truncate max-w-0">{{ $link['url'] }}</td>
-                            <td class="px-2 py-[5px] text-muted truncate max-w-0">{{ $link['anchor'] ?? '—' }}</td>
+                            <td class="px-3 py-[5px] text-secondary truncate max-w-0">{{ $link['url'] }}</td>
+                            <td class="px-2 py-[5px] text-muted truncate max-w-0 font-sans">{{ $link['anchor'] ?? '—' }}</td>
                             <td class="px-2 py-[5px] text-center">
                                 @if($link['relation'] !== 'follow')
                                     <span class="badge badge-warn">{{ $link['relation'] }}</span>
@@ -259,29 +339,31 @@
                     </tbody>
                 </table>
                 @else
-                <div class="flex items-center justify-center py-6 text-tertiary text-[13px]">No outgoing links found</div>
+                <div class="flex items-center justify-center py-6 font-mono text-[12px] text-muted">
+                    <span class="c-accent mr-2">$</span>no outgoing links
+                </div>
                 @endif
             </div>
 
             {{-- Images --}}
             <div x-show="linkTab === 'images'" class="overflow-x-auto">
                 @if(count($imgLinks) > 0)
-                <table class="w-full text-[12px] border-collapse" style="min-width:600px">
+                <table class="w-full text-[11px] border-collapse font-mono" style="min-width:600px">
                     <thead>
                         <tr class="border-b border-line bg-panel2">
-                            <th class="text-left px-3 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider">Image URL</th>
-                            <th class="text-left px-2 py-1.5 text-2xs text-tertiary font-medium uppercase tracking-wider w-[220px]">Alt text</th>
+                            <th class="text-left px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted">image_url</th>
+                            <th class="text-left px-2 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted w-[220px]">alt</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($imgLinks as $link)
                         <tr class="border-b border-line row-hover">
-                            <td class="px-3 py-[5px] font-mono text-secondary truncate max-w-0">{{ $link['url'] }}</td>
+                            <td class="px-3 py-[5px] text-secondary truncate max-w-0">{{ $link['url'] }}</td>
                             <td class="px-2 py-[5px] truncate max-w-0">
                                 @if($link['anchor'])
-                                    <span class="text-muted">{{ $link['anchor'] }}</span>
+                                    <span class="text-muted font-sans">{{ $link['anchor'] }}</span>
                                 @else
-                                    <span class="c-warn font-medium">Missing alt</span>
+                                    <span class="c-warn">✗ missing alt</span>
                                 @endif
                             </td>
                         </tr>
@@ -289,11 +371,14 @@
                     </tbody>
                 </table>
                 @else
-                <div class="flex items-center justify-center py-6 text-tertiary text-[13px]">No images found</div>
+                <div class="flex items-center justify-center py-6 font-mono text-[12px] text-muted">
+                    <span class="c-accent mr-2">$</span>no images
+                </div>
                 @endif
             </div>
         </div>
 
+        {{-- ═══ ISSUES ═══ --}}
         @elseif($detailTab === 'issues')
         <div class="p-4 anim-fade">
             @if(count($selectedPage['issues']) > 0)
@@ -306,27 +391,45 @@
                 <div class="space-y-4">
                     @foreach($grouped as $cat => $catIssues)
                     <div>
-                        <div class="text-2xs text-tertiary font-semibold uppercase tracking-wider mb-1.5">
-                            {{ ucfirst($cat) }} <span class="text-muted font-normal">({{ count($catIssues) }})</span>
+                        <div class="flex items-center gap-2 mb-1.5 font-mono text-[10px] uppercase tracking-[0.16em]">
+                            <span class="c-accent">▸</span>
+                            <span class="text-muted">{{ $cat }}</span>
+                            <span class="text-tertiary">·{{ count($catIssues) }}</span>
                         </div>
                         <div class="space-y-1">
                             @foreach($catIssues as $issue)
-                            <div class="flex gap-2.5 text-[12px] bg-app2 rounded-lg px-3 py-2 border border-line">
-                                <span class="mt-[4px] w-2 h-2 rounded-full shrink-0"
-                                    style="background:{{ match($issue['severity']) {
-                                        'error' => 'var(--c-err)', 'warning' => 'var(--c-warn)',
-                                        'notice' => 'var(--c-info)', default => 'var(--c-fg4)'
-                                    } }}"></span>
+                            @php
+                                $sev = $issue['severity'];
+                                $sevColor = match($sev) {
+                                    'error'   => 'var(--c-err)',
+                                    'warning' => 'var(--c-warn)',
+                                    'notice'  => 'var(--c-info)',
+                                    default   => 'var(--c-fg4)',
+                                };
+                                $sevGlyph = match($sev) {
+                                    'error'   => '●',
+                                    'warning' => '▲',
+                                    'notice'  => '●',
+                                    default   => '○',
+                                };
+                                $sevBadge = match($sev) {
+                                    'error'   => 'badge-err',
+                                    'warning' => 'badge-warn',
+                                    'notice'  => 'badge-info',
+                                    default   => '',
+                                };
+                            @endphp
+                            <div class="flex gap-2.5 text-[12px] bg-app2 border border-line px-3 py-2">
+                                <span class="mt-[3px] font-mono shrink-0 text-[10px]" style="color: {{ $sevColor }};">{{ $sevGlyph }}</span>
                                 <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-primary">{{ $issue['message'] }}</span>
-                                        <span class="badge {{ match($issue['severity']) {
-                                            'error' => 'badge-err', 'warning' => 'badge-warn',
-                                            'notice' => 'badge-info', default => ''
-                                        } }}">{{ $issue['severity'] }}</span>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-primary font-sans">{{ $issue['message'] }}</span>
+                                        <span class="badge {{ $sevBadge }}">{{ $sev }}</span>
                                     </div>
                                     @if($issue['context'])
-                                    <div class="text-[11px] text-muted font-mono mt-0.5 truncate">{{ $issue['context'] }}</div>
+                                    <div class="text-[11px] text-muted font-mono mt-1 truncate">
+                                        <span class="text-tertiary">└─ </span>{{ $issue['context'] }}
+                                    </div>
                                     @endif
                                 </div>
                             </div>
@@ -336,9 +439,9 @@
                     @endforeach
                 </div>
             @else
-                <div class="flex items-center justify-center py-8 gap-2 text-tertiary">
-                    <svg class="w-4 h-4" style="color:var(--c-ok);opacity:0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span class="text-[13px]">No issues detected</span>
+                <div class="flex items-center justify-center py-8 gap-2 font-mono text-[12px] c-ok">
+                    <span>✓</span>
+                    <span>no issues detected</span>
                 </div>
             @endif
         </div>

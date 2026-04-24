@@ -1,245 +1,315 @@
-{{-- ══ HEADER ══ --}}
-<header class="flex-none bg-panel border-b border-line px-3 py-2.5">
-    <div class="flex items-center gap-2.5">
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{--  HEADER — Terminal Operator                                                 --}}
+{{--  Three bands: tty-strip (draggable) · command row · status line (on crawl)  --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+<header class="flex-none chrome-nosel">
 
-        {{-- Logo + Theme toggle --}}
-        <div class="flex items-center gap-2 pr-3 border-r border-line">
-            <div class="w-7 h-7 rounded-lg bg-accent-s flex items-center justify-center">
-                <svg class="w-3.5 h-3.5 c-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <circle cx="11" cy="11" r="6"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-            </div>
-            <span class="text-2xs font-semibold text-tertiary tracking-widest hidden xl:block">SEO SPIDER</span>
-
-            <button @click="dark = !dark" class="ml-1 p-1 rounded-md hover:bg-panel3 transition-colors text-tertiary hover:text-secondary" title="Toggle theme">
-                <template x-if="dark">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                </template>
-                <template x-if="!dark">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                </template>
-            </button>
+    {{-- ── TTY STRIP ─────────────────────────────────────────────────── --}}
+    {{-- Draggable region for NativePHP (when titleBarHidden is enabled).   --}}
+    <div class="app-drag h-7 bg-panel2 border-b border-line flex items-center px-3 gap-3 text-[11px] leading-none">
+        <div class="flex items-center gap-1.5">
+            <span class="c-accent font-mono text-[13px]" style="text-shadow: 0 0 6px var(--c-accent-glow);">▸</span>
+            <span class="c-accent font-semibold tracking-tight">seo-spider</span>
+            <span class="text-muted">·</span>
+            <span class="text-tertiary font-mono text-[10px]">tty0</span>
         </div>
 
-        {{-- URL Input --}}
-        <div class="flex-1 relative group">
-            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-link transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" d="M13.828 10.172a4 4 0 0 0-5.656 0l-4 4a4 4 0 1 0 5.656 5.656l1.102-1.101"/>
-                    <path stroke-linecap="round" d="M10.172 13.828a4 4 0 0 0 5.656 0l4-4a4 4 0 0 0-5.656-5.656l-1.1 1.1"/>
-                </svg>
-            </div>
-            <input type="url" wire:model="url" wire:keydown.enter="startCrawl"
-                placeholder="https://example.com"
-                class="w-full h-9 bg-app2 border border-line rounded-lg pl-9 pr-10 text-[13px] font-mono text-primary placeholder:text-muted
-                       focus:border-[var(--c-accent)] focus:ring-1 focus:ring-[var(--c-accent-bg)] transition-all duration-200"
-                @if($crawling || $paused) disabled @endif autocomplete="off" spellcheck="false">
-            @if($crawling)
-            <div class="absolute right-3 top-1/2 -translate-y-1/2">
-                <div class="w-4 h-4 border-2 border-line border-t-[var(--c-accent)] rounded-full animate-spin"></div>
-            </div>
+        <span class="text-muted">─</span>
+
+        <div class="text-tertiary font-mono flex items-center gap-1.5 min-w-0">
+            @if($status)
+                <span class="text-muted">session:</span>
+                <span class="text-secondary truncate max-w-[240px]">{{ parse_url($status['seedUrl'] ?? '', PHP_URL_HOST) ?: '—' }}</span>
+            @else
+                <span class="text-muted">session: idle</span>
             @endif
         </div>
 
-        {{-- Config --}}
-        <div class="flex items-center gap-1.5">
-            <div class="flex items-center gap-1.5 bg-app2 border border-line rounded-lg px-2.5 h-9">
-                <span class="text-2xs text-tertiary">Max</span>
-                <input type="number" wire:model="maxPages" class="w-14 bg-transparent text-[13px] font-mono text-primary text-center tabular-nums" @if($crawling || $paused) disabled @endif>
-            </div>
-            <div class="flex items-center gap-1.5 bg-app2 border border-line rounded-lg px-2.5 h-9">
-                <span class="text-2xs text-tertiary">Depth</span>
-                <input type="number" wire:model="maxDepth" class="w-10 bg-transparent text-[13px] font-mono text-primary text-center tabular-nums" @if($crawling || $paused) disabled @endif>
-            </div>
-        </div>
+        <div class="flex-1"></div>
 
-        {{-- ═══ Advanced Options Dropdown ═══ --}}
-        @php $hasAdvanced = $crawlResources || $crawlSubdomains || $followExternalLinks; @endphp
-        <div x-data="{ open: false }" class="relative">
-            <button @click="open = !open"
-                    :disabled="@js($crawling || $paused)"
-                    class="h-9 w-9 rounded-lg bg-app2 border flex items-center justify-center transition-all relative
-                           {{ $hasAdvanced ? 'border-[var(--c-accent)] text-[var(--c-accent)]' : 'border-line text-tertiary hover:text-secondary hover:border-line2' }}
-                           {{ ($crawling || $paused) ? 'opacity-50 cursor-not-allowed' : '' }}"
-                    :class="{ 'border-[var(--c-accent)] text-[var(--c-accent)]': open }"
-                    title="Advanced options">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                </svg>
-                @if($hasAdvanced)
-                <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full" style="background: var(--c-accent)"></span>
-                @endif
-            </button>
-
-            {{-- Dropdown Panel --}}
-            <div x-show="open" x-cloak
-                 x-transition:enter="transition ease-out duration-150"
-                 x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
-                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-                 @click.outside="open = false"
-                 class="absolute right-0 top-full mt-2 w-80 bg-panel border border-line rounded-xl shadow-2xl z-50 overflow-hidden">
-
-                {{-- Header --}}
-                <div class="px-4 py-3 border-b border-line bg-panel2">
-                    <h3 class="text-[13px] font-semibold text-primary flex items-center gap-2">
-                        <svg class="w-4 h-4 text-tertiary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/>
-                        </svg>
-                        Crawl options
-                    </h3>
-                    <p class="text-2xs text-tertiary mt-0.5">Advanced crawler settings</p>
-                </div>
-
-                {{-- Options --}}
-                <div class="p-2 space-y-0.5">
-
-                    {{-- Crawl Resources --}}
-                    <label class="flex items-start gap-3 p-3 rounded-lg hover:bg-panel2 cursor-pointer transition-colors">
-                        <input type="checkbox" wire:model.live="crawlResources"
-                               class="mt-0.5 w-4 h-4 rounded border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[13px] font-medium text-primary">Static resources</span>
-                                <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-info-s c-info">CSS · JS · IMG</span>
-                            </div>
-                            <p class="text-2xs text-tertiary mt-1 leading-relaxed">
-                                Crawl CSS, JavaScript, images and other resources to detect 404 errors and analyze sizes
-                            </p>
-                        </div>
-                    </label>
-
-                    {{-- Crawl Subdomains --}}
-                    <label class="flex items-start gap-3 p-3 rounded-lg hover:bg-panel2 cursor-pointer transition-colors">
-                        <input type="checkbox" wire:model.live="crawlSubdomains"
-                               class="mt-0.5 w-4 h-4 rounded border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[13px] font-medium text-primary">Subdomains</span>
-                            </div>
-                            <p class="text-2xs text-tertiary mt-1 leading-relaxed">
-                                Include subdomains like <code class="font-mono text-secondary bg-panel3 px-1 rounded">blog.example.com</code> in the crawl
-                            </p>
-                        </div>
-                    </label>
-
-                    {{-- Follow External Links --}}
-                    <label class="flex items-start gap-3 p-3 rounded-lg hover:bg-panel2 cursor-pointer transition-colors">
-                        <input type="checkbox" wire:model.live="followExternalLinks"
-                               class="mt-0.5 w-4 h-4 rounded border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[13px] font-medium text-primary">External links</span>
-                                <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-warn-s c-warn">+ slow</span>
-                            </div>
-                            <p class="text-2xs text-tertiary mt-1 leading-relaxed">
-                                Verify HTTP status of outgoing links to other domains
-                            </p>
-                        </div>
-                    </label>
-
-                </div>
-
-                {{-- Footer --}}
-                <div class="px-4 py-2.5 border-t border-line bg-panel2">
-                    <p class="text-2xs text-muted flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>
-                        </svg>
-                        Enabling options increases crawl time
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        {{-- Updater --}}
-        <livewire:app-updater />
-
-        {{-- Actions --}}
+        {{-- global state pill --}}
         @if($crawling)
-            <button wire:click="pauseCrawl"
-                class="h-9 px-3 rounded-lg text-[13px] font-medium bg-app2 border border-line text-secondary hover:text-primary hover:border-line2 transition-all flex items-center gap-1.5" title="Pause">
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-                Pause
-            </button>
-            <button wire:click="cancelCrawl"
-                class="h-9 px-3 rounded-lg text-[13px] font-medium bg-err-s c-err border border-line hover:brightness-110 transition-all flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
-                Stop
-            </button>
+            <span class="flex items-center gap-1.5 c-accent font-mono">
+                <span class="w-1.5 h-1.5 rounded-full dot-pulse" style="background:var(--c-accent); box-shadow:0 0 6px var(--c-accent-glow);"></span>
+                <span class="text-[10px] uppercase tracking-[0.14em]">live</span>
+            </span>
         @elseif($paused)
-            <button wire:click="resumeCrawl"
-                class="h-9 px-4 rounded-lg text-[13px] font-semibold text-white transition-all flex items-center gap-1.5"
-                style="background:var(--c-accent)">
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                Resume
-            </button>
-            <button wire:click="cancelCrawl"
-                class="h-9 px-3 rounded-lg text-[13px] font-medium bg-err-s c-err border border-line hover:brightness-110 transition-all flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
-                Stop
-            </button>
+            <span class="flex items-center gap-1.5 c-warn font-mono">
+                <span class="w-1.5 h-1.5 rounded-full" style="background:var(--c-warn);"></span>
+                <span class="text-[10px] uppercase tracking-[0.14em]">paused</span>
+            </span>
         @else
-            <button wire:click="startCrawl"
-                class="h-9 px-5 rounded-lg text-[13px] font-semibold text-white transition-all flex items-center gap-1.5"
-                style="background:var(--c-accent)">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
-                Crawl
-            </button>
+            <span class="flex items-center gap-1.5 text-tertiary font-mono">
+                <span class="w-1.5 h-1.5 rounded-full" style="background:var(--c-fg4);"></span>
+                <span class="text-[10px] uppercase tracking-[0.14em]">ready</span>
+            </span>
         @endif
     </div>
 
-    @error('url') <p class="c-err text-2xs mt-1.5 pl-12">{{ $message }}</p> @enderror
+    {{-- ── COMMAND ROW ───────────────────────────────────────────────── --}}
+    <div class="app-no-drag bg-panel border-b border-line px-3 py-2.5">
+        <div class="flex items-center gap-2">
 
-    {{-- Progress Bar --}}
+            {{-- URL input with prompt prefix --}}
+            <div class="flex-1 relative group">
+                <div class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none select-none">
+                    <span class="c-accent font-mono text-[13px] leading-none" style="text-shadow:0 0 6px var(--c-accent-glow);">❯</span>
+                    <span class="text-muted font-mono text-[10px] uppercase tracking-[0.16em]">crawl</span>
+                </div>
+
+                <input type="url" wire:model="url" wire:keydown.enter="startCrawl"
+                       placeholder="example.com"
+                       class="w-full h-9 bg-app2 border border-line pl-[88px] pr-11 text-[13px] font-mono text-primary placeholder:text-muted tabular-nums
+                              focus:border-line3 focus:bg-app transition-[border-color,background-color] duration-150"
+                       @if($crawling || $paused) disabled @endif
+                       autocomplete="off" spellcheck="false">
+
+                @if($crawling)
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div class="w-3.5 h-3.5 border border-line2 animate-spin" style="border-top-color: var(--c-accent); border-radius: 1px;"></div>
+                    </div>
+                @endif
+            </div>
+
+            {{-- key=value config pairs --}}
+            <label class="flex items-center bg-app2 border border-line h-9 pl-2.5 pr-1.5 gap-1.5 cursor-text focus-within:border-line3 transition-colors">
+                <span class="text-muted font-mono text-[10px] uppercase tracking-[0.12em]">max</span>
+                <span class="text-muted font-mono">=</span>
+                <input type="number" wire:model="maxPages"
+                       class="w-14 bg-transparent text-[13px] font-mono text-primary tabular-nums"
+                       @if($crawling || $paused) disabled @endif>
+            </label>
+
+            <label class="flex items-center bg-app2 border border-line h-9 pl-2.5 pr-1.5 gap-1.5 cursor-text focus-within:border-line3 transition-colors">
+                <span class="text-muted font-mono text-[10px] uppercase tracking-[0.12em]">depth</span>
+                <span class="text-muted font-mono">=</span>
+                <input type="number" wire:model="maxDepth"
+                       class="w-10 bg-transparent text-[13px] font-mono text-primary tabular-nums"
+                       @if($crawling || $paused) disabled @endif>
+            </label>
+
+            {{-- advanced options dropdown --}}
+            @php
+                $hasAdvanced = $crawlResources || $crawlSubdomains || $followExternalLinks;
+                $advCount    = ($crawlResources?1:0) + ($crawlSubdomains?1:0) + ($followExternalLinks?1:0);
+            @endphp
+            <div x-data="{ open: false }" class="relative">
+                <button @click="open = !open"
+                        :disabled="@js($crawling || $paused)"
+                        class="h-9 px-3 bg-app2 border flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.12em] transition-colors
+                               {{ $hasAdvanced ? 'border-line3 c-accent' : 'border-line text-tertiary hover:text-secondary hover:border-line2' }}
+                               {{ ($crawling || $paused) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                        :class="{ 'border-line3 c-accent': open }"
+                        title="Advanced options">
+                    <span>opts</span>
+                    @if($hasAdvanced)
+                        <span class="c-accent font-bold">·{{ $advCount }}</span>
+                    @endif
+                </button>
+
+                {{-- dropdown panel --}}
+                <div x-show="open" x-cloak
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 -translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-1"
+                     @click.outside="open = false"
+                     class="absolute right-0 top-full mt-1 w-[340px] bg-panel border border-line2 shadow-2xl z-50 overflow-hidden app-no-drag">
+
+                    <div class="px-3 py-2 border-b border-line bg-panel2 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em]">
+                        <span class="c-accent">/etc/crawler.conf</span>
+                        <span class="text-muted">edit</span>
+                    </div>
+
+                    <div class="p-1">
+                        <label class="flex items-start gap-3 p-3 hover:bg-panel2 cursor-pointer transition-colors">
+                            <input type="checkbox" wire:model.live="crawlResources"
+                                   class="mt-0.5 w-4 h-4 border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[13px] font-mono text-primary">crawl_static_resources</span>
+                                    <span class="badge badge-info">css · js · img</span>
+                                </div>
+                                <p class="text-2xs text-tertiary mt-1 leading-relaxed font-mono">
+                                    <span class="text-muted">#</span> detect 404s and oversized assets
+                                </p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3 hover:bg-panel2 cursor-pointer transition-colors">
+                            <input type="checkbox" wire:model.live="crawlSubdomains"
+                                   class="mt-0.5 w-4 h-4 border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
+                            <div class="flex-1 min-w-0">
+                                <span class="text-[13px] font-mono text-primary">include_subdomains</span>
+                                <p class="text-2xs text-tertiary mt-1 leading-relaxed font-mono">
+                                    <span class="text-muted">#</span> e.g. blog.example.com
+                                </p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3 hover:bg-panel2 cursor-pointer transition-colors">
+                            <input type="checkbox" wire:model.live="followExternalLinks"
+                                   class="mt-0.5 w-4 h-4 border-line text-[var(--c-accent)] bg-app2 focus:ring-[var(--c-accent)] focus:ring-offset-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[13px] font-mono text-primary">verify_external_links</span>
+                                    <span class="badge badge-warn">slow</span>
+                                </div>
+                                <p class="text-2xs text-tertiary mt-1 leading-relaxed font-mono">
+                                    <span class="text-muted">#</span> HEAD request on outbound domains
+                                </p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="px-3 py-2 border-t border-line bg-panel2">
+                        <span class="font-mono text-[10px] text-muted">// extra options increase crawl time</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- updater slot (kept) --}}
+            <livewire:app-updater />
+
+            <span class="h-5 w-px" style="background: var(--c-border);"></span>
+
+            {{-- actions --}}
+            @if($crawling)
+                <button wire:click="pauseCrawl"
+                        class="h-9 px-3 text-[11px] font-mono uppercase tracking-[0.14em] bg-app2 border border-line text-secondary hover:text-primary hover:border-line2 transition-colors flex items-center gap-1.5"
+                        title="Pause">
+                    <span class="c-warn text-[10px]">❚❚</span>
+                    <span>pause</span>
+                </button>
+                <button wire:click="cancelCrawl"
+                        class="h-9 px-3 text-[11px] font-mono uppercase tracking-[0.14em] bg-app2 border c-err hover:bg-err-s transition-colors flex items-center gap-1.5"
+                        style="border-color: var(--c-err);">
+                    <span>■</span>
+                    <span>stop</span>
+                </button>
+
+            @elseif($paused)
+                <button wire:click="resumeCrawl"
+                        class="h-9 px-4 text-[11px] font-mono uppercase tracking-[0.14em] font-semibold flex items-center gap-1.5 transition-[filter,box-shadow] hover:brightness-110"
+                        style="background: var(--c-accent); color: #0a0c0a; box-shadow: 0 0 16px var(--c-accent-glow);">
+                    <span>▶</span>
+                    <span>resume</span>
+                </button>
+                <button wire:click="cancelCrawl"
+                        class="h-9 px-3 text-[11px] font-mono uppercase tracking-[0.14em] bg-app2 border c-err hover:bg-err-s transition-colors flex items-center gap-1.5"
+                        style="border-color: var(--c-err);">
+                    <span>■</span>
+                    <span>stop</span>
+                </button>
+
+            @else
+                <button wire:click="startCrawl"
+                        wire:loading.attr="disabled"
+                        wire:target="startCrawl"
+                        class="group h-9 px-5 text-[11px] font-mono uppercase tracking-[0.14em] font-semibold flex items-center gap-2 transition-[filter,box-shadow,opacity] hover:brightness-110 disabled:opacity-60"
+                        style="background: var(--c-accent); color: #0a0c0a; box-shadow: 0 0 16px var(--c-accent-glow);">
+                    <span class="transition-transform group-hover:translate-x-0.5">▶</span>
+                    <span wire:loading.remove wire:target="startCrawl">exec</span>
+                    <span wire:loading wire:target="startCrawl" class="ellipsis">booting</span>
+                </button>
+            @endif
+        </div>
+
+        @error('url')
+        <div class="mt-2 pl-[88px] flex items-center gap-2 text-2xs font-mono c-err anim-fade">
+            <span class="font-semibold">✗ err</span>
+            <span class="text-muted">·</span>
+            <span>{{ $message }}</span>
+        </div>
+        @enderror
+    </div>
+
+    {{-- ── STATUS LINE ───────────────────────────────────────────────── --}}
     @if($status)
     @php $prog = $this->progress; @endphp
-    <div class="mt-2.5 flex items-center gap-3">
-        <div class="flex-1">
-            <div class="w-full h-1 bg-app3 rounded-full overflow-hidden">
-                <div class="progress-fill h-full rounded-full"
-                     style="width:{{ $prog['pct'] }}%; background:{{ $crawling ? 'var(--c-accent)' : ($paused ? 'var(--c-warn)' : ($status['status'] === 'completed' ? 'var(--c-ok)' : 'var(--c-err)')) }}"></div>
+    <div class="app-no-drag bg-panel2 border-b border-line px-3 py-2 flex items-center gap-3 text-[11px] font-mono leading-none">
+
+        {{-- progress track + percent --}}
+        <div class="flex-1 flex items-center gap-2.5 min-w-0">
+            <div class="flex-1 h-[6px] progress-track">
+                @php
+                    $barColor = $crawling ? 'var(--c-accent)'
+                              : ($paused ? 'var(--c-warn)'
+                              : ($status['status'] === 'completed' ? 'var(--c-ok)' : 'var(--c-err)'));
+                @endphp
+                <div class="progress-fill {{ $crawling ? 'is-active' : '' }}"
+                     style="width: {{ $prog['pct'] }}%;
+                            background: {{ $barColor }};
+                            {{ $crawling ? 'box-shadow: 0 0 10px '.($barColor).';' : '' }}"></div>
             </div>
+            <span class="text-tertiary tabular-nums min-w-[3ch] text-right">{{ number_format($prog['pct'], 0) }}%</span>
         </div>
-        <div class="flex items-center gap-3 text-2xs tabular-nums shrink-0">
+
+        {{-- state + counters (pipe-separated, tmux-status style) --}}
+        <div class="flex items-center gap-3 tabular-nums shrink-0">
             @if($crawling)
-                <span class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full dot-pulse" style="background:var(--c-accent)"></span>
-                    <span class="c-accent font-medium">Crawling</span>
+                <span class="flex items-center gap-1.5 c-accent">
+                    <span class="w-1.5 h-1.5 rounded-full dot-pulse" style="background:var(--c-accent); box-shadow: 0 0 6px var(--c-accent-glow);"></span>
+                    <span class="font-medium ellipsis">crawling</span>
                 </span>
             @elseif($paused)
-                <span class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full" style="background:var(--c-warn)"></span>
-                    <span class="c-warn font-medium">Paused</span>
+                <span class="flex items-center gap-1.5 c-warn">
+                    <span class="w-1.5 h-1.5 rounded-full" style="background:var(--c-warn);"></span>
+                    <span class="font-medium">paused</span>
                 </span>
             @else
-                <span class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $status['status'] === 'completed' ? 'var(--c-ok)' : 'var(--c-err)' }}"></span>
-                    <span class="text-secondary">{{ match($status['status']) { 'completed' => 'Completed', 'cancelled' => 'Cancelled', 'failed' => 'Failed', default => ucfirst($status['status']) } }}</span>
+                @php
+                    $isDone = $status['status'] === 'completed';
+                    $stateColor = $isDone ? 'var(--c-ok)' : 'var(--c-err)';
+                    $stateLabel = match($status['status']) {
+                        'completed' => 'done',
+                        'cancelled' => 'stop',
+                        'failed'    => 'fail',
+                        default     => strtolower($status['status']),
+                    };
+                @endphp
+                <span class="flex items-center gap-1.5" style="color: {{ $stateColor }};">
+                    <span class="w-1.5 h-1.5 rounded-full" style="background: {{ $stateColor }};"></span>
+                    <span class="font-medium">{{ $stateLabel }}</span>
                 </span>
             @endif
 
-            <span><span class="text-primary font-medium">{{ $prog['label'] }}</span> <span class="text-muted">pages</span></span>
+            <span class="text-muted">│</span>
+            <span>
+                <span class="text-primary font-medium">{{ $prog['label'] }}</span>
+                <span class="text-muted">pages</span>
+            </span>
 
             @if($prog['rate'] > 0 && $crawling)
-                <span class="text-muted">{{ $prog['rate'] }} p/s</span>
-            @endif
-
-            {{-- Active options badges --}}
-            @if($crawlResources || $crawlSubdomains || $followExternalLinks)
-                <span class="flex items-center gap-1">
-                    @if($crawlResources)<span class="text-[9px] font-semibold px-1 py-0.5 rounded bg-info-s c-info">RES</span>@endif
-                    @if($crawlSubdomains)<span class="text-[9px] font-semibold px-1 py-0.5 rounded bg-info-s c-info">SUB</span>@endif
-                    @if($followExternalLinks)<span class="text-[9px] font-semibold px-1 py-0.5 rounded bg-warn-s c-warn">EXT</span>@endif
+                <span class="text-muted">│</span>
+                <span>
+                    <span class="text-primary font-medium">{{ $prog['rate'] }}</span><span class="text-muted">/s</span>
                 </span>
             @endif
 
-            @if($status['errorsFound'] > 0)<span class="badge badge-err">{{ $status['errorsFound'] }} err</span>@endif
-            @if($status['warningsFound'] > 0)<span class="badge badge-warn">{{ $status['warningsFound'] }} warn</span>@endif
-            @if($status['duration'])<span class="text-muted">{{ number_format($status['duration'], 1) }}s</span>@endif
+            @if($crawlResources || $crawlSubdomains || $followExternalLinks)
+                <span class="text-muted">│</span>
+                <span class="flex items-center gap-1">
+                    @if($crawlResources)     <span class="badge badge-info">res</span> @endif
+                    @if($crawlSubdomains)    <span class="badge badge-info">sub</span> @endif
+                    @if($followExternalLinks)<span class="badge badge-warn">ext</span> @endif
+                </span>
+            @endif
+
+            @if($status['errorsFound'] > 0)
+                <span class="text-muted">│</span>
+                <span class="c-err"><span class="font-medium">{{ $status['errorsFound'] }}</span> err</span>
+            @endif
+            @if($status['warningsFound'] > 0)
+                <span class="c-warn"><span class="font-medium">{{ $status['warningsFound'] }}</span> warn</span>
+            @endif
+
+            @if($status['duration'])
+                <span class="text-muted">│</span>
+                <span class="text-tertiary tabular-nums">{{ number_format($status['duration'], 1) }}s</span>
+            @endif
         </div>
     </div>
     @endif

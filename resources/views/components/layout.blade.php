@@ -1,24 +1,27 @@
 <!DOCTYPE html>
-<html lang="en" x-data="{ dark: localStorage.getItem('theme') !== 'light' }"
-      x-init="$watch('dark', v => { localStorage.setItem('theme', v ? 'dark' : 'light') })"
-      :class="dark ? 'dark' : ''" class="h-full">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
     <title>SEO Spider</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
     tailwind.config = {
-        darkMode: 'class',
         theme: {
             extend: {
                 fontFamily: {
-                    sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
-                    mono: ['"JetBrains Mono"', 'Consolas', 'monospace'],
+                    sans:    ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
+                    mono:    ['"JetBrains Mono"', '"IBM Plex Mono"', 'ui-monospace', 'monospace'],
+                    display: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
                 },
                 fontSize: {
+                    '3xs': ['0.625rem',  { lineHeight: '0.875rem' }],
                     '2xs': ['0.6875rem', { lineHeight: '1rem' }],
                 },
             }
@@ -27,110 +30,254 @@
     </script>
     <style>
         :root {
-            --c-bg:       #ffffff; --c-bg2:      #f7f7f8; --c-bg3:      #efefef;
-            --c-surface:  #ffffff; --c-surface2: #f4f4f5; --c-surface3: #e8e8ec;
-            --c-border:   #e0e0e4; --c-border2:  #d0d0d6;
-            --c-fg:       #1a1a1f; --c-fg2:      #4a4a58; --c-fg3:      #6b6b7d; --c-fg4: #8b8b9e;
-            --c-accent:   #2563eb; --c-accent-h: #1d4ed8; --c-accent-bg: rgba(37,99,235,0.07);
-            --c-ok:       #16a34a; --c-ok-bg:    rgba(22,163,74,0.08);
-            --c-warn:     #d97706; --c-warn-bg:  rgba(217,119,6,0.08);
-            --c-err:      #dc2626; --c-err-bg:   rgba(220,38,38,0.07);
-            --c-info:     #7c3aed; --c-info-bg:  rgba(124,58,237,0.07);
-            --c-row-hover: rgba(0,0,0,0.02); --c-row-sel: rgba(37,99,235,0.06);
-        }
-        .dark {
-            --c-bg:       #0a0a0c; --c-bg2:      #101014; --c-bg3:      #1a1a20;
-            --c-surface:  #111116; --c-surface2: #19191f; --c-surface3: #222230;
-            --c-border:   rgba(255,255,255,0.07); --c-border2: rgba(255,255,255,0.12);
-            --c-fg:       #ededf0; --c-fg2:      #a0a0b0; --c-fg3:      #6b6b80; --c-fg4: #4a4a5e;
-            --c-accent:   #5b8af5; --c-accent-h: #7ba3ff; --c-accent-bg: rgba(91,138,245,0.1);
-            --c-ok:       #34d399; --c-ok-bg:    rgba(52,211,153,0.08);
-            --c-warn:     #fbbf24; --c-warn-bg:  rgba(251,191,36,0.08);
-            --c-err:      #f87171; --c-err-bg:   rgba(248,113,113,0.08);
-            --c-info:     #a78bfa; --c-info-bg:  rgba(167,139,250,0.08);
-            --c-row-hover: rgba(255,255,255,0.015); --c-row-sel: rgba(91,138,245,0.07);
+            color-scheme: dark;
+
+            /* ── Surfaces (near-black with green undertone) ── */
+            --c-bg:       #0a0c0a;
+            --c-bg2:      #0d100d;
+            --c-bg3:      #111511;
+            --c-surface:  #0f1310;
+            --c-surface2: #131812;
+            --c-surface3: #1a2018;
+
+            /* ── Borders (lime ghost) ── */
+            --c-border:   rgba(166,226,46,0.07);
+            --c-border2:  rgba(166,226,46,0.16);
+            --c-border3:  rgba(166,226,46,0.32);
+
+            /* ── Text (phosphor white) ── */
+            --c-fg:   #dff0c8;
+            --c-fg2:  #a3b09a;
+            --c-fg3:  #6b7a66;
+            --c-fg4:  #4a544a;
+
+            /* ── Accent: lime phosphor ── */
+            --c-accent:      #a6e22e;
+            --c-accent-h:    #c6ff5c;
+            --c-accent-bg:   rgba(166,226,46,0.10);
+            --c-accent-glow: rgba(166,226,46,0.40);
+
+            /* ── Signals ── */
+            --c-ok:   #a6e22e;  --c-ok-bg:   rgba(166,226,46,0.10);
+            --c-warn: #f5a524;  --c-warn-bg: rgba(245,165,36,0.10);
+            --c-err:  #ff5470;  --c-err-bg:  rgba(255,84,112,0.10);
+            --c-info: #7dd3fc;  --c-info-bg: rgba(125,211,252,0.10);
+
+            /* ── Table row states ── */
+            --c-row-hover: rgba(166,226,46,0.04);
+            --c-row-sel:   rgba(166,226,46,0.09);
         }
 
-        body { font-family: 'DM Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased;
-               background: var(--c-bg); color: var(--c-fg); }
-        .font-mono { font-family: 'JetBrains Mono', Consolas, monospace; }
+        html, body {
+            overscroll-behavior: none;
+        }
 
-        /* Utility color classes via custom properties */
-        .bg-app       { background: var(--c-bg); }
-        .bg-app2      { background: var(--c-bg2); }
-        .bg-app3      { background: var(--c-bg3); }
-        .bg-panel     { background: var(--c-surface); }
-        .bg-panel2    { background: var(--c-surface2); }
-        .bg-panel3    { background: var(--c-surface3); }
+        body {
+            font-family: 'IBM Plex Mono', ui-monospace, monospace;
+            font-feature-settings: "ss01", "cv01";
+            -webkit-font-smoothing: antialiased;
+            background: var(--c-bg);
+            color: var(--c-fg);
+            letter-spacing: -0.005em;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+        }
+
+        /* ── Surfaces ── */
+        .bg-app    { background: var(--c-bg); }
+        .bg-app2   { background: var(--c-bg2); }
+        .bg-app3   { background: var(--c-bg3); }
+        .bg-panel  { background: var(--c-surface); }
+        .bg-panel2 { background: var(--c-surface2); }
+        .bg-panel3 { background: var(--c-surface3); }
         .border-line  { border-color: var(--c-border); }
         .border-line2 { border-color: var(--c-border2); }
+        .border-line3 { border-color: var(--c-border3); }
+
+        /* ── Text ── */
         .text-primary   { color: var(--c-fg); }
         .text-secondary { color: var(--c-fg2); }
         .text-tertiary  { color: var(--c-fg3); }
         .text-muted     { color: var(--c-fg4); }
         .text-link      { color: var(--c-accent); }
-        .bg-accent-s  { background: var(--c-accent-bg); }
-        .bg-ok-s      { background: var(--c-ok-bg); }
-        .bg-warn-s    { background: var(--c-warn-bg); }
-        .bg-err-s     { background: var(--c-err-bg); }
-        .bg-info-s    { background: var(--c-info-bg); }
-        .c-accent     { color: var(--c-accent); }
-        .c-ok         { color: var(--c-ok); }
-        .c-warn       { color: var(--c-warn); }
-        .c-err        { color: var(--c-err); }
-        .c-info       { color: var(--c-info); }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--c-border2); }
-        ::-webkit-scrollbar-corner { background: transparent; }
+        /* ── Signal tints ── */
+        .bg-accent-s { background: var(--c-accent-bg); }
+        .bg-ok-s     { background: var(--c-ok-bg); }
+        .bg-warn-s   { background: var(--c-warn-bg); }
+        .bg-err-s    { background: var(--c-err-bg); }
+        .bg-info-s   { background: var(--c-info-bg); }
+        .c-accent { color: var(--c-accent); }
+        .c-ok     { color: var(--c-ok); }
+        .c-warn   { color: var(--c-warn); }
+        .c-err    { color: var(--c-err); }
+        .c-info   { color: var(--c-info); }
 
-        /* Animations */
-        @keyframes fade-in { from { opacity:0; transform:translateY(3px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes slide-up { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes pulse-dot { 0%,100% { opacity:1 } 50% { opacity:.3 } }
-        .anim-fade   { animation: fade-in 0.25s ease-out both; }
-        .anim-slide  { animation: slide-up 0.3s ease-out both; }
-        .dot-pulse   { animation: pulse-dot 1.4s ease-in-out infinite; }
+        /* ── Ambient grid (subtle operator feel) ── */
+        .bg-grid {
+            background-image:
+              linear-gradient(rgba(166,226,46,0.025) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(166,226,46,0.025) 1px, transparent 1px);
+            background-size: 32px 32px;
+            background-position: -1px -1px;
+        }
 
-        /* Table rows */
-        .row-hover:hover  { background: var(--c-row-hover); }
-        .row-selected     { background: var(--c-row-sel) !important; }
-        tbody tr          { transition: background 0.1s ease; }
+        /* ── Scrollbar: phosphor ── */
+        ::-webkit-scrollbar         { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track   { background: transparent; }
+        ::-webkit-scrollbar-thumb   { background: var(--c-border2); border-radius: 0; }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--c-accent);
+            box-shadow: 0 0 8px var(--c-accent-glow);
+        }
+        ::-webkit-scrollbar-corner  { background: transparent; }
 
-        /* Badge */
+        /* ── Text selection ── */
+        ::selection { background: var(--c-accent); color: #0a0c0a; }
+
+        /* ── NativePHP window-drag regions ── */
+        .app-drag    { -webkit-app-region: drag; }
+        .app-no-drag { -webkit-app-region: no-drag; }
+
+        /* ── Chrome: no text selection in app frame ── */
+        .chrome-nosel {
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: default;
+        }
+
+        /* ── Keyframes ── */
+        @keyframes cursor-blink {
+            0%, 49%    { opacity: 1; }
+            50%, 100%  { opacity: 0; }
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%      { opacity: 0.35; transform: scale(0.8); }
+        }
+        @keyframes scan-sweep {
+            0%   { transform: translateX(-120%); }
+            100% { transform: translateX(320%); }
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(2px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes ellipsis-clip {
+            0%       { clip-path: inset(0 100% 0 0); }
+            25%      { clip-path: inset(0 66%  0 0); }
+            50%      { clip-path: inset(0 33%  0 0); }
+            75%,100% { clip-path: inset(0 0    0 0); }
+        }
+        @keyframes flicker {
+            0%, 92%, 100% { opacity: 1; }
+            93%           { opacity: 0.72; }
+            94%           { opacity: 1; }
+            96%           { opacity: 0.85; }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Animation utilities ── */
+        .cursor-blink::after {
+            content: "▍";
+            color: var(--c-accent);
+            animation: cursor-blink 1.06s steps(1,end) infinite;
+            margin-left: 1px;
+            text-shadow: 0 0 6px var(--c-accent-glow);
+        }
+        .dot-pulse { animation: pulse-dot 1.2s ease-in-out infinite; }
+        .ellipsis  { display: inline-flex; align-items: baseline; }
+        .ellipsis::after {
+            content: "...";
+            display: inline-block;
+            animation: ellipsis-clip 1.4s steps(4) infinite;
+            clip-path: inset(0 100% 0 0);
+            margin-left: 1px;
+        }
+        .anim-fade  { animation: fade-in 0.2s ease-out both; }
+        .anim-slide { animation: slide-up 0.24s cubic-bezier(0.2,0,0.2,1) both; }
+        .flicker    { animation: flicker 6s infinite; }
+        .animate-spin { animation: spin 0.9s linear infinite; }
+
+        /* ── Progress track / fill with scan sweep ── */
+        .progress-track {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255,255,255,0.05);
+        }
+        .progress-fill {
+            position: relative;
+            height: 100%;
+            transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+        }
+        .progress-fill.is-active::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            width: 40%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255,255,255,0.55) 50%,
+                transparent 100%);
+            animation: scan-sweep 1.8s linear infinite;
+            pointer-events: none;
+        }
+
+        /* ── Table rows ── */
+        .row-hover:hover { background: var(--c-row-hover); }
+        .row-selected    { background: var(--c-row-sel) !important; }
+        tbody tr         { transition: background 0.08s ease; }
+
+        /* ── Badge (terminal-tag style) ── */
         .badge {
             display: inline-flex; align-items: center; gap: 3px;
-            font-size: 11px; font-weight: 500; padding: 1px 7px; border-radius: 4px;
+            font-size: 10px; font-weight: 500; padding: 1px 6px;
+            font-family: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
             line-height: 1.4;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            border: 1px solid currentColor;
+            background: transparent;
         }
-        .badge-ok   { background: var(--c-ok-bg);   color: var(--c-ok); }
-        .badge-warn { background: var(--c-warn-bg); color: var(--c-warn); }
-        .badge-err  { background: var(--c-err-bg);  color: var(--c-err); }
-        .badge-info { background: var(--c-info-bg); color: var(--c-info); }
+        .badge-ok   { color: var(--c-ok); }
+        .badge-warn { color: var(--c-warn); }
+        .badge-err  { color: var(--c-err); }
+        .badge-info { color: var(--c-info); }
 
-        /* Stat card */
-        .stat-card { transition: all 0.15s ease; }
+        /* ── Stat card (legacy hook) ── */
+        .stat-card { transition: border-color 0.15s ease; }
         .stat-card:hover { border-color: var(--c-border2); }
 
-        /* Progress bar smooth */
-        .progress-fill { transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
-
-        /* Input */
+        /* ── Forms ── */
         input:focus { outline: none; }
         .tabular-nums { font-variant-numeric: tabular-nums; }
 
-        /* Alpine cloak */
+        /* ── Alpine cloak ── */
         [x-cloak] { display: none !important; }
-
-        /* Custom checkbox visual (peer-checked handled inline) */
         .peer:checked ~ div svg { opacity: 1; }
+
+        /* ── Reduced motion ── */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .cursor-blink::after { animation: none; opacity: 1; }
+            .ellipsis::after     { animation: none; clip-path: none; }
+            .progress-fill.is-active::after { animation: none; opacity: 0; }
+        }
     </style>
     @livewireStyles
 </head>
-<body class="h-full overflow-hidden">
+<body class="h-full overflow-hidden bg-app bg-grid">
     {{ $slot }}
     @livewireScripts
 </body>
