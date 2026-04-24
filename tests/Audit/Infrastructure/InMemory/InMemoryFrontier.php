@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Audit\Domain\Model\DiscoverySource;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\FrontierEntry;
 use SeoSpider\Audit\Domain\Model\Url;
@@ -18,11 +19,14 @@ final class InMemoryFrontier implements Frontier
     /** @var array<string, array<string, true>> */
     private array $known = [];
 
+    /** @var array<string, array<string, DiscoverySource>> */
+    private array $sources = [];
+
     public function __construct(private readonly UrlCanonicalizer $canonicalizer)
     {
     }
 
-    public function enqueue(AuditId $auditId, Url $url, int $depth): bool
+    public function enqueue(AuditId $auditId, Url $url, int $depth, DiscoverySource $source): bool
     {
         $key = $auditId->value();
         $canonical = $this->canonicalizer->canonicalize($url);
@@ -34,8 +38,16 @@ final class InMemoryFrontier implements Frontier
 
         $this->queues[$key][] = new FrontierEntry($canonical, $depth);
         $this->known[$key][$urlString] = true;
+        $this->sources[$key][$urlString] = $source;
 
         return true;
+    }
+
+    public function sourceOf(AuditId $auditId, Url $url): ?DiscoverySource
+    {
+        $urlString = $this->canonicalizer->canonicalize($url)->toString();
+
+        return $this->sources[$auditId->value()][$urlString] ?? null;
     }
 
     public function dequeue(AuditId $auditId): ?FrontierEntry

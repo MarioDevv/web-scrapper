@@ -9,7 +9,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 interface Frontier
 {
     #[\NoDiscard('Check whether the URL was actually enqueued')]
-    public function enqueue(AuditId $auditId, Url $url, int $depth): bool;
+    public function enqueue(AuditId $auditId, Url $url, int $depth, DiscoverySource $source): bool;
 
     public function dequeue(AuditId $auditId): ?FrontierEntry;
 

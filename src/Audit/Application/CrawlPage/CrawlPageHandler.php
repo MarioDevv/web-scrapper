@@ -8,6 +8,7 @@ use SeoSpider\Audit\Domain\Model\Analyzer\Analyzer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Audit\Domain\Model\DiscoverySource;
 use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HtmlParser;
@@ -150,7 +151,7 @@ final readonly class CrawlPageHandler
                 continue;
             }
 
-            $enqueued = $this->frontier->enqueue($auditId, $link->targetUrl(), $nextDepth);
+            $enqueued = $this->frontier->enqueue($auditId, $link->targetUrl(), $nextDepth, DiscoverySource::LINK);
             if ($enqueued) {
                 $newUrls++;
             }
