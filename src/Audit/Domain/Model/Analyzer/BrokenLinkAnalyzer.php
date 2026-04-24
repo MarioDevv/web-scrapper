@@ -130,7 +130,7 @@ final class BrokenLinkAnalyzer implements Analyzer
             category: IssueCategory::LINKS,
             severity: IssueSeverity::NOTICE,
             code: 'internal_nofollow',
-            message: sprintf('%d internal link(s) with rel="nofollow". This blocks authority flow within the site.', $count),
+            message: sprintf('%d internal link(s) with rel="nofollow". Since 2019 Google treats nofollow as a hint, but it can still discourage crawling and pass weaker internal signals.', $count),
             context: implode(', ', $urls) . ($count > 5 ? sprintf(' (+%d more)', $count - 5) : ''),
         ));
     }

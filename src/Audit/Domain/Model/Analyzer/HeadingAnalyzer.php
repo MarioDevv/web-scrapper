@@ -41,16 +41,6 @@ final class HeadingAnalyzer implements Analyzer
                 message: 'Page has no H2 headings.',
             ));
         }
-
-        if (count($h2s) > 5) {
-            $page->addIssue(new Issue(
-                id: IssueId::generate(),
-                category: IssueCategory::METADATA,
-                severity: IssueSeverity::NOTICE,
-                code: 'h2_excessive',
-                message: sprintf('Page has %d H2 headings.', count($h2s)),
-            ));
-        }
     }
 
     private function checkHeadingOrder(Page $page, \SeoSpider\Audit\Domain\Model\Page\PageMetadata $metadata): void

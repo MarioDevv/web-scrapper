@@ -91,16 +91,6 @@ final class MetaDataAnalyzer implements Analyzer
                 message: sprintf('Meta description is %d characters (recommended: max 160).', $metadata->metaDescriptionLength()),
             ));
         }
-
-        if ($metadata->isMetaDescriptionTooShort()) {
-            $page->addIssue(new Issue(
-                id: IssueId::generate(),
-                category: IssueCategory::METADATA,
-                severity: IssueSeverity::NOTICE,
-                code: 'meta_description_too_short',
-                message: sprintf('Meta description is %d characters (recommended: min 70).', $metadata->metaDescriptionLength()),
-            ));
-        }
     }
 
     private function checkH1(Page $page, \SeoSpider\Audit\Domain\Model\Page\PageMetadata $metadata): void
@@ -119,9 +109,9 @@ final class MetaDataAnalyzer implements Analyzer
             $page->addIssue(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
-                severity: IssueSeverity::WARNING,
+                severity: IssueSeverity::NOTICE,
                 code: 'h1_multiple',
-                message: sprintf('Page has %d H1 headings (recommended: exactly 1).', $metadata->h1Count()),
+                message: sprintf('Page has %d H1 headings. Prefer one main H1 for structural clarity; Google confirms multiple H1s are not a ranking penalty.', $metadata->h1Count()),
             ));
         }
     }

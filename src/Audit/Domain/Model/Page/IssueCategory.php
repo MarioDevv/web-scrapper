@@ -12,4 +12,5 @@ enum IssueCategory: string
     case HREFLANG = 'hreflang';
     case CONTENT = 'content';
     case PERFORMANCE = 'performance';
+    case SECURITY = 'security';
 }
