@@ -51,9 +51,9 @@
                     @endif
 
                     @php
-                        $inOverview  = $activeTab === 'overview';
-                        $displayCnt  = $inOverview ? count($pages) : count($this->filteredPages);
-                        $showFilter  = !$inOverview && count($this->filteredPages) !== count($pages);
+                        $useTotal    = in_array($activeTab, ['overview', 'all'], true);
+                        $displayCnt  = $useTotal ? count($pages) : count($this->filteredPages);
+                        $showFilter  = !$useTotal && count($this->filteredPages) !== count($pages);
                     @endphp
                     <span>
                         <span class="text-primary">{{ $displayCnt }}</span>@if($showFilter)<span class="text-muted">/</span><span class="text-tertiary">{{ count($pages) }}</span>@endif
