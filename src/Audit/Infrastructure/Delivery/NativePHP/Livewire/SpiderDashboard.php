@@ -130,6 +130,7 @@ class SpiderDashboard extends Component
 
         RunCrawlJob::dispatch($this->auditId);
         $this->refreshStatus();
+        $this->loadAuditHistory();
     }
 
     public function cancelCrawl(): void
