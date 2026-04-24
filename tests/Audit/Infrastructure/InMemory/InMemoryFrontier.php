@@ -20,13 +20,14 @@ final class InMemoryFrontier implements Frontier
     public function enqueue(AuditId $auditId, Url $url, int $depth): bool
     {
         $key = $auditId->value();
-        $urlString = $url->toString();
+        $normalized = $url->normalized();
+        $urlString = $normalized->toString();
 
-        if ($this->isKnown($auditId, $url)) {
+        if ($this->isKnown($auditId, $normalized)) {
             return false;
         }
 
-        $this->queues[$key][] = new FrontierEntry($url, $depth);
+        $this->queues[$key][] = new FrontierEntry($normalized, $depth);
         $this->known[$key][$urlString] = true;
 
         return true;
@@ -45,12 +46,12 @@ final class InMemoryFrontier implements Frontier
 
     public function markVisited(AuditId $auditId, Url $url): void
     {
-        $this->known[$auditId->value()][$url->toString()] = true;
+        $this->known[$auditId->value()][$url->normalized()->toString()] = true;
     }
 
     public function isKnown(AuditId $auditId, Url $url): bool
     {
-        return isset($this->known[$auditId->value()][$url->toString()]);
+        return isset($this->known[$auditId->value()][$url->normalized()->toString()]);
     }
 
     public function isEmpty(AuditId $auditId): bool

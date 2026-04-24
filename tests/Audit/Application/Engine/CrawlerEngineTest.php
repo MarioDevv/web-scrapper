@@ -253,7 +253,7 @@ final class CrawlerEngineTest extends TestCase
 
         $this->assertCount(1, $progressReports);
         $this->assertSame($auditId, $progressReports[0]->auditId);
-        $this->assertSame('https://example.com', $progressReports[0]->currentUrl);
+        $this->assertSame('https://example.com/', $progressReports[0]->currentUrl);
         $this->assertSame(1, $progressReports[0]->pagesCrawled);
     }
 
