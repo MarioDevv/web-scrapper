@@ -56,7 +56,7 @@ final class DomCrawlerHtmlParser implements HtmlParser
             ?? '';
 
         $lower = strtolower($robotsContent);
-        $canonical = $this->extractCanonical($crawler, $baseUrl);
+        $canonical = $this->extractCanonical($crawler, $this->resolveBase($crawler, $baseUrl));
 
         return new Directive(
             noindex: str_contains($lower, 'noindex'),
@@ -76,17 +76,18 @@ final class DomCrawlerHtmlParser implements HtmlParser
     public function extractLinks(string $html, Url $baseUrl): array
     {
         $crawler = new Crawler($html);
+        $effectiveBase = $this->resolveBase($crawler, $baseUrl);
         $links = [];
 
         // ── Anchors (<a href>)
-        $crawler->filter('a[href]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('a[href]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
 
             if ($href === '' || str_starts_with($href, '#') || str_starts_with($href, 'javascript:') || str_starts_with($href, 'mailto:')) {
                 return;
             }
 
-            $resolved = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
+            $resolved = Url::tryFromString($href) ?? $this->tryResolve($effectiveBase, $href);
             if ($resolved === null) {
                 return;
             }
@@ -111,13 +112,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Images (<img src>)
-        $crawler->filter('img[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('img[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '' || str_starts_with($src, 'data:')) {
                 return;
             }
 
-            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($effectiveBase, $src);
             if ($resolved === null) {
                 return;
             }
@@ -132,13 +133,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Scripts (<script src>)
-        $crawler->filter('script[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('script[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '') {
                 return;
             }
 
-            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($effectiveBase, $src);
             if ($resolved === null) {
                 return;
             }
@@ -153,13 +154,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Stylesheets (<link rel="stylesheet" href>)
-        $crawler->filter('link[rel="stylesheet"][href]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('link[rel="stylesheet"][href]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
             if ($href === '') {
                 return;
             }
 
-            $resolved = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
+            $resolved = Url::tryFromString($href) ?? $this->tryResolve($effectiveBase, $href);
             if ($resolved === null) {
                 return;
             }
@@ -174,13 +175,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Iframes (<iframe src>)
-        $crawler->filter('iframe[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('iframe[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '' || str_starts_with($src, 'about:')) {
                 return;
             }
 
-            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($effectiveBase, $src);
             if ($resolved === null) {
                 return;
             }
@@ -195,13 +196,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Preload (<link rel="preload" href>)
-        $crawler->filter('link[rel="preload"][href]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('link[rel="preload"][href]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
             if ($href === '') {
                 return;
             }
 
-            $resolved = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
+            $resolved = Url::tryFromString($href) ?? $this->tryResolve($effectiveBase, $href);
             if ($resolved === null) {
                 return;
             }
@@ -225,13 +226,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Modulepreload (<link rel="modulepreload" href>)
-        $crawler->filter('link[rel="modulepreload"][href]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('link[rel="modulepreload"][href]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
             if ($href === '') {
                 return;
             }
 
-            $resolved = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
+            $resolved = Url::tryFromString($href) ?? $this->tryResolve($effectiveBase, $href);
             if ($resolved === null) {
                 return;
             }
@@ -246,13 +247,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Prefetch (<link rel="prefetch" href>)
-        $crawler->filter('link[rel="prefetch"][href]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('link[rel="prefetch"][href]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $href = trim($node->attr('href') ?? '');
             if ($href === '') {
                 return;
             }
 
-            $resolved = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
+            $resolved = Url::tryFromString($href) ?? $this->tryResolve($effectiveBase, $href);
             if ($resolved === null) {
                 return;
             }
@@ -267,14 +268,14 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Srcset images (<img srcset>, <source srcset>)
-        $crawler->filter('img[srcset], source[srcset]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('img[srcset], source[srcset]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $srcset = trim($node->attr('srcset') ?? '');
             if ($srcset === '') {
                 return;
             }
 
             foreach ($this->parseSrcset($srcset) as $src) {
-                $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+                $resolved = Url::tryFromString($src) ?? $this->tryResolve($effectiveBase, $src);
                 if ($resolved === null) {
                     continue;
                 }
@@ -290,13 +291,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Picture source (<picture><source src>)
-        $crawler->filter('picture > source[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('picture > source[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '' || str_starts_with($src, 'data:')) {
                 return;
             }
 
-            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($effectiveBase, $src);
             if ($resolved === null) {
                 return;
             }
@@ -311,13 +312,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Video (<video src>, <video><source src>)
-        $crawler->filter('video[src], video > source[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('video[src], video > source[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '') {
                 return;
             }
 
-            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($effectiveBase, $src);
             if ($resolved === null) {
                 return;
             }
@@ -332,13 +333,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Video poster (<video poster>)
-        $crawler->filter('video[poster]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('video[poster]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $poster = trim($node->attr('poster') ?? '');
             if ($poster === '' || str_starts_with($poster, 'data:')) {
                 return;
             }
 
-            $resolved = Url::tryFromString($poster) ?? $this->tryResolve($baseUrl, $poster);
+            $resolved = Url::tryFromString($poster) ?? $this->tryResolve($effectiveBase, $poster);
             if ($resolved === null) {
                 return;
             }
@@ -353,13 +354,13 @@ final class DomCrawlerHtmlParser implements HtmlParser
         });
 
         // ── Audio (<audio src>, <audio><source src>)
-        $crawler->filter('audio[src], audio > source[src]')->each(function (Crawler $node) use ($baseUrl, &$links) {
+        $crawler->filter('audio[src], audio > source[src]')->each(function (Crawler $node) use ($effectiveBase, $baseUrl, &$links) {
             $src = trim($node->attr('src') ?? '');
             if ($src === '') {
                 return;
             }
 
-            $resolved = Url::tryFromString($src) ?? $this->tryResolve($baseUrl, $src);
+            $resolved = Url::tryFromString($src) ?? $this->tryResolve($effectiveBase, $src);
             if ($resolved === null) {
                 return;
             }
@@ -423,9 +424,10 @@ final class DomCrawlerHtmlParser implements HtmlParser
     public function extractHreflangs(string $html, Url $baseUrl): array
     {
         $crawler = new Crawler($html);
+        $effectiveBase = $this->resolveBase($crawler, $baseUrl);
         $hreflangs = [];
 
-        $crawler->filter('link[rel="alternate"][hreflang]')->each(function (Crawler $node) use ($baseUrl, &$hreflangs) {
+        $crawler->filter('link[rel="alternate"][hreflang]')->each(function (Crawler $node) use ($effectiveBase, &$hreflangs) {
             $hreflang = trim($node->attr('hreflang') ?? '');
             $href = trim($node->attr('href') ?? '');
 
@@ -433,7 +435,7 @@ final class DomCrawlerHtmlParser implements HtmlParser
                 return;
             }
 
-            $url = Url::tryFromString($href) ?? $this->tryResolve($baseUrl, $href);
+            $url = Url::tryFromString($href) ?? $this->tryResolve($effectiveBase, $href);
             if ($url === null) {
                 return;
             }
@@ -531,7 +533,7 @@ final class DomCrawlerHtmlParser implements HtmlParser
         return $html->count() > 0 ? $html->first()->attr('lang') : null;
     }
 
-    private function extractCanonical(Crawler $crawler, Url $baseUrl): ?Url
+    private function extractCanonical(Crawler $crawler, Url $effectiveBase): ?Url
     {
         $node = $crawler->filter('link[rel="canonical"]');
         if ($node->count() === 0) {
@@ -545,7 +547,7 @@ final class DomCrawlerHtmlParser implements HtmlParser
 
         $trimmed = trim($href);
 
-        return Url::tryFromString($trimmed) ?? $this->tryResolve($baseUrl, $trimmed);
+        return Url::tryFromString($trimmed) ?? $this->tryResolve($effectiveBase, $trimmed);
     }
 
     private function extractMaxDirective(string $content, string $directive): ?int
@@ -582,5 +584,22 @@ final class DomCrawlerHtmlParser implements HtmlParser
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function resolveBase(Crawler $crawler, Url $fallback): Url
+    {
+        $node = $crawler->filter('base[href]');
+        if ($node->count() === 0) {
+            return $fallback;
+        }
+
+        $href = trim($node->first()->attr('href') ?? '');
+        if ($href === '') {
+            return $fallback;
+        }
+
+        $resolved = Url::tryFromString($href) ?? $this->tryResolve($fallback, $href);
+
+        return $resolved ?? $fallback;
     }
 }

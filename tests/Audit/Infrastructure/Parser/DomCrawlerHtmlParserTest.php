@@ -108,4 +108,74 @@ final class DomCrawlerHtmlParserTest extends TestCase
 
         $this->assertSame([], $hreflangs);
     }
+
+    public function test_base_href_redirects_relative_anchors_to_another_origin(): void
+    {
+        $html = '<html><head>'
+            . '<base href="https://cdn.other.com/app/">'
+            . '</head><body>'
+            . '<a href="foo">link</a>'
+            . '</body></html>';
+
+        $links = $this->parser->extractLinks($html, $this->baseUrl);
+
+        $this->assertCount(1, $links);
+        $this->assertSame('https://cdn.other.com/app/foo', $links[0]->targetUrl()->toString());
+        $this->assertFalse($links[0]->isInternal(), 'link resolved to a different origin should be external');
+    }
+
+    public function test_relative_base_href_resolves_against_document_url(): void
+    {
+        $html = '<html><head>'
+            . '<base href="/app/">'
+            . '</head><body>'
+            . '<a href="foo">link</a>'
+            . '</body></html>';
+
+        $links = $this->parser->extractLinks($html, $this->baseUrl);
+
+        $this->assertCount(1, $links);
+        $this->assertSame('https://example.com/app/foo', $links[0]->targetUrl()->toString());
+        $this->assertTrue($links[0]->isInternal());
+    }
+
+    public function test_empty_base_href_falls_back_to_document_url(): void
+    {
+        $html = '<html><head>'
+            . '<base href="">'
+            . '</head><body>'
+            . '<a href="foo">link</a>'
+            . '</body></html>';
+
+        $links = $this->parser->extractLinks($html, $this->baseUrl);
+
+        $this->assertCount(1, $links);
+        $this->assertSame('https://example.com/es/foo', $links[0]->targetUrl()->toString());
+    }
+
+    public function test_base_href_affects_relative_canonical(): void
+    {
+        $html = '<html><head>'
+            . '<base href="https://other.com/">'
+            . '<link rel="canonical" href="page">'
+            . '</head></html>';
+
+        $directive = $this->parser->extractDirectives($html, $this->baseUrl);
+
+        $this->assertNotNull($directive->canonical());
+        $this->assertSame('https://other.com/page', $directive->canonical()->toString());
+    }
+
+    public function test_base_href_affects_relative_hreflang(): void
+    {
+        $html = '<html><head>'
+            . '<base href="https://other.com/intl/">'
+            . '<link rel="alternate" hreflang="en" href="en/page">'
+            . '</head></html>';
+
+        $hreflangs = $this->parser->extractHreflangs($html, $this->baseUrl);
+
+        $this->assertCount(1, $hreflangs);
+        $this->assertSame('https://other.com/intl/en/page', $hreflangs[0]->href()->toString());
+    }
 }
