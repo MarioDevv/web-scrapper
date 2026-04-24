@@ -9,6 +9,7 @@ use SeoSpider\Audit\Domain\Model\Page\Directive;
 use SeoSpider\Audit\Domain\Model\Page\Hreflang;
 use SeoSpider\Audit\Domain\Model\Page\Link;
 use SeoSpider\Audit\Domain\Model\Page\PageMetadata;
+use SeoSpider\Audit\Domain\Model\Page\ParsedPage;
 use SeoSpider\Audit\Domain\Model\Url;
 
 final class StubHtmlParser implements HtmlParser
@@ -51,9 +52,20 @@ final class StubHtmlParser implements HtmlParser
         $this->cleanContent = $content;
     }
 
-    public function extractMetadata(string $html): PageMetadata
+    public function parse(string $html, Url $baseUrl): ParsedPage
     {
-        return $this->metadata ?? new PageMetadata(
+        return new ParsedPage(
+            metadata: $this->metadata ?? $this->defaultMetadata(),
+            links: $this->links,
+            hreflangs: $this->hreflangs,
+            directive: $this->directives ?? new Directive(),
+            cleanContent: $this->cleanContent !== '' ? $this->cleanContent : 'Default clean content for fingerprinting',
+        );
+    }
+
+    private function defaultMetadata(): PageMetadata
+    {
+        return new PageMetadata(
             title: 'Default Title',
             metaDescription: 'Default description',
             h1s: ['Default H1'],
@@ -67,27 +79,5 @@ final class StubHtmlParser implements HtmlParser
             wordCount: 10,
             lang: 'en',
         );
-    }
-
-    public function extractDirectives(string $html, Url $baseUrl): Directive
-    {
-        return $this->directives ?? new Directive();
-    }
-
-    /** @return Link[] */
-    public function extractLinks(string $html, Url $baseUrl): array
-    {
-        return $this->links;
-    }
-
-    /** @return Hreflang[] */
-    public function extractHreflangs(string $html, Url $baseUrl): array
-    {
-        return $this->hreflangs;
-    }
-
-    public function extractCleanContent(string $html): string
-    {
-        return $this->cleanContent ?: 'Default clean content for fingerprinting';
     }
 }

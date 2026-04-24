@@ -160,4 +160,23 @@ final readonly class PageMetadata
     {
         return $this->lang;
     }
+
+    #[\NoDiscard('PageMetadata is immutable — use the returned instance')]
+    public function withWordCount(int $wordCount): self
+    {
+        return new self(
+            title: $this->title,
+            metaDescription: $this->metaDescription,
+            h1s: $this->h1s,
+            h2s: $this->h2s,
+            headingHierarchy: $this->headingHierarchy,
+            charset: $this->charset,
+            viewport: $this->viewport,
+            ogTitle: $this->ogTitle,
+            ogDescription: $this->ogDescription,
+            ogImage: $this->ogImage,
+            wordCount: $wordCount,
+            lang: $this->lang,
+        );
+    }
 }
