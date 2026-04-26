@@ -23,6 +23,7 @@ use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
+use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryIssueReportReader;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 
 final class GetAuditIssueReportHandlerTest extends TestCase
@@ -43,7 +44,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
 
     public function test_raises_audit_not_found_for_unknown_id(): void
     {
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
 
         $this->expectException(AuditNotFound::class);
         $handler(new GetAuditIssueReportQuery(AuditId::generate()->value()));
@@ -53,7 +54,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
     {
         $this->persistPage('https://example.com/a', []);
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(0, $report->totalIssues);
@@ -71,7 +72,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
             $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
         ]);
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(3, $report->totalIssues);
@@ -96,7 +97,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
             $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
         ]);
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $group = $report->groups[0];
@@ -113,7 +114,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
             $this->issue('hreflang_invalid_language', IssueSeverity::ERROR, IssueCategory::HREFLANG, context: 'yy'),
         ]);
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $group = $report->groups[0];
@@ -127,7 +128,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
         $this->persistPage('https://example.com/a', []);
         $this->persistPage('https://example.com/b', []);
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(100, $report->siteScore);
@@ -135,7 +136,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
 
     public function test_site_score_is_100_when_audit_has_no_pages(): void
     {
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(100, $report->siteScore);
@@ -149,7 +150,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
             $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
         ]);
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(67, $report->siteScore);
@@ -166,7 +167,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
             $this->persistPage(sprintf('https://example.com/p-%d', $i), []);
         }
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(97, $report->siteScore);
@@ -185,7 +186,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
             $this->issue('response_very_slow', IssueSeverity::ERROR, IssueCategory::PERFORMANCE),
         ]);
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(0, $report->siteScore);
@@ -201,7 +202,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
         ]);
         $this->persistPage('https://example.com/b', []);
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(97, $report->siteScore);
@@ -221,7 +222,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
             ]);
         }
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame('content_thin', $report->groups[0]->code, 'higher impact (weight × pages) wins over severity');
@@ -234,7 +235,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
             $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
         ]);
 
-        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $handler = new GetAuditIssueReportHandler($this->audits, new InMemoryIssueReportReader($this->pages));
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(10, $report->groups[0]->weight);

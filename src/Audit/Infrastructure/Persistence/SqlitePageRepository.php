@@ -98,6 +98,34 @@ final readonly class SqlitePageRepository implements PageRepository
         );
     }
 
+    public function findByAuditSince(AuditId $auditId, ?string $sinceIso): array
+    {
+        if ($sinceIso === null || $sinceIso === '') {
+            return $this->findByAudit($auditId);
+        }
+
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM pages WHERE audit_id = :audit_id AND crawled_at > :since ORDER BY crawled_at ASC',
+        );
+        $stmt->execute([
+            'audit_id' => $auditId->value(),
+            'since' => $sinceIso,
+        ]);
+
+        $rows = $stmt->fetchAll();
+        if ($rows === []) {
+            return [];
+        }
+
+        $pageIds = array_column($rows, 'id');
+        $issuesByPage = $this->loadIssuesBatch($pageIds);
+
+        return array_map(
+            fn(array $row) => $this->hydrate($row, $issuesByPage[$row['id']] ?? []),
+            $rows,
+        );
+    }
+
     public function countByAudit(AuditId $auditId): int
     {
         $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM pages WHERE audit_id = :audit_id');

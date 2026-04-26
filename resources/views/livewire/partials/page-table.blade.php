@@ -458,6 +458,7 @@
             @endphp
             <tr @if(!$isExt) wire:click="selectPage('{{ $page['pageId'] }}')" @endif
                 wire:key="row-{{ $page['pageId'] ?? 'ext-'.$idx }}"
+                style="content-visibility: auto; contain-intrinsic-size: auto 32px;"
                 class="border-b border-line
                        {{ $isExt ? 'row-hover opacity-70' : 'cursor-pointer row-hover' }}
                        {{ $isSel ? 'row-selected' : '' }}

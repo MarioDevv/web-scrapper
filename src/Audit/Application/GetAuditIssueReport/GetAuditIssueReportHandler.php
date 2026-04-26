@@ -9,7 +9,6 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Page\IssueRuleCatalog;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 
 /**
  * Read model that projects an audit's per-page issues into a site-wide
@@ -31,7 +30,7 @@ final readonly class GetAuditIssueReportHandler
 
     public function __construct(
         private AuditRepository $auditRepository,
-        private PageRepository $pageRepository,
+        private IssueReportReader $reader,
     ) {
     }
 
@@ -43,7 +42,7 @@ final readonly class GetAuditIssueReportHandler
             throw AuditNotFound::withId($query->auditId);
         }
 
-        $pages = $this->pageRepository->findByAudit($auditId);
+        $data = $this->reader->read($auditId);
 
         $groupsByCode = [];
         $severityTotals = [];
@@ -52,42 +51,37 @@ final readonly class GetAuditIssueReportHandler
         $totalIssues = 0;
         $weightByPage = [];
 
-        foreach ($pages as $page) {
-            $pageId = $page->id()->value();
-            $weightByPage[$pageId] ??= 0;
+        foreach ($data->rows as $row) {
+            $code = $row->code;
+            $severity = $row->severity;
+            $category = $row->category;
+            $rule = IssueRuleCatalog::forCode($code);
+            $weight = $rule?->weight() ?? 0;
 
-            foreach ($page->issues() as $issue) {
-                $code = $issue->code();
-                $severity = $issue->severity()->value;
-                $category = $issue->category()->value;
-                $rule = IssueRuleCatalog::forCode($code);
-                $weight = $rule?->weight() ?? 0;
-
-                if (!isset($groupsByCode[$code])) {
-                    $groupsByCode[$code] = [
-                        'code' => $code,
-                        'category' => $category,
-                        'severity' => $severity,
-                        'weight' => $weight,
-                        'count' => 0,
-                        'pages' => [],
-                    ];
-                }
-
-                $groupsByCode[$code]['count']++;
-
-                $groupsByCode[$code]['pages'][$pageId] ??= new AffectedPage(
-                    pageId: $pageId,
-                    url: $page->url()->toString(),
-                    context: $issue->context(),
-                );
-
-                $severityTotals[$severity] = ($severityTotals[$severity] ?? 0) + 1;
-                $categoryTotals[$category] = ($categoryTotals[$category] ?? 0) + 1;
-                $affectedPageIds[$pageId] = true;
-                $totalIssues++;
-                $weightByPage[$pageId] += $weight;
+            if (!isset($groupsByCode[$code])) {
+                $groupsByCode[$code] = [
+                    'code' => $code,
+                    'category' => $category,
+                    'severity' => $severity,
+                    'weight' => $weight,
+                    'count' => 0,
+                    'pages' => [],
+                ];
             }
+
+            $groupsByCode[$code]['count']++;
+
+            $groupsByCode[$code]['pages'][$row->pageId] ??= new AffectedPage(
+                pageId: $row->pageId,
+                url: $row->pageUrl,
+                context: $row->context,
+            );
+
+            $severityTotals[$severity] = ($severityTotals[$severity] ?? 0) + 1;
+            $categoryTotals[$category] = ($categoryTotals[$category] ?? 0) + 1;
+            $affectedPageIds[$row->pageId] = true;
+            $totalIssues++;
+            $weightByPage[$row->pageId] = ($weightByPage[$row->pageId] ?? 0) + $weight;
         }
 
         $groups = [];
@@ -133,7 +127,7 @@ final readonly class GetAuditIssueReportHandler
             severityTotals: $severityTotals,
             categoryTotals: $categoryTotals,
             groups: $groups,
-            siteScore: $this->computeSiteScore(count($pages), $weightByPage),
+            siteScore: $this->computeSiteScore($data->pageCount, $weightByPage),
         );
     }
 

@@ -18,6 +18,16 @@ interface PageRepository
     /** @return Page[] */
     public function findByAudit(AuditId $auditId): array;
 
+    /**
+     * Returns pages crawled strictly after the given ISO-8601 instant.
+     * Used by the polling UI to fetch only the new arrivals each tick
+     * instead of rehydrating the whole audit. Pass null/empty to fall
+     * back to findByAudit.
+     *
+     * @return Page[]
+     */
+    public function findByAuditSince(AuditId $auditId, ?string $sinceIso): array;
+
     public function countByAudit(AuditId $auditId): int;
 
     public function nextId(): PageId;
