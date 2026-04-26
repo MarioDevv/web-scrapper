@@ -19,6 +19,7 @@ final class BrokenLinkAnalyzer implements Analyzer
         $this->checkRedirectChain($page);
         $this->checkRedirectLoop($page);
         $this->checkMixedProtocols($page);
+        $this->checkRedirectNotPermanent($page);
         $this->checkInternalNofollow($page);
     }
 
@@ -100,6 +101,29 @@ final class BrokenLinkAnalyzer implements Analyzer
             severity: IssueSeverity::WARNING,
             code: 'mixed_protocol_redirect',
             message: 'Redirect chain mixes HTTP and HTTPS.',
+        ));
+    }
+
+    private function checkRedirectNotPermanent(Page $page): void
+    {
+        $chain = $page->redirectChain();
+
+        if ($chain->isEmpty() || $chain->isAllPermanent()) {
+            return;
+        }
+
+        $codes = array_map(
+            static fn($hop) => (string) $hop->statusCode()->code(),
+            $chain->hops(),
+        );
+
+        $page->addIssue(new Issue(
+            id: IssueId::generate(),
+            category: IssueCategory::LINKS,
+            severity: IssueSeverity::NOTICE,
+            code: 'redirect_not_permanent',
+            message: 'Redirect chain uses non-permanent codes (302/303/307). Use 301/308 for long-lived moves so signals consolidate to the destination.',
+            context: 'Status codes in chain: ' . implode(' → ', $codes),
         ));
     }
 
