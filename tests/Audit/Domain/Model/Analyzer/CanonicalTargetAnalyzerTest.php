@@ -12,7 +12,7 @@ use SeoSpider\Audit\Domain\Model\Url;
 
 final class CanonicalTargetAnalyzerTest extends TestCase
 {
-    use SiteAnalyzerTestHelpers;
+    use AnalyzerTestHelpers;
 
     public function test_does_not_flag_self_canonical(): void
     {

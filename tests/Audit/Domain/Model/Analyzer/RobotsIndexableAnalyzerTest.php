@@ -12,7 +12,7 @@ use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubRobotsPolicy;
 
 final class RobotsIndexableAnalyzerTest extends TestCase
 {
-    use SiteAnalyzerTestHelpers;
+    use AnalyzerTestHelpers;
 
     public function test_flags_indexable_page_disallowed_by_robots(): void
     {
