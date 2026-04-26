@@ -8,6 +8,7 @@ use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
+use SeoSpider\Audit\Domain\Model\Page\Link;
 use SeoSpider\Audit\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 
@@ -31,6 +32,7 @@ final class ImageAnalyzer implements Analyzer
         }
 
         $missingAlt = 0;
+        $missingDimensions = [];
 
         foreach ($images as $image) {
             $alt = $image->anchorText();
@@ -47,6 +49,10 @@ final class ImageAnalyzer implements Analyzer
                     context: $image->targetUrl()->toString(),
                 ));
             }
+
+            if (!$image->hasDimensions()) {
+                $missingDimensions[] = $image;
+            }
         }
 
         if ($missingAlt > 0) {
@@ -56,6 +62,23 @@ final class ImageAnalyzer implements Analyzer
                 severity: IssueSeverity::WARNING,
                 code: 'img_alt_missing',
                 message: sprintf('%d image(s) missing alt attribute.', $missingAlt),
+            ));
+        }
+
+        if ($missingDimensions !== []) {
+            $sample = array_map(
+                static fn(Link $img) => $img->targetUrl()->toString(),
+                array_slice($missingDimensions, 0, 5),
+            );
+            $count = count($missingDimensions);
+
+            $page->addIssue(new Issue(
+                id: IssueId::generate(),
+                category: IssueCategory::CONTENT,
+                severity: IssueSeverity::NOTICE,
+                code: 'image_missing_dimensions',
+                message: sprintf('%d image(s) missing width/height attributes (causes layout shift, hurts CLS).', $count),
+                context: implode(', ', $sample) . ($count > 5 ? sprintf(' (+%d more)', $count - 5) : ''),
             ));
         }
     }

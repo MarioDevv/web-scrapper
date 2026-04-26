@@ -117,10 +117,73 @@ final class SocialMetadataAnalyzerTest extends TestCase
         $this->assertSame([], $page->issues());
     }
 
+    public function test_flags_when_twitter_card_missing(): void
+    {
+        $page = $this->pageWithMetadata(
+            ogTitle: 'Title',
+            ogDescription: 'Description',
+            ogImage: 'https://example.com/og.png',
+            twitterCard: null,
+        );
+
+        (new SocialMetadataAnalyzer())->analyze($page);
+
+        $codes = array_map(static fn($issue) => $issue->code(), $page->issues());
+        $this->assertSame(['twitter_card_incomplete'], $codes);
+        $this->assertStringContainsString('twitter:card', $page->issues()[0]->message());
+    }
+
+    public function test_lists_all_missing_twitter_tags(): void
+    {
+        $page = $this->pageWithMetadata(
+            ogTitle: 'Title',
+            ogDescription: 'Description',
+            ogImage: 'https://example.com/og.png',
+            twitterCard: null,
+            twitterTitle: null,
+            twitterDescription: null,
+            twitterImage: null,
+        );
+
+        (new SocialMetadataAnalyzer())->analyze($page);
+
+        $issues = $page->issues();
+        $this->assertCount(1, $issues);
+        $message = $issues[0]->message();
+        $this->assertStringContainsString('twitter:card', $message);
+        $this->assertStringContainsString('twitter:title', $message);
+        $this->assertStringContainsString('twitter:description', $message);
+        $this->assertStringContainsString('twitter:image', $message);
+    }
+
+    public function test_emits_both_og_and_twitter_issues_when_both_incomplete(): void
+    {
+        $page = $this->pageWithMetadata(
+            ogTitle: null,
+            ogDescription: null,
+            ogImage: null,
+            twitterCard: null,
+            twitterTitle: null,
+            twitterDescription: null,
+            twitterImage: null,
+        );
+
+        (new SocialMetadataAnalyzer())->analyze($page);
+
+        $codes = array_map(static fn($issue) => $issue->code(), $page->issues());
+        $this->assertContains('open_graph_incomplete', $codes);
+        $this->assertContains('twitter_card_incomplete', $codes);
+        $this->assertCount(2, $codes);
+    }
+
     private function pageWithMetadata(
         ?string $ogTitle,
         ?string $ogDescription,
         ?string $ogImage,
+        ?string $twitterCard = 'summary_large_image',
+        ?string $twitterTitle = 'A twitter title',
+        ?string $twitterDescription = 'A twitter description.',
+        ?string $twitterImage = 'https://example.com/twitter-card.png',
         string $contentType = 'text/html; charset=utf-8',
         int $statusCode = 200,
     ): Page {
@@ -138,6 +201,10 @@ final class SocialMetadataAnalyzerTest extends TestCase
             ogImage: $ogImage,
             wordCount: 200,
             lang: 'en',
+            twitterCard: $twitterCard,
+            twitterTitle: $twitterTitle,
+            twitterDescription: $twitterDescription,
+            twitterImage: $twitterImage,
         ));
 
         return $page;

@@ -378,6 +378,8 @@ final readonly class SqlitePageRepository implements PageRepository
                 'anchor' => $link->anchorText(),
                 'rel' => $link->relation()->value,
                 'internal' => $link->isInternal(),
+                'width' => $link->width(),
+                'height' => $link->height(),
             ],
             $links,
         );
@@ -396,6 +398,8 @@ final readonly class SqlitePageRepository implements PageRepository
                 $item['anchor'],
                 LinkRelation::from($item['rel']),
                 $item['internal'],
+                isset($item['width']) ? (int) $item['width'] : null,
+                isset($item['height']) ? (int) $item['height'] : null,
             ),
             $data,
         );

@@ -23,28 +23,50 @@ final class SocialMetadataAnalyzer implements Analyzer
             return;
         }
 
-        $missing = [];
+        $ogMissing = [];
         if (!self::isPresent($metadata->ogTitle())) {
-            $missing[] = 'og:title';
+            $ogMissing[] = 'og:title';
         }
         if (!self::isPresent($metadata->ogDescription())) {
-            $missing[] = 'og:description';
+            $ogMissing[] = 'og:description';
         }
         if (!self::isPresent($metadata->ogImage())) {
-            $missing[] = 'og:image';
+            $ogMissing[] = 'og:image';
         }
 
-        if ($missing === []) {
-            return;
+        if ($ogMissing !== []) {
+            $page->addIssue(new Issue(
+                id: IssueId::generate(),
+                category: IssueCategory::METADATA,
+                severity: IssueSeverity::NOTICE,
+                code: 'open_graph_incomplete',
+                message: sprintf('Open Graph metadata is incomplete: missing %s.', implode(', ', $ogMissing)),
+            ));
         }
 
-        $page->addIssue(new Issue(
-            id: IssueId::generate(),
-            category: IssueCategory::METADATA,
-            severity: IssueSeverity::NOTICE,
-            code: 'open_graph_incomplete',
-            message: sprintf('Open Graph metadata is incomplete: missing %s.', implode(', ', $missing)),
-        ));
+        $twitterMissing = [];
+        if (!self::isPresent($metadata->twitterCard())) {
+            $twitterMissing[] = 'twitter:card';
+        }
+        if (!self::isPresent($metadata->twitterTitle())) {
+            $twitterMissing[] = 'twitter:title';
+        }
+        if (!self::isPresent($metadata->twitterDescription())) {
+            $twitterMissing[] = 'twitter:description';
+        }
+        if (!self::isPresent($metadata->twitterImage())) {
+            $twitterMissing[] = 'twitter:image';
+        }
+
+        if ($twitterMissing !== []) {
+            $page->addIssue(new Issue(
+                id: IssueId::generate(),
+                category: IssueCategory::METADATA,
+                severity: IssueSeverity::NOTICE,
+                code: 'twitter_card_incomplete',
+                message: sprintf('Twitter Card metadata is incomplete: missing %s.', implode(', ', $twitterMissing)),
+            ));
+        }
     }
 
     public function category(): IssueCategory

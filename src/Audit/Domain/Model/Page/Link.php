@@ -14,6 +14,8 @@ final readonly class Link
         private ?string $anchorText,
         private LinkRelation $relation,
         private bool $isInternal,
+        private ?int $width = null,
+        private ?int $height = null,
     ) {
     }
 
@@ -60,5 +62,20 @@ final readonly class Link
     public function isResource(): bool
     {
         return $this->type->isResource();
+    }
+
+    public function width(): ?int
+    {
+        return $this->width;
+    }
+
+    public function height(): ?int
+    {
+        return $this->height;
+    }
+
+    public function hasDimensions(): bool
+    {
+        return $this->width !== null && $this->height !== null;
     }
 }
