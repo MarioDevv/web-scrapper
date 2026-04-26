@@ -15,6 +15,9 @@
         'notice'  => 'badge-info',
         'info'    => 'badge-muted',
     ];
+    $score = $report['siteScore'] ?? 100;
+    // Lighthouse-style thresholds: 90+ green, 50-89 amber, <50 red.
+    $scoreClass = $score >= 90 ? 'c-ok' : ($score >= 50 ? 'c-warn' : 'c-err');
 @endphp
 
 <div class="flex-1 overflow-auto min-h-0">
@@ -25,6 +28,8 @@
         </div>
     @elseif($report['totalIssues'] === 0)
         <div class="p-8 font-mono text-[11px] text-tertiary text-center">
+            <div class="c-ok text-[36px] tabular-nums font-semibold leading-none mb-1">{{ $score }}</div>
+            <div class="text-muted uppercase tracking-[0.16em] text-[10px] mb-3">site score / 100</div>
             <div class="c-ok text-[13px] mb-2">✓ No issues detected</div>
             <div class="text-muted">Either no pages have been analyzed yet, or the site passes every active rule.</div>
         </div>
@@ -38,6 +43,16 @@
                 <span class="text-tertiary">{{ count($report['groups']) }} rules triggered</span>
             </header>
             <div class="p-4 font-mono text-[11px] leading-relaxed">
+                <div class="flex items-center gap-5 mb-3">
+                    <div class="flex items-baseline gap-2">
+                        <span class="{{ $scoreClass }} text-[32px] tabular-nums font-semibold leading-none">{{ $score }}</span>
+                        <span class="text-muted text-[12px] tabular-nums">/ 100</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-muted uppercase tracking-[0.16em] text-[10px]">site score</span>
+                        <span class="text-tertiary text-[10px]">weighted by rule impact</span>
+                    </div>
+                </div>
                 <div class="flex items-baseline gap-3 mb-3">
                     <span class="text-[22px] tabular-nums text-primary font-semibold">{{ $report['totalIssues'] }}</span>
                     <span class="text-muted uppercase tracking-[0.14em] text-[10px]">issues</span>

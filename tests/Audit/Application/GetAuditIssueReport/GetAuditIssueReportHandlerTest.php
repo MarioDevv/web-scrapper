@@ -143,8 +143,8 @@ final class GetAuditIssueReportHandlerTest extends TestCase
 
     public function test_site_score_drops_with_an_error_issue(): void
     {
-        // 1 page, 1 ERROR issue (title_missing → weight 10).
-        // score = 100 × (1 − 10/(1×10)) = 0.
+        // Single page with one ERROR (title_missing → weight 10).
+        // page_score = 100 × (1 − 10/30) ≈ 67. Audit = avg = 67.
         $this->persistPage('https://example.com/a', [
             $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
         ]);
@@ -152,13 +152,13 @@ final class GetAuditIssueReportHandlerTest extends TestCase
         $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
-        $this->assertSame(0, $report->siteScore);
+        $this->assertSame(67, $report->siteScore);
     }
 
     public function test_site_score_dilutes_with_audit_size(): void
     {
-        // 1 ERROR issue spread across 10 pages keeps the audit mostly clean.
-        // weight 10 / (10 × 10) = 0.10 → score 90.
+        // 1 ERROR on a single page out of 10 keeps the audit mostly clean.
+        // page_a = 67, the other 9 score 100. Audit = (67 + 900) / 10 ≈ 97.
         $this->persistPage('https://example.com/a', [
             $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
         ]);
@@ -169,13 +169,14 @@ final class GetAuditIssueReportHandlerTest extends TestCase
         $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
-        $this->assertSame(90, $report->siteScore);
+        $this->assertSame(97, $report->siteScore);
     }
 
-    public function test_site_score_clamps_at_zero_when_overwhelmed(): void
+    public function test_site_score_clamps_a_single_overwhelmed_page_at_zero(): void
     {
-        // 5 ERROR-weight-10 issues on a single page would give a raw
-        // score of 100 × (1 − 50/10) = -400. The handler must clamp to 0.
+        // 5 ERROR-weight-10 issues on a single page yield a raw page
+        // weight of 50, clamped to MAX_PAGE_PENALTY=30 → page_score 0.
+        // With only that page in the audit, audit = 0.
         $this->persistPage('https://example.com/a', [
             $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
             $this->issue('redirect_loop', IssueSeverity::ERROR, IssueCategory::LINKS),
@@ -188,6 +189,22 @@ final class GetAuditIssueReportHandlerTest extends TestCase
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(0, $report->siteScore);
+    }
+
+    public function test_site_score_averages_across_pages_with_mixed_severities(): void
+    {
+        // Page A: 1 NOTICE weight 2 → page_score 100×(1-2/30) ≈ 93.
+        // Page B: clean → 100.
+        // Audit = (93 + 100)/2 ≈ 97.
+        $this->persistPage('https://example.com/a', [
+            $this->issue('content_thin', IssueSeverity::NOTICE, IssueCategory::CONTENT),
+        ]);
+        $this->persistPage('https://example.com/b', []);
+
+        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
+
+        $this->assertSame(97, $report->siteScore);
     }
 
     public function test_groups_sort_by_weight_times_affected_pages(): void
