@@ -54,6 +54,8 @@ use SeoSpider\Audit\Application\GetAuditIssueReport\IssueReportReader;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteIssueReportReader;
 use SeoSpider\Audit\Domain\Model\Page\SiteIssueRepository;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteSiteIssueRepository;
+use SeoSpider\Audit\Application\GetAuditPages\PageSummaryReader;
+use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageSummaryReader;
 use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
@@ -95,6 +97,8 @@ final class AuditServiceProvider extends ServiceProvider
         $this->app->singleton(IssueReportReader::class, fn($app) => new SqliteIssueReportReader($app->make(PDO::class)));
 
         $this->app->singleton(SiteIssueRepository::class, fn($app) => new SqliteSiteIssueRepository($app->make(PDO::class)));
+
+        $this->app->singleton(PageSummaryReader::class, fn($app) => new SqlitePageSummaryReader($app->make(PDO::class)));
 
         $this->app->singleton(UrlCanonicalizer::class, fn() => new UrlCanonicalizer());
 
@@ -207,7 +211,7 @@ final class AuditServiceProvider extends ServiceProvider
 
         $this->app->singleton(GetAuditPagesHandler::class, fn($app) => new GetAuditPagesHandler(
             auditRepository: $app->make(AuditRepository::class),
-            pageRepository: $app->make(PageRepository::class),
+            reader: $app->make(PageSummaryReader::class),
         ));
 
         $this->app->singleton(GetPageDetailHandler::class, fn($app) => new GetPageDetailHandler(

@@ -65,6 +65,26 @@ class SpiderDashboard extends Component
     public string $sortField = 'crawlDepth';
     public string $sortDir = 'asc';
 
+    // ── Pagination (server-side; only kicks in when the audit is no
+    // longer crawling so live audits keep showing every new row in
+    // real time)
+    public int $currentPage = 0;
+    public int $pageSize = 100;
+    public int $pagesTotal = 0;
+
+    /**
+     * Raw counts straight from the SQL reader (keys: pages, internal,
+     * html, redirects, errors, issues, noindex). The Blade view consumes
+     * the post-mapped getTabCountsProperty(); this property exists so
+     * the dashboard can cache them between renders without re-querying.
+     *
+     * @var array<string, int>
+     */
+    public array $rawTabCounts = [
+        'pages' => 0, 'internal' => 0, 'html' => 0,
+        'redirects' => 0, 'errors' => 0, 'issues' => 0, 'noindex' => 0,
+    ];
+
     // ── Sidebar
     public bool $sidebarCollapsed = false;
 
@@ -246,6 +266,11 @@ class SpiderDashboard extends Component
     public function setTab(string $tab): void
     {
         $this->activeTab = $tab;
+        $this->currentPage = 0;
+        // Tab moves the SQL filter; refetch from the new view.
+        if ($this->auditId !== null && !$this->crawling) {
+            $this->refreshPages();
+        }
     }
 
     public function toggleSidebar(): void
@@ -260,6 +285,36 @@ class SpiderDashboard extends Component
         } else {
             $this->sortField = $field;
             $this->sortDir = 'asc';
+        }
+        $this->currentPage = 0;
+        if ($this->auditId !== null && !$this->crawling) {
+            $this->refreshPages();
+        }
+    }
+
+    public function nextPage(): void
+    {
+        if (($this->currentPage + 1) * $this->pageSize >= $this->pagesTotal) {
+            return;
+        }
+        $this->currentPage++;
+        $this->refreshPages();
+    }
+
+    public function prevPage(): void
+    {
+        if ($this->currentPage === 0) {
+            return;
+        }
+        $this->currentPage--;
+        $this->refreshPages();
+    }
+
+    public function updatedSearchQuery(): void
+    {
+        $this->currentPage = 0;
+        if ($this->auditId !== null && !$this->crawling) {
+            $this->refreshPages();
         }
     }
 
@@ -430,7 +485,21 @@ class SpiderDashboard extends Component
         $r = app(GetAuditPagesHandler::class)(new GetAuditPagesQuery(
             auditId: $this->auditId,
             since: $since,
+            tab: $this->mapActiveTabToQuery(),
+            search: $this->searchQuery !== '' ? $this->searchQuery : null,
+            sortField: $this->sortField,
+            sortDir: $this->sortDir,
+            // Live crawls show every newly arrived row in real time, so we
+            // skip pagination there. Once the audit settles we cap each
+            // load to one page so a 1000+ row audit never blows up the
+            // Livewire payload.
+            limit: $this->crawling ? null : $this->pageSize,
+            offset: $this->crawling ? 0 : $this->currentPage * $this->pageSize,
         ));
+
+        $this->pagesTotal = $r->total;
+        $this->rawTabCounts = app(\SeoSpider\Audit\Application\GetAuditPages\PageSummaryReader::class)
+            ->tabCounts(new \SeoSpider\Audit\Domain\Model\Audit\AuditId($this->auditId));
 
         $previousIds = $this->knownPageIds;
 
@@ -469,6 +538,21 @@ class SpiderDashboard extends Component
         $currentIds = array_map(fn(array $p): string => (string) $p['pageId'], $this->pages);
         $this->newPageIds = array_values(array_diff($currentIds, $previousIds));
         $this->knownPageIds = $currentIds;
+    }
+
+    private function mapActiveTabToQuery(): ?string
+    {
+        return match ($this->activeTab) {
+            'internal' => \SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery::TAB_INTERNAL,
+            'html' => \SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery::TAB_HTML,
+            'redirects' => \SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery::TAB_REDIRECTS,
+            'errors' => \SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery::TAB_ERRORS,
+            'issues' => \SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery::TAB_ISSUES,
+            'noindex' => \SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery::TAB_NOINDEX,
+            // 'all', 'overview', 'audit', 'external' fall through to the
+            // unfiltered result set.
+            default => null,
+        };
     }
 
     private function latestCrawledAt(): ?string
@@ -579,53 +663,38 @@ class SpiderDashboard extends Component
     // ═══════════════════════════════════════
 
     /**
+     * Tab/search/sort/paginate semantics now live in the SQL reader, so
+     * this property no longer filters — it just hands the already-loaded
+     * page out, optionally tacking external link checks onto the rare
+     * tabs that mixed both.
+     *
      * @return array<int, array<string, mixed>>
      */
     public function getFilteredPagesProperty(): array
     {
-        $extAsPages = $this->externalLinksAsPages();
-
-        $pages = match ($this->activeTab) {
-            'all'       => array_merge($this->pages, $extAsPages),
-            'overview'  => [],
-            'internal'  => array_values(array_filter($this->pages, static fn(array $p): bool => str_contains((string) ($p['contentType'] ?? ''), 'html') && $p['statusCode'] < 300)),
-            'external'  => [],
-            'html'      => array_values(array_filter($this->pages, static fn(array $p): bool => str_contains((string) ($p['contentType'] ?? ''), 'html'))),
-            'redirects' => array_values(array_filter(
-                array_merge($this->pages, $extAsPages),
-                static fn(array $p): bool => $p['statusCode'] >= 300 && $p['statusCode'] < 400,
-            )),
-            'errors'    => array_values(array_filter(
-                array_merge($this->pages, $extAsPages),
-                static fn(array $p): bool => $p['statusCode'] >= 400 || ((int) $p['statusCode'] === 0 && !empty($p['isExternalCheck'])),
-            )),
-            'issues'    => array_values(array_filter($this->pages, static fn(array $p): bool => $p['errorCount'] > 0 || $p['warningCount'] > 0)),
-            'noindex'   => array_values(array_filter($this->pages, static fn(array $p): bool => !$p['isIndexable'])),
-            default     => $this->pages,
-        };
-
-        if ($this->searchQuery !== '') {
-            $q = mb_strtolower($this->searchQuery);
-            $pages = array_values(array_filter($pages, static fn(array $p): bool =>
-                str_contains(mb_strtolower((string) $p['url']), $q) ||
-                str_contains(mb_strtolower((string) ($p['title'] ?? '')), $q)
-            ));
+        if (in_array($this->activeTab, ['external'], true)) {
+            return [];
         }
 
-        $sortField = $this->sortField;
-        $sortDir = $this->sortDir;
+        $rows = $this->pages;
 
-        usort($pages, static function (array $a, array $b) use ($sortField, $sortDir): int {
-            $va = $a[$sortField] ?? '';
-            $vb = $b[$sortField] ?? '';
-            $cmp = is_numeric($va) && is_numeric($vb)
-                ? ((float) $va <=> (float) $vb)
-                : strcasecmp((string) $va, (string) $vb);
+        if (in_array($this->activeTab, ['all', 'redirects', 'errors'], true)) {
+            $extAsPages = $this->externalLinksAsPages();
+            if ($this->activeTab === 'redirects') {
+                $extAsPages = array_filter(
+                    $extAsPages,
+                    static fn(array $p) => $p['statusCode'] >= 300 && $p['statusCode'] < 400,
+                );
+            } elseif ($this->activeTab === 'errors') {
+                $extAsPages = array_filter(
+                    $extAsPages,
+                    static fn(array $p) => $p['statusCode'] >= 400 || ((int) $p['statusCode'] === 0 && !empty($p['isExternalCheck'])),
+                );
+            }
+            $rows = array_merge($rows, array_values($extAsPages));
+        }
 
-            return $sortDir === 'asc' ? $cmp : -$cmp;
-        });
-
-        return $pages;
+        return $rows;
     }
 
     /**
@@ -633,24 +702,19 @@ class SpiderDashboard extends Component
      */
     public function getTabCountsProperty(): array
     {
-        $extAsPages = $this->externalLinksAsPages();
+        $extCount = count($this->externalLinks);
+        $tc = $this->rawTabCounts;
 
         return [
-            'overview'  => count($this->pages),
-            'all'       => count($this->pages) + count($extAsPages),
-            'internal'  => count(array_filter($this->pages, static fn(array $p): bool => str_contains((string) ($p['contentType'] ?? ''), 'html') && $p['statusCode'] < 300)),
-            'external'  => count($this->externalLinks),
-            'html'      => count(array_filter($this->pages, static fn(array $p): bool => str_contains((string) ($p['contentType'] ?? ''), 'html'))),
-            'redirects' => count(array_filter(
-                array_merge($this->pages, $extAsPages),
-                static fn(array $p): bool => $p['statusCode'] >= 300 && $p['statusCode'] < 400,
-            )),
-            'errors'    => count(array_filter(
-                array_merge($this->pages, $extAsPages),
-                static fn(array $p): bool => $p['statusCode'] >= 400 || ((int) $p['statusCode'] === 0 && !empty($p['isExternalCheck'])),
-            )),
-            'issues'    => count(array_filter($this->pages, static fn(array $p): bool => $p['errorCount'] > 0 || $p['warningCount'] > 0)),
-            'noindex'   => count(array_filter($this->pages, static fn(array $p): bool => !$p['isIndexable'])),
+            'overview'  => $tc['pages'],
+            'all'       => $tc['pages'] + $extCount,
+            'internal'  => $tc['internal'],
+            'external'  => $extCount,
+            'html'      => $tc['html'],
+            'redirects' => $tc['redirects'],
+            'errors'    => $tc['errors'],
+            'issues'    => $tc['issues'],
+            'noindex'   => $tc['noindex'],
         ];
     }
 
