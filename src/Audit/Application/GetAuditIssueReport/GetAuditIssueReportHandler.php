@@ -71,17 +71,28 @@ final readonly class GetAuditIssueReportHandler
 
             $groupsByCode[$code]['count']++;
 
-            $groupsByCode[$code]['pages'][$row->pageId] ??= new AffectedPage(
+            // Site-wide issues have no pageId — they still surface as a
+            // row in the group, keyed by their context so multiple
+            // orphan URLs do not collapse into one entry.
+            $key = $row->pageId ?? 'site:' . md5((string) $row->context);
+            $groupsByCode[$code]['pages'][$key] ??= new AffectedPage(
                 pageId: $row->pageId,
-                url: $row->pageUrl,
+                url: $row->pageUrl ?? ($row->context ?? ''),
                 context: $row->context,
             );
 
             $severityTotals[$severity] = ($severityTotals[$severity] ?? 0) + 1;
             $categoryTotals[$category] = ($categoryTotals[$category] ?? 0) + 1;
-            $affectedPageIds[$row->pageId] = true;
             $totalIssues++;
-            $weightByPage[$row->pageId] = ($weightByPage[$row->pageId] ?? 0) + $weight;
+
+            // affectedPages and the per-page weight buckets only apply
+            // to page-bound issues; site issues belong to the audit
+            // and would otherwise inflate counts that the UI labels as
+            // "pages affected".
+            if ($row->pageId !== null) {
+                $affectedPageIds[$row->pageId] = true;
+                $weightByPage[$row->pageId] = ($weightByPage[$row->pageId] ?? 0) + $weight;
+            }
         }
 
         $groups = [];

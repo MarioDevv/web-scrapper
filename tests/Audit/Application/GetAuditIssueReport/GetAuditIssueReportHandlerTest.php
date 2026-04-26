@@ -20,11 +20,13 @@ use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
+use SeoSpider\Audit\Domain\Model\Page\SiteIssue;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryIssueReportReader;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
+use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemorySiteIssueRepository;
 
 final class GetAuditIssueReportHandlerTest extends TestCase
 {
@@ -239,6 +241,70 @@ final class GetAuditIssueReportHandlerTest extends TestCase
         $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
 
         $this->assertSame(10, $report->groups[0]->weight);
+    }
+
+    public function test_includes_site_issues_in_the_report_with_null_page_id(): void
+    {
+        $this->persistPage('https://example.com/a', []);
+
+        $siteIssues = new InMemorySiteIssueRepository();
+        $siteIssues->appendIssues($this->auditId, [
+            new SiteIssue(
+                id: IssueId::generate(),
+                category: IssueCategory::LINKS,
+                severity: IssueSeverity::NOTICE,
+                code: 'sitemap_orphans',
+                message: 'URL declared in the sitemap but never reached.',
+                context: 'https://example.com/orphan',
+            ),
+        ]);
+
+        $handler = new GetAuditIssueReportHandler(
+            $this->audits,
+            new InMemoryIssueReportReader($this->pages, $siteIssues),
+        );
+        $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
+
+        $codes = array_map(static fn($g) => $g->code, $report->groups);
+        $this->assertSame(['sitemap_orphans'], $codes);
+
+        $group = $report->groups[0];
+        $this->assertSame(1, $group->count);
+        $this->assertCount(1, $group->affectedPages);
+        $this->assertNull($group->affectedPages[0]->pageId);
+        $this->assertSame('https://example.com/orphan', $group->affectedPages[0]->url);
+
+        // The top-level affectedPages tally only counts real pages, so a
+        // pure site-issue group leaves it at zero.
+        $this->assertSame(0, $report->affectedPages);
+    }
+
+    public function test_site_issues_do_not_count_against_site_score(): void
+    {
+        // 1 clean page + 1 sitemap orphan should leave score at 100
+        // because the page itself contributes nothing and the audit
+        // formula averages page scores, not raw issue counts.
+        $this->persistPage('https://example.com/a', []);
+
+        $siteIssues = new InMemorySiteIssueRepository();
+        $siteIssues->appendIssues($this->auditId, [
+            new SiteIssue(
+                id: IssueId::generate(),
+                category: IssueCategory::LINKS,
+                severity: IssueSeverity::NOTICE,
+                code: 'sitemap_orphans',
+                message: 'orphan',
+                context: 'https://example.com/orphan',
+            ),
+        ]);
+
+        $handler = new GetAuditIssueReportHandler(
+            $this->audits,
+            new InMemoryIssueReportReader($this->pages, $siteIssues),
+        );
+        $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
+
+        $this->assertSame(100, $report->siteScore);
     }
 
     /** @param Issue[] $issues */
