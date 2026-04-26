@@ -210,7 +210,19 @@ final readonly class SqlitePageRepository implements PageRepository
         $this->pdo->prepare('DELETE FROM issues WHERE page_id = :page_id')
             ->execute(['page_id' => $pageId]);
 
-        if ($page->issues() === []) {
+        $this->insertIssues($pageId, $page->issues());
+    }
+
+    /** @param Issue[] $issues */
+    public function appendIssues(PageId $pageId, array $issues): void
+    {
+        $this->insertIssues($pageId->value(), $issues);
+    }
+
+    /** @param Issue[] $issues */
+    private function insertIssues(string $pageId, array $issues): void
+    {
+        if ($issues === []) {
             return;
         }
 
@@ -219,7 +231,7 @@ final readonly class SqlitePageRepository implements PageRepository
             VALUES (:id, :page_id, :category, :severity, :code, :message, :context)
         ');
 
-        foreach ($page->issues() as $issue) {
+        foreach ($issues as $issue) {
             $stmt->execute([
                 'id' => $issue->id()->value(),
                 'page_id' => $pageId,

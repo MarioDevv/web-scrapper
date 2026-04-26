@@ -6,6 +6,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Page\Fingerprint;
+use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
@@ -54,6 +55,18 @@ final class InMemoryPageRepository implements PageRepository
     public function nextId(): PageId
     {
         return PageId::generate();
+    }
+
+    /**
+     * No-op: in-memory aggregates already hold the issues their analyzers
+     * added via Page::addIssue(). This mirrors the SQLite implementation,
+     * which simply inserts rows into the issues table without touching
+     * the page aggregate that triggered the call.
+     *
+     * @param Issue[] $issues
+     */
+    public function appendIssues(PageId $pageId, array $issues): void
+    {
     }
 
     /** @return array<string, Fingerprint> */

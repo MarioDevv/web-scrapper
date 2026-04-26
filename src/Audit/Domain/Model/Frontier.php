@@ -31,4 +31,14 @@ interface Frontier
     public function clear(AuditId $auditId): void;
 
     public function pendingCount(AuditId $auditId): int;
+
+    /**
+     * Lists every URL the frontier knows for a given discovery source
+     * (e.g. sitemap), including pending and visited entries. Site-wide
+     * analyzers use this to compare what the sitemap declared against
+     * what the crawl actually reached.
+     *
+     * @return Url[]
+     */
+    public function urlsBySource(AuditId $auditId, DiscoverySource $source): array;
 }

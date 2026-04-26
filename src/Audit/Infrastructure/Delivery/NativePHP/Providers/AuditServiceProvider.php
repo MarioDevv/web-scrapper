@@ -45,6 +45,12 @@ use SeoSpider\Audit\Domain\Model\Analyzer\DuplicateAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\TransportSecurityAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\SocialMetadataAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\StructuredDataAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\HreflangReturnAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\CanonicalTargetAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\RobotsIndexableAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\SitemapCoverageAnalyzer;
+use SeoSpider\Audit\Application\AnalyzeSite\AnalyzeSiteOnAuditCompleted;
+use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
@@ -113,6 +119,28 @@ final class AuditServiceProvider extends ServiceProvider
             HreflangAnalyzer::class,
             DuplicateAnalyzer::class,
         ], 'analyzers');
+
+        $this->app->singleton(HreflangReturnAnalyzer::class, fn() => new HreflangReturnAnalyzer());
+        $this->app->singleton(CanonicalTargetAnalyzer::class, fn() => new CanonicalTargetAnalyzer());
+        $this->app->singleton(RobotsIndexableAnalyzer::class, fn($app) => new RobotsIndexableAnalyzer(
+            robotsPolicy: $app->make(RobotsPolicy::class),
+        ));
+        $this->app->singleton(SitemapCoverageAnalyzer::class, fn($app) => new SitemapCoverageAnalyzer(
+            frontier: $app->make(Frontier::class),
+        ));
+
+        $this->app->tag([
+            HreflangReturnAnalyzer::class,
+            CanonicalTargetAnalyzer::class,
+            RobotsIndexableAnalyzer::class,
+            SitemapCoverageAnalyzer::class,
+        ], 'site-analyzers');
+
+        $this->app->singleton(AnalyzeSiteOnAuditCompleted::class, fn($app) => new AnalyzeSiteOnAuditCompleted(
+            pageRepository: $app->make(PageRepository::class),
+            auditRepository: $app->make(AuditRepository::class),
+            siteAnalyzers: iterator_to_array($app->tagged('site-analyzers')),
+        ));
 
         $this->app->singleton(UrlDiscoverer::class, fn($app) => new FrontierUrlDiscoverer(
             $app->make(Frontier::class),
@@ -205,6 +233,12 @@ final class AuditServiceProvider extends ServiceProvider
         $bus->subscribe(PageFetched::class, static function (\SeoSpider\Shared\Domain\DomainEvent $event) use ($app): void {
             if ($event instanceof PageFetched) {
                 ($app->make(AnalyzePageOnPageFetched::class))($event);
+            }
+        });
+
+        $bus->subscribe(AuditCompleted::class, static function (\SeoSpider\Shared\Domain\DomainEvent $event) use ($app): void {
+            if ($event instanceof AuditCompleted) {
+                ($app->make(AnalyzeSiteOnAuditCompleted::class))($event);
             }
         });
     }
