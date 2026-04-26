@@ -24,6 +24,7 @@ final class MetaDataAnalyzer implements Analyzer
         $this->checkMetaDescription($page, $metadata);
         $this->checkH1($page, $metadata);
         $this->checkViewport($page, $metadata);
+        $this->checkHtmlLang($page, $metadata);
     }
 
     public function category(): IssueCategory
@@ -127,5 +128,22 @@ final class MetaDataAnalyzer implements Analyzer
                 message: 'Page has no viewport meta tag (required for mobile-friendly rendering).',
             ));
         }
+    }
+
+    private function checkHtmlLang(Page $page, \SeoSpider\Audit\Domain\Model\Page\PageMetadata $metadata): void
+    {
+        $lang = $metadata->lang();
+
+        if ($lang !== null && trim($lang) !== '') {
+            return;
+        }
+
+        $page->addIssue(new Issue(
+            id: IssueId::generate(),
+            category: IssueCategory::METADATA,
+            severity: IssueSeverity::NOTICE,
+            code: 'html_lang_missing',
+            message: 'The <html> element does not declare a lang attribute.',
+        ));
     }
 }

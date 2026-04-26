@@ -112,6 +112,26 @@ final class IssueRuleCatalog
                 how: 'Add <meta name="viewport" content="width=device-width, initial-scale=1"> in <head>.',
                 source: 'https://developers.google.com/search/docs/crawling-indexing/mobile/mobile-sites-mobile-first-indexing',
             ),
+            new IssueRule(
+                code: 'html_lang_missing',
+                category: IssueCategory::METADATA,
+                severity: IssueSeverity::NOTICE,
+                title: 'HTML lang attribute missing',
+                summary: 'The <html> element does not declare a lang attribute.',
+                why: 'Without lang, screen readers fall back to the browser default and may pronounce content with the wrong phonemes. Google also uses lang as one of several signals to confirm the locale of the page.',
+                how: 'Add lang to the root element using a BCP 47 code: <html lang="es"> or <html lang="en-GB">. Match the actual content language.',
+                source: 'https://www.w3.org/International/questions/qa-html-language-declarations',
+            ),
+            new IssueRule(
+                code: 'open_graph_incomplete',
+                category: IssueCategory::METADATA,
+                severity: IssueSeverity::NOTICE,
+                title: 'Open Graph metadata incomplete',
+                summary: 'One or more of og:title, og:description, og:image is missing.',
+                why: 'Open Graph drives the preview card when the URL is shared on Facebook, LinkedIn, Slack, WhatsApp and most chat apps. Missing tags fall back to a generic snippet (or no preview at all), reducing click-through.',
+                how: 'Add the three core OG meta tags in <head>: og:title (≤60 chars), og:description (≤160 chars), og:image (1200×630 PNG/JPG). Include og:url and og:type=website|article for completeness.',
+                source: 'https://ogp.me/',
+            ),
 
             // ── HEADINGS ────────────────────────────────────────────────
             new IssueRule(
@@ -248,6 +268,16 @@ final class IssueRuleCatalog
                 summary: 'The redirect chain alternates between HTTP and HTTPS.',
                 why: 'Bouncing protocols inflates the chain and exposes the user to a cleartext hop, which can trigger HSTS warnings and browser blocks.',
                 how: 'Redirect from HTTP to HTTPS once at the edge and keep all subsequent hops on HTTPS.',
+            ),
+            new IssueRule(
+                code: 'redirect_not_permanent',
+                category: IssueCategory::LINKS,
+                severity: IssueSeverity::NOTICE,
+                title: 'Redirect is not permanent (301/308)',
+                summary: 'The redirect chain uses 302/303/307 instead of a permanent 301/308.',
+                why: 'Temporary redirects tell crawlers the move may revert, so signals from the source URL are not consolidated to the destination. Long-lived moves should be 301 (or 308 to preserve method) for cleaner indexing.',
+                how: 'Change the redirect rule to 301 (or 308 if the original method must be preserved). Use 302/307 only for genuinely temporary redirects (A/B tests, maintenance pages).',
+                source: 'https://developers.google.com/search/docs/crawling-indexing/301-redirects',
             ),
             new IssueRule(
                 code: 'internal_nofollow',
@@ -430,6 +460,26 @@ final class IssueRuleCatalog
                 summary: 'The Referrer-Policy allows full-URL referrers across origins.',
                 why: 'Policies like "unsafe-url" or "no-referrer-when-downgrade" expose full URLs (including query strings, which may carry tokens) to third-party origins.',
                 how: 'Switch to "strict-origin-when-cross-origin" — the same behaviour modern browsers default to. Only relax for specific analytics use cases.',
+            ),
+            new IssueRule(
+                code: 'http_insecure',
+                category: IssueCategory::SECURITY,
+                severity: IssueSeverity::ERROR,
+                title: 'Page served over plain HTTP',
+                summary: 'The final URL of the page resolves over http:// rather than https://.',
+                why: 'Google has used HTTPS as a ranking signal since 2014, and Chrome marks plain HTTP pages as "Not secure". HTTP also exposes traffic to interception and tampering, which can inject content that flips the page into a search-engine penalty.',
+                how: 'Configure the server to serve everything over HTTPS, redirect HTTP→HTTPS at the edge with 301, and set Strict-Transport-Security to lock browsers into HTTPS for the domain.',
+                source: 'https://developers.google.com/search/blog/2014/08/https-as-ranking-signal',
+            ),
+            new IssueRule(
+                code: 'mixed_content',
+                category: IssueCategory::SECURITY,
+                severity: IssueSeverity::WARNING,
+                title: 'Mixed content (HTTP resources on HTTPS page)',
+                summary: 'The page is served over HTTPS but loads scripts, stylesheets, images, or iframes over HTTP.',
+                why: 'Modern browsers block active mixed content (scripts, iframes, stylesheets) outright and warn on passive mixed content (images, video). The page may render broken, lose the padlock icon, or trigger a downgrade warning that hurts trust and CTR.',
+                how: 'Update each HTTP reference to https:// (or use a protocol-relative reference for assets the origin also serves over HTTPS). Add a Content-Security-Policy with upgrade-insecure-requests as a safety net.',
+                source: 'https://developer.mozilla.org/docs/Web/Security/Mixed_content',
             ),
         ];
 
