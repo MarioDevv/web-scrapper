@@ -11,7 +11,7 @@ use SeoSpider\Audit\Domain\Model\Url;
 
 final class HreflangReturnAnalyzerTest extends TestCase
 {
-    use SiteAnalyzerTestHelpers;
+    use AnalyzerTestHelpers;
 
     public function test_does_not_flag_symmetric_cluster(): void
     {

@@ -14,7 +14,7 @@ use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 
 final class SitemapCoverageAnalyzerTest extends TestCase
 {
-    use SiteAnalyzerTestHelpers;
+    use AnalyzerTestHelpers;
 
     public function test_does_not_flag_when_no_sitemap_was_ingested(): void
     {
