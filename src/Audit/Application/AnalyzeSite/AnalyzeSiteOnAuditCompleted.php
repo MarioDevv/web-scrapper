@@ -11,6 +11,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Audit\Domain\Model\Page\SiteIssueRepository;
 
 /**
  * Site-wide analysis phase. After the per-page pipeline has finished
@@ -25,6 +26,7 @@ final readonly class AnalyzeSiteOnAuditCompleted
     public function __construct(
         private PageRepository $pageRepository,
         private AuditRepository $auditRepository,
+        private SiteIssueRepository $siteIssueRepository,
         private array $siteAnalyzers = [],
     ) {
     }
@@ -62,6 +64,10 @@ final readonly class AnalyzeSiteOnAuditCompleted
             if ($newIssues !== []) {
                 $this->pageRepository->appendIssues($page->id(), $newIssues);
             }
+        }
+
+        if ($context->siteIssues() !== []) {
+            $this->siteIssueRepository->appendIssues($event->auditId, $context->siteIssues());
         }
     }
 

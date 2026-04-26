@@ -10,6 +10,7 @@ use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
+use SeoSpider\Audit\Domain\Model\Page\SiteIssue;
 use SeoSpider\Audit\Domain\Model\Url;
 
 final class SitemapCoverageAnalyzer implements SiteAnalyzer
@@ -25,15 +26,25 @@ final class SitemapCoverageAnalyzer implements SiteAnalyzer
         if ($sitemapUrls === []) {
             // No sitemap was ingested — flagging every crawled page would
             // be noise. The absence of a sitemap is a separate concern
-            // (sitemap_unreachable) tracked outside phase A.3.1.
+            // (sitemap_unreachable) not yet tracked.
             return;
         }
 
         $sitemapIndex = [];
         foreach ($sitemapUrls as $url) {
-            $sitemapIndex[$this->normalize($url)] = true;
+            $sitemapIndex[$this->normalize($url)] = $url;
         }
 
+        $crawledIndex = [];
+        foreach ($context->pages as $page) {
+            $crawledIndex[$this->normalize($page->url())] = true;
+            $finalUrl = $page->response()->finalUrl();
+            if ($finalUrl !== null) {
+                $crawledIndex[$this->normalize($finalUrl)] = true;
+            }
+        }
+
+        // sitemap_missing — page crawled but absent from the sitemap.
         foreach ($context->pages as $page) {
             if (!$page->response()->statusCode()->isSuccessful()) {
                 continue;
@@ -61,6 +72,24 @@ final class SitemapCoverageAnalyzer implements SiteAnalyzer
                 code: 'sitemap_missing',
                 message: 'Page was crawled but is not declared in the sitemap.',
                 context: $page->url()->toString(),
+            ));
+        }
+
+        // sitemap_orphans — URL declared in the sitemap that the
+        // crawler never reached. These have no Page to attach to, so
+        // they emit as SiteIssues persisted at the audit level.
+        foreach ($sitemapIndex as $key => $url) {
+            if (isset($crawledIndex[$key])) {
+                continue;
+            }
+
+            $context->addSiteIssue(new SiteIssue(
+                id: IssueId::generate(),
+                category: IssueCategory::LINKS,
+                severity: IssueSeverity::NOTICE,
+                code: 'sitemap_orphans',
+                message: 'URL declared in the sitemap but never reached by the crawler.',
+                context: $url->toString(),
             ));
         }
     }

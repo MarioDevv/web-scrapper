@@ -334,6 +334,16 @@ final class IssueRuleCatalog
                 how: 'Add the URL to the sitemap (sitemap.xml or a child of the sitemap index). If the page should not be indexed, also confirm it has noindex.',
                 source: 'https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview',
             ),
+            new IssueRule(
+                code: 'sitemap_orphans',
+                category: IssueCategory::LINKS,
+                severity: IssueSeverity::NOTICE,
+                title: 'Sitemap URL never reached by the crawl',
+                summary: 'A URL declared in the sitemap was not reached during the crawl.',
+                why: 'When the sitemap announces URLs that the crawler cannot find through internal links, Google often draws the same conclusion: low-quality candidates with no inbound signal. Either the sitemap is stale or there is a broken navigation path.',
+                how: 'Either add internal links so the page is discoverable, drop the URL from the sitemap if it should not be indexed, or fix whatever 4xx/redirect is preventing the crawl from reaching it.',
+                source: 'https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap',
+            ),
 
             // ── DIRECTIVES ─────────────────────────────────────────────
             new IssueRule(

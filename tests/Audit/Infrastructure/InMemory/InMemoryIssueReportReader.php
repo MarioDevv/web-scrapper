@@ -17,8 +17,10 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
  */
 final readonly class InMemoryIssueReportReader implements IssueReportReader
 {
-    public function __construct(private InMemoryPageRepository $pages)
-    {
+    public function __construct(
+        private InMemoryPageRepository $pages,
+        private ?InMemorySiteIssueRepository $siteIssues = null,
+    ) {
     }
 
     public function read(AuditId $auditId): IssueReportData
@@ -35,6 +37,19 @@ final readonly class InMemoryIssueReportReader implements IssueReportReader
                     severity: $issue->severity()->value,
                     category: $issue->category()->value,
                     context: $issue->context(),
+                );
+            }
+        }
+
+        if ($this->siteIssues !== null) {
+            foreach ($this->siteIssues->findByAudit($auditId) as $siteIssue) {
+                $rows[] = new IssueReportRow(
+                    pageId: null,
+                    pageUrl: null,
+                    code: $siteIssue->code,
+                    severity: $siteIssue->severity->value,
+                    category: $siteIssue->category->value,
+                    context: $siteIssue->context,
                 );
             }
         }
