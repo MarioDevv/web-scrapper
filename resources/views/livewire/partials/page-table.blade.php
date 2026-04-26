@@ -36,8 +36,8 @@
                     <span class="w-1.5 h-1.5 rounded-full dot-pulse" style="background:var(--c-accent); box-shadow:0 0 6px var(--c-accent-glow);"></span>
                 @endif
                 audit
-                @if(($status['issuesFound'] ?? 0) > 0)
-                    <span class="text-muted font-normal">·{{ $status['issuesFound'] }}</span>
+                @if(($this->tabCounts['issues'] ?? 0) > 0)
+                    <span class="text-muted font-normal">·{{ $this->tabCounts['issues'] }}</span>
                 @endif
             </span>
             <span class="{{ $isAudit ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">]</span>
