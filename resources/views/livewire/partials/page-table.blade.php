@@ -582,6 +582,34 @@
     </table>
     </div>
 
+    {{-- ── PAGINATION FOOTER ─────────────────────────────────────── --}}
+    @php
+        $totalPages = $pageSize > 0 ? (int) ceil($pagesTotal / $pageSize) : 1;
+        $showPager = !$crawling && $pagesTotal > $pageSize;
+    @endphp
+    @if($showPager)
+    <div class="flex items-center justify-between px-3 py-2 border-t border-line bg-app2 font-mono text-[10px] text-muted uppercase tracking-[0.16em]">
+        <span>
+            page <span class="text-primary tabular-nums">{{ $currentPage + 1 }}</span> /
+            <span class="text-primary tabular-nums">{{ max(1, $totalPages) }}</span>
+            <span class="text-tertiary">·</span>
+            <span class="text-primary tabular-nums">{{ number_format($pagesTotal) }}</span> rows
+        </span>
+        <span class="flex items-center gap-2">
+            <button wire:click="prevPage"
+                    @disabled($currentPage === 0)
+                    class="px-2 py-0.5 border border-line hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed">
+                ← prev
+            </button>
+            <button wire:click="nextPage"
+                    @disabled(($currentPage + 1) * $pageSize >= $pagesTotal)
+                    class="px-2 py-0.5 border border-line hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed">
+                next →
+            </button>
+        </span>
+    </div>
+    @endif
+
     @elseif($auditId && $crawling)
     <div class="flex flex-col items-center justify-center h-full gap-3 font-mono">
         <div class="c-accent text-[14px] ellipsis">discovering pages</div>

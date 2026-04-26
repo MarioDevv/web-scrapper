@@ -22,6 +22,7 @@ use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
+use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageSummaryReader;
 
 final class GetAuditPagesHandlerTest extends TestCase
 {
@@ -40,7 +41,7 @@ final class GetAuditPagesHandlerTest extends TestCase
 
     public function test_raises_audit_not_found_for_unknown_id(): void
     {
-        $handler = new GetAuditPagesHandler($this->audits, $this->pages);
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
 
         $this->expectException(AuditNotFound::class);
         $handler(new GetAuditPagesQuery(AuditId::generate()->value()));
@@ -51,7 +52,7 @@ final class GetAuditPagesHandlerTest extends TestCase
         $this->persistPage('https://example.com/a', '2026-04-26T10:00:00+00:00');
         $this->persistPage('https://example.com/b', '2026-04-26T10:00:05+00:00');
 
-        $handler = new GetAuditPagesHandler($this->audits, $this->pages);
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
         $response = $handler(new GetAuditPagesQuery($this->auditId->value()));
 
         $this->assertCount(2, $response->pages);
@@ -64,7 +65,7 @@ final class GetAuditPagesHandlerTest extends TestCase
         $this->persistPage('https://example.com/b', '2026-04-26T10:00:05+00:00');
         $this->persistPage('https://example.com/c', '2026-04-26T10:00:10+00:00');
 
-        $handler = new GetAuditPagesHandler($this->audits, $this->pages);
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
         $response = $handler(new GetAuditPagesQuery(
             auditId: $this->auditId->value(),
             since: '2026-04-26T10:00:05+00:00',
@@ -79,7 +80,7 @@ final class GetAuditPagesHandlerTest extends TestCase
     {
         $this->persistPage('https://example.com/a', '2026-04-26T10:00:00+00:00');
 
-        $handler = new GetAuditPagesHandler($this->audits, $this->pages);
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
         $response = $handler(new GetAuditPagesQuery(
             auditId: $this->auditId->value(),
             since: '2026-04-26T10:00:00+00:00',
@@ -87,6 +88,74 @@ final class GetAuditPagesHandlerTest extends TestCase
 
         $this->assertSame([], $response->pages);
         $this->assertSame(1, $response->total);
+    }
+
+    public function test_filters_by_search_term_against_url(): void
+    {
+        $this->persistPage('https://example.com/blog', '2026-04-26T10:00:00+00:00');
+        $this->persistPage('https://example.com/about', '2026-04-26T10:00:01+00:00');
+
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
+        $response = $handler(new GetAuditPagesQuery(
+            auditId: $this->auditId->value(),
+            search: 'blog',
+        ));
+
+        $this->assertCount(1, $response->pages);
+        $this->assertStringContainsString('blog', $response->pages[0]->url);
+        $this->assertSame(1, $response->total);
+    }
+
+    public function test_paginates_with_limit_offset_while_total_tracks_full_match(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $this->persistPage(
+                "https://example.com/p{$i}",
+                sprintf('2026-04-26T10:00:0%d+00:00', $i),
+            );
+        }
+
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
+
+        $first = $handler(new GetAuditPagesQuery(
+            auditId: $this->auditId->value(),
+            sortField: 'crawledAt',
+            sortDir: 'asc',
+            limit: 2,
+            offset: 0,
+        ));
+        $this->assertCount(2, $first->pages);
+        $this->assertSame(5, $first->total);
+
+        $second = $handler(new GetAuditPagesQuery(
+            auditId: $this->auditId->value(),
+            sortField: 'crawledAt',
+            sortDir: 'asc',
+            limit: 2,
+            offset: 2,
+        ));
+        $this->assertCount(2, $second->pages);
+        $this->assertNotSame(
+            $first->pages[0]->pageId,
+            $second->pages[0]->pageId,
+            'second page must contain different rows than the first',
+        );
+    }
+
+    public function test_sort_descending_reverses_order(): void
+    {
+        $this->persistPage('https://example.com/a', '2026-04-26T10:00:00+00:00');
+        $this->persistPage('https://example.com/b', '2026-04-26T10:00:05+00:00');
+
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
+        $response = $handler(new GetAuditPagesQuery(
+            auditId: $this->auditId->value(),
+            sortField: 'crawledAt',
+            sortDir: 'desc',
+        ));
+
+        $this->assertSame('https://example.com/b', $response->pages[0]->url);
+        $this->assertSame('https://example.com/a', $response->pages[1]->url);
     }
 
     private function persistPage(string $url, string $crawledAtIso): void

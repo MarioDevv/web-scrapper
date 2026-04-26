@@ -160,11 +160,15 @@ final readonly class SqlitePageRepository implements PageRepository
         $metadata = $page->metadata();
         $directives = $page->directives();
         $fingerprint = $page->fingerprint();
+        $linkSummary = $this->summariseLinks($page);
+        $canonicalStatus = $this->canonicalStatus($page);
 
         $stmt = $this->pdo->prepare('
             INSERT INTO pages (
                 id, audit_id, url, status_code, content_type, body_size, response_time,
-                final_url, headers, crawl_depth, is_html,
+                final_url, headers, crawl_depth, error_count, warning_count,
+                internal_link_count, external_link_count, image_count, canonical_status,
+                is_html,
                 title, meta_description, h1s, h2s, heading_hierarchy,
                 charset, viewport, og_title, og_description, og_image, word_count, lang,
                 noindex, nofollow, noarchive, nosnippet, noimageindex,
@@ -174,7 +178,9 @@ final readonly class SqlitePageRepository implements PageRepository
                 redirect_chain, links, hreflangs, crawled_at
             ) VALUES (
                 :id, :audit_id, :url, :status_code, :content_type, :body_size, :response_time,
-                :final_url, :headers, :crawl_depth, :is_html,
+                :final_url, :headers, :crawl_depth, :error_count, :warning_count,
+                :internal_link_count, :external_link_count, :image_count, :canonical_status,
+                :is_html,
                 :title, :meta_description, :h1s, :h2s, :heading_hierarchy,
                 :charset, :viewport, :og_title, :og_description, :og_image, :word_count, :lang,
                 :noindex, :nofollow, :noarchive, :nosnippet, :noimageindex,
@@ -184,6 +190,12 @@ final readonly class SqlitePageRepository implements PageRepository
                 :redirect_chain, :links, :hreflangs, :crawled_at
             ) ON CONFLICT(id) DO UPDATE SET
                 status_code = :status_code,
+                error_count = :error_count,
+                warning_count = :warning_count,
+                internal_link_count = :internal_link_count,
+                external_link_count = :external_link_count,
+                image_count = :image_count,
+                canonical_status = :canonical_status,
                 links = :links,
                 hreflangs = :hreflangs
         ');
@@ -199,6 +211,12 @@ final readonly class SqlitePageRepository implements PageRepository
             'final_url' => $page->response()->finalUrl()?->toString(),
             'headers' => json_encode($page->response()->headers()),
             'crawl_depth' => $page->crawlDepth(),
+            'error_count' => $page->errorCount(),
+            'warning_count' => $page->warningCount(),
+            'internal_link_count' => $linkSummary['internal'],
+            'external_link_count' => $linkSummary['external'],
+            'image_count' => $linkSummary['images'],
+            'canonical_status' => $canonicalStatus,
             'is_html' => $page->isHtml() ? 1 : 0,
             'title' => $metadata?->title(),
             'meta_description' => $metadata?->metaDescription(),
@@ -244,7 +262,36 @@ final readonly class SqlitePageRepository implements PageRepository
     /** @param Issue[] $issues */
     public function appendIssues(PageId $pageId, array $issues): void
     {
+        if ($issues === []) {
+            return;
+        }
+
         $this->insertIssues($pageId->value(), $issues);
+
+        // Materialised counts must reflect the newly inserted rows so the
+        // page-list query can avoid recomputing them per render.
+        $errors = 0;
+        $warnings = 0;
+        foreach ($issues as $issue) {
+            if ($issue->isError()) {
+                $errors++;
+            } elseif ($issue->isWarning()) {
+                $warnings++;
+            }
+        }
+
+        if ($errors === 0 && $warnings === 0) {
+            return;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'UPDATE pages SET error_count = error_count + :errors, warning_count = warning_count + :warnings WHERE id = :id',
+        );
+        $stmt->execute([
+            'errors' => $errors,
+            'warnings' => $warnings,
+            'id' => $pageId->value(),
+        ]);
     }
 
     /** @param Issue[] $issues */
@@ -477,5 +524,40 @@ final readonly class SqlitePageRepository implements PageRepository
             ),
             $data,
         );
+    }
+
+    /** @return array{internal: int, external: int, images: int} */
+    private function summariseLinks(Page $page): array
+    {
+        $internal = 0;
+        $external = 0;
+        $images = 0;
+
+        foreach ($page->links() as $link) {
+            if ($link->type() === LinkType::IMAGE) {
+                $images++;
+                continue;
+            }
+
+            if ($link->type() === LinkType::ANCHOR) {
+                if ($link->isInternal()) {
+                    $internal++;
+                } else {
+                    $external++;
+                }
+            }
+        }
+
+        return ['internal' => $internal, 'external' => $external, 'images' => $images];
+    }
+
+    private function canonicalStatus(Page $page): string
+    {
+        $directives = $page->directives();
+        if ($directives === null || !$directives->hasCanonical()) {
+            return 'missing';
+        }
+
+        return $directives->isSelfCanonical($page->url()) ? 'self' : 'other';
     }
 }
