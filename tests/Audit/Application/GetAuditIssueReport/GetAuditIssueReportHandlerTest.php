@@ -122,6 +122,107 @@ final class GetAuditIssueReportHandlerTest extends TestCase
         $this->assertCount(1, $group->affectedPages);
     }
 
+    public function test_site_score_is_100_when_audit_has_no_issues(): void
+    {
+        $this->persistPage('https://example.com/a', []);
+        $this->persistPage('https://example.com/b', []);
+
+        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
+
+        $this->assertSame(100, $report->siteScore);
+    }
+
+    public function test_site_score_is_100_when_audit_has_no_pages(): void
+    {
+        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
+
+        $this->assertSame(100, $report->siteScore);
+    }
+
+    public function test_site_score_drops_with_an_error_issue(): void
+    {
+        // 1 page, 1 ERROR issue (title_missing → weight 10).
+        // score = 100 × (1 − 10/(1×10)) = 0.
+        $this->persistPage('https://example.com/a', [
+            $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
+        ]);
+
+        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
+
+        $this->assertSame(0, $report->siteScore);
+    }
+
+    public function test_site_score_dilutes_with_audit_size(): void
+    {
+        // 1 ERROR issue spread across 10 pages keeps the audit mostly clean.
+        // weight 10 / (10 × 10) = 0.10 → score 90.
+        $this->persistPage('https://example.com/a', [
+            $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
+        ]);
+        for ($i = 1; $i < 10; $i++) {
+            $this->persistPage(sprintf('https://example.com/p-%d', $i), []);
+        }
+
+        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
+
+        $this->assertSame(90, $report->siteScore);
+    }
+
+    public function test_site_score_clamps_at_zero_when_overwhelmed(): void
+    {
+        // 5 ERROR-weight-10 issues on a single page would give a raw
+        // score of 100 × (1 − 50/10) = -400. The handler must clamp to 0.
+        $this->persistPage('https://example.com/a', [
+            $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
+            $this->issue('redirect_loop', IssueSeverity::ERROR, IssueCategory::LINKS),
+            $this->issue('client_error', IssueSeverity::ERROR, IssueCategory::LINKS),
+            $this->issue('server_error', IssueSeverity::ERROR, IssueCategory::LINKS),
+            $this->issue('response_very_slow', IssueSeverity::ERROR, IssueCategory::PERFORMANCE),
+        ]);
+
+        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
+
+        $this->assertSame(0, $report->siteScore);
+    }
+
+    public function test_groups_sort_by_weight_times_affected_pages(): void
+    {
+        // notice on 5 pages (weight 2 × 5 = 10) should outrank an
+        // error on a single page (weight 10 × 1 = 10) only on tiebreak,
+        // so we make notice clearly higher: notice on 6 pages = 12.
+        $this->persistPage('https://example.com/x', [
+            $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
+        ]);
+        for ($i = 0; $i < 6; $i++) {
+            $this->persistPage(sprintf('https://example.com/n-%d', $i), [
+                $this->issue('content_thin', IssueSeverity::NOTICE, IssueCategory::CONTENT),
+            ]);
+        }
+
+        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
+
+        $this->assertSame('content_thin', $report->groups[0]->code, 'higher impact (weight × pages) wins over severity');
+        $this->assertSame('title_missing', $report->groups[1]->code);
+    }
+
+    public function test_groups_carry_their_weight(): void
+    {
+        $this->persistPage('https://example.com/a', [
+            $this->issue('title_missing', IssueSeverity::ERROR, IssueCategory::METADATA),
+        ]);
+
+        $handler = new GetAuditIssueReportHandler($this->audits, $this->pages);
+        $report = $handler(new GetAuditIssueReportQuery($this->auditId->value()));
+
+        $this->assertSame(10, $report->groups[0]->weight);
+    }
+
     /** @param Issue[] $issues */
     private function persistPage(string $url, array $issues): void
     {

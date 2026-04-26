@@ -9,7 +9,7 @@ final readonly class GetAuditIssueReportResponse
     /**
      * @param array<string, int> $severityTotals     keyed by severity value
      * @param array<string, int> $categoryTotals     keyed by category value
-     * @param IssueGroup[]       $groups             sorted by severity then count desc
+     * @param IssueGroup[]       $groups             sorted by weight × affectedPageCount desc, severity rank, count desc
      */
     public function __construct(
         public string $auditId,
@@ -18,6 +18,7 @@ final readonly class GetAuditIssueReportResponse
         public array $severityTotals,
         public array $categoryTotals,
         public array $groups,
+        public int $siteScore = 100,
     ) {
     }
 }

@@ -73,6 +73,7 @@ final class IssueRuleCatalog
                 why: 'Without a meta description Google generates a snippet from page text, which is often off-topic and hurts click-through rate. The description is not a ranking factor but it is a CTR factor.',
                 how: 'Add a 120–160 character description that summarises the page and implies the benefit of clicking. Unique per page.',
                 source: 'https://developers.google.com/search/docs/appearance/snippet',
+                weightOverride: 6,
             ),
             new IssueRule(
                 code: 'meta_description_too_long',
@@ -151,6 +152,7 @@ final class IssueRuleCatalog
                 why: 'Structured data is what Google reads to render rich results: review stars, FAQ accordions, breadcrumbs, sitelinks, recipe panels. It is not a ranking factor on its own, but unlocks SERP features that lift CTR substantially.',
                 how: 'Add a JSON-LD <script type="application/ld+json"> block in <head> with the relevant schema (Article, Product, Organization, BreadcrumbList). Validate it at https://validator.schema.org before deploying.',
                 source: 'https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data',
+                weightOverride: 1,
             ),
 
             // ── HEADINGS ────────────────────────────────────────────────
@@ -231,6 +233,7 @@ final class IssueRuleCatalog
                 why: 'Without explicit dimensions the browser cannot reserve space before the image loads, causing layout shift (CLS). CLS is a Core Web Vital and a confirmed mobile ranking factor.',
                 how: 'Add width and height attributes that match the intrinsic image size. The browser computes the aspect ratio and reserves the right space, even when the rendered size is controlled by CSS.',
                 source: 'https://web.dev/articles/optimize-cls',
+                weightOverride: 3,
             ),
             new IssueRule(
                 code: 'exact_duplicate',
@@ -280,6 +283,7 @@ final class IssueRuleCatalog
                 summary: 'The URL goes through two or more redirect hops before landing.',
                 why: 'Each hop adds latency, wastes crawl budget, and — although Google now follows long chains — progressively dilutes the signal. Users and crawlers alike prefer direct 1-hop redirects.',
                 how: 'Update the origin link or the first redirect target so any resolution completes in a single hop.',
+                weightOverride: 4,
             ),
             new IssueRule(
                 code: 'redirect_loop',
@@ -318,6 +322,7 @@ final class IssueRuleCatalog
                 why: 'Since 2019 Google treats nofollow as a hint rather than a directive, but nofollowed internal links still discourage crawling and pass weaker signals than follow links.',
                 how: 'Remove rel="nofollow" from internal links unless there is a specific reason (user-generated content, sponsored, login-only destinations).',
                 source: 'https://developers.google.com/search/blog/2019/09/evolving-nofollow-new-ways-to-identify',
+                weightOverride: 1,
             ),
             new IssueRule(
                 code: 'sitemap_missing',
@@ -550,6 +555,7 @@ final class IssueRuleCatalog
                 why: 'Modern browsers block active mixed content (scripts, iframes, stylesheets) outright and warn on passive mixed content (images, video). The page may render broken, lose the padlock icon, or trigger a downgrade warning that hurts trust and CTR.',
                 how: 'Update each HTTP reference to https:// (or use a protocol-relative reference for assets the origin also serves over HTTPS). Add a Content-Security-Policy with upgrade-insecure-requests as a safety net.',
                 source: 'https://developer.mozilla.org/docs/Web/Security/Mixed_content',
+                weightOverride: 6,
             ),
         ];
 

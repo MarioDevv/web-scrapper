@@ -19,6 +19,7 @@ final readonly class IssueGroup
         public int $count,
         public int $affectedPageCount,
         public array $affectedPages,
+        public int $weight = 0,
     ) {
     }
 }
