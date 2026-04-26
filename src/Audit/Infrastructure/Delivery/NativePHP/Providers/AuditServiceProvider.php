@@ -44,6 +44,7 @@ use SeoSpider\Audit\Domain\Model\Analyzer\HreflangAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\DuplicateAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\TransportSecurityAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\SocialMetadataAnalyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\StructuredDataAnalyzer;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
@@ -108,6 +109,7 @@ final class AuditServiceProvider extends ServiceProvider
             SecurityHeaderAnalyzer::class,
             TransportSecurityAnalyzer::class,
             SocialMetadataAnalyzer::class,
+            StructuredDataAnalyzer::class,
             HreflangAnalyzer::class,
             DuplicateAnalyzer::class,
         ], 'analyzers');

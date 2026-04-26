@@ -15,6 +15,7 @@ final readonly class PageMetadata
      * @param string[] $h1s
      * @param string[] $h2s
      * @param array<array{level: int, text: string}> $headingHierarchy
+     * @param string[] $jsonLdTypes
      */
     public function __construct(
         private ?string $title,
@@ -29,6 +30,12 @@ final readonly class PageMetadata
         private ?string $ogImage,
         private int $wordCount,
         private ?string $lang,
+        private ?string $twitterCard = null,
+        private ?string $twitterTitle = null,
+        private ?string $twitterDescription = null,
+        private ?string $twitterImage = null,
+        private array $jsonLdTypes = [],
+        private bool $hasMicrodata = false,
     ) {
     }
 
@@ -161,6 +168,42 @@ final readonly class PageMetadata
         return $this->lang;
     }
 
+    public function twitterCard(): ?string
+    {
+        return $this->twitterCard;
+    }
+
+    public function twitterTitle(): ?string
+    {
+        return $this->twitterTitle;
+    }
+
+    public function twitterDescription(): ?string
+    {
+        return $this->twitterDescription;
+    }
+
+    public function twitterImage(): ?string
+    {
+        return $this->twitterImage;
+    }
+
+    /** @return string[] */
+    public function jsonLdTypes(): array
+    {
+        return $this->jsonLdTypes;
+    }
+
+    public function hasMicrodata(): bool
+    {
+        return $this->hasMicrodata;
+    }
+
+    public function hasStructuredData(): bool
+    {
+        return $this->jsonLdTypes !== [] || $this->hasMicrodata;
+    }
+
     #[\NoDiscard('PageMetadata is immutable — use the returned instance')]
     public function withWordCount(int $wordCount): self
     {
@@ -177,6 +220,12 @@ final readonly class PageMetadata
             ogImage: $this->ogImage,
             wordCount: $wordCount,
             lang: $this->lang,
+            twitterCard: $this->twitterCard,
+            twitterTitle: $this->twitterTitle,
+            twitterDescription: $this->twitterDescription,
+            twitterImage: $this->twitterImage,
+            jsonLdTypes: $this->jsonLdTypes,
+            hasMicrodata: $this->hasMicrodata,
         );
     }
 }

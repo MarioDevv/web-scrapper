@@ -67,6 +67,12 @@ final class DomCrawlerHtmlParser implements HtmlParser
             ogImage: $this->extractMetaProperty($crawler, 'og:image'),
             wordCount: 0, // replaced by parse() once clean content is available
             lang: $this->extractLang($crawler),
+            twitterCard: $this->extractTwitter($crawler, 'twitter:card'),
+            twitterTitle: $this->extractTwitter($crawler, 'twitter:title'),
+            twitterDescription: $this->extractTwitter($crawler, 'twitter:description'),
+            twitterImage: $this->extractTwitter($crawler, 'twitter:image'),
+            jsonLdTypes: $this->extractJsonLdTypes($crawler),
+            hasMicrodata: $crawler->filter('[itemscope]')->count() > 0,
         );
     }
 
@@ -145,6 +151,8 @@ final class DomCrawlerHtmlParser implements HtmlParser
                 anchorText: $node->attr('alt') ?: null,
                 relation: LinkRelation::FOLLOW,
                 isInternal: $resolved->isInternalTo($baseUrl),
+                width: $this->parseDimension($node->attr('width')),
+                height: $this->parseDimension($node->attr('height')),
             );
         });
 
@@ -515,6 +523,80 @@ final class DomCrawlerHtmlParser implements HtmlParser
         return $content !== null ? trim($content) ?: null : null;
     }
 
+    private function extractTwitter(Crawler $crawler, string $name): ?string
+    {
+        // Twitter spec uses name="twitter:..." but property="twitter:..." is
+        // common in the wild (Open Graph parsers leak the syntax). Accept both.
+        $node = $crawler->filter(sprintf('meta[name="%s"], meta[property="%s"]', $name, $name));
+        if ($node->count() === 0) {
+            return null;
+        }
+
+        $content = $node->first()->attr('content');
+
+        return $content !== null ? trim($content) ?: null : null;
+    }
+
+    /** @return string[] */
+    private function extractJsonLdTypes(Crawler $crawler): array
+    {
+        $types = [];
+
+        $crawler->filter('script[type="application/ld+json"]')->each(function (Crawler $node) use (&$types): void {
+            $raw = trim($node->text('', false));
+            if ($raw === '') {
+                return;
+            }
+
+            $decoded = json_decode($raw, true);
+            if (!is_array($decoded)) {
+                return;
+            }
+
+            foreach ($this->collectJsonLdTypes($decoded) as $type) {
+                $types[] = $type;
+            }
+        });
+
+        return array_values(array_unique($types));
+    }
+
+    /**
+     * @param mixed $node
+     * @return string[]
+     */
+    private function collectJsonLdTypes(mixed $node): array
+    {
+        if (!is_array($node)) {
+            return [];
+        }
+
+        $found = [];
+
+        if (isset($node['@type'])) {
+            $type = $node['@type'];
+            if (is_string($type)) {
+                $found[] = $type;
+            } elseif (is_array($type)) {
+                foreach ($type as $t) {
+                    if (is_string($t)) {
+                        $found[] = $t;
+                    }
+                }
+            }
+        }
+
+        // Recurse into @graph and any nested arrays/objects so we catch
+        // nested entities that schema.org tooling commonly emits.
+        foreach ($node as $value) {
+            if (is_array($value)) {
+                $found = array_merge($found, $this->collectJsonLdTypes($value));
+            }
+        }
+
+        return $found;
+    }
+
     private function extractCharset(Crawler $crawler): ?string
     {
         $meta = $crawler->filter('meta[charset]');
@@ -573,6 +655,22 @@ final class DomCrawlerHtmlParser implements HtmlParser
         }
 
         return null;
+    }
+
+    private function parseDimension(?string $value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '' || !ctype_digit($trimmed)) {
+            return null;
+        }
+
+        $int = (int) $trimmed;
+
+        return $int > 0 ? $int : null;
     }
 
     private function countWords(string $text): int

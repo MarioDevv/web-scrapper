@@ -132,6 +132,26 @@ final class IssueRuleCatalog
                 how: 'Add the three core OG meta tags in <head>: og:title (≤60 chars), og:description (≤160 chars), og:image (1200×630 PNG/JPG). Include og:url and og:type=website|article for completeness.',
                 source: 'https://ogp.me/',
             ),
+            new IssueRule(
+                code: 'twitter_card_incomplete',
+                category: IssueCategory::METADATA,
+                severity: IssueSeverity::NOTICE,
+                title: 'Twitter Card metadata incomplete',
+                summary: 'One or more of twitter:card, twitter:title, twitter:description, twitter:image is missing.',
+                why: 'Without Twitter Card tags, links shared on X/Twitter render as bare URLs instead of preview cards. X falls back to Open Graph for some fields, but explicit twitter:* tags give the most control over the preview.',
+                how: 'Add twitter:card (typically "summary_large_image"), twitter:title, twitter:description and twitter:image in <head>. Reuse the OG image to keep the preview consistent across platforms.',
+                source: 'https://developer.x.com/en/docs/x-for-websites/cards/overview/abouts-cards',
+            ),
+            new IssueRule(
+                code: 'schema_org_missing',
+                category: IssueCategory::METADATA,
+                severity: IssueSeverity::INFO,
+                title: 'No structured data',
+                summary: 'The page declares no schema.org JSON-LD or Microdata markup.',
+                why: 'Structured data is what Google reads to render rich results: review stars, FAQ accordions, breadcrumbs, sitelinks, recipe panels. It is not a ranking factor on its own, but unlocks SERP features that lift CTR substantially.',
+                how: 'Add a JSON-LD <script type="application/ld+json"> block in <head> with the relevant schema (Article, Product, Organization, BreadcrumbList). Validate it at https://validator.schema.org before deploying.',
+                source: 'https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data',
+            ),
 
             // ── HEADINGS ────────────────────────────────────────────────
             new IssueRule(
@@ -201,6 +221,16 @@ final class IssueRuleCatalog
                 summary: 'An alt attribute exceeds ~125 characters.',
                 why: 'Legacy screen readers truncate alt past roughly 125 characters. This is an accessibility guideline, not a direct SEO factor.',
                 how: 'Tighten to the essential description. If more context is needed, move it to adjacent body copy or figcaption.',
+            ),
+            new IssueRule(
+                code: 'image_missing_dimensions',
+                category: IssueCategory::CONTENT,
+                severity: IssueSeverity::NOTICE,
+                title: 'Images without width/height',
+                summary: 'One or more <img> tags are missing the width and/or height attributes.',
+                why: 'Without explicit dimensions the browser cannot reserve space before the image loads, causing layout shift (CLS). CLS is a Core Web Vital and a confirmed mobile ranking factor.',
+                how: 'Add width and height attributes that match the intrinsic image size. The browser computes the aspect ratio and reserves the right space, even when the rendered size is controlled by CSS.',
+                source: 'https://web.dev/articles/optimize-cls',
             ),
             new IssueRule(
                 code: 'exact_duplicate',
