@@ -161,4 +161,21 @@ final readonly class SqliteFrontier implements Frontier
 
         return (int) $stmt->fetchColumn();
     }
+
+    public function urlsBySource(AuditId $auditId, DiscoverySource $source): array
+    {
+        $stmt = $this->pdo->prepare('
+            SELECT url FROM frontier WHERE audit_id = :audit_id AND source = :source
+        ');
+
+        $stmt->execute([
+            'audit_id' => $auditId->value(),
+            'source' => $source->value,
+        ]);
+
+        return array_map(
+            static fn(array $row) => Url::fromString($row['url']),
+            $stmt->fetchAll() ?: [],
+        );
+    }
 }

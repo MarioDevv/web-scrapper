@@ -319,6 +319,16 @@ final class IssueRuleCatalog
                 how: 'Remove rel="nofollow" from internal links unless there is a specific reason (user-generated content, sponsored, login-only destinations).',
                 source: 'https://developers.google.com/search/blog/2019/09/evolving-nofollow-new-ways-to-identify',
             ),
+            new IssueRule(
+                code: 'sitemap_missing',
+                category: IssueCategory::LINKS,
+                severity: IssueSeverity::NOTICE,
+                title: 'Page absent from sitemap',
+                summary: 'The page was crawled but does not appear in any sitemap referenced by the site.',
+                why: 'Sitemaps are how site owners signal "these are the canonical URLs I want indexed". Pages outside the sitemap are still discoverable via internal links, but they get less crawl prioritisation and can be flagged as orphan candidates.',
+                how: 'Add the URL to the sitemap (sitemap.xml or a child of the sitemap index). If the page should not be indexed, also confirm it has noindex.',
+                source: 'https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview',
+            ),
 
             // ── DIRECTIVES ─────────────────────────────────────────────
             new IssueRule(
@@ -369,6 +379,26 @@ final class IssueRuleCatalog
                 how: 'Pick one: if the page should not be indexed, keep noindex and remove canonical. If the page should be consolidated with another, remove noindex and keep canonical.',
                 source: 'https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls#rel-canonical-link-method',
             ),
+            new IssueRule(
+                code: 'canonical_broken_target',
+                category: IssueCategory::DIRECTIVES,
+                severity: IssueSeverity::WARNING,
+                title: 'Canonical points to a broken target',
+                summary: 'The rel="canonical" target returns 4xx/5xx, redirects, or is itself noindexed.',
+                why: 'A canonical pointing at a dead, redirected or noindexed URL is wasted: Google cannot consolidate signals to it. Crawl budget is spent reaching the canonical only to find it cannot be indexed.',
+                how: 'Update the canonical to a live, indexable URL — typically the page itself. If the destination has moved, redirect this page (301) instead of carrying a stale canonical.',
+                source: 'https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls',
+            ),
+            new IssueRule(
+                code: 'robots_blocks_indexable',
+                category: IssueCategory::DIRECTIVES,
+                severity: IssueSeverity::WARNING,
+                title: 'Robots.txt blocks an indexable page',
+                summary: 'The page is indexable (no noindex) but robots.txt disallows crawling it.',
+                why: 'Conflicting signals: the page wants to be indexed but the crawler is forbidden from reading it. Google may still index a URL it cannot fetch (e.g. from anchor text alone), producing a result with no snippet and no quality signal — usually worse than a clean noindex.',
+                how: 'Pick one outcome. To keep it indexable, remove the Disallow rule or narrow it. To deindex it, add noindex (and only then optionally Disallow once Google has dropped it).',
+                source: 'https://developers.google.com/search/docs/crawling-indexing/robots/intro',
+            ),
 
             // ── HREFLANG ───────────────────────────────────────────────
             new IssueRule(
@@ -409,6 +439,16 @@ final class IssueRuleCatalog
                 summary: 'Two hreflang entries share the same language/region code.',
                 why: 'When the same locale points to two URLs, Google cannot decide which to serve and may ignore the annotation entirely.',
                 how: 'Keep one entry per language/region pair. Remove duplicates or fix the mistyped code.',
+            ),
+            new IssueRule(
+                code: 'hreflang_no_return',
+                category: IssueCategory::HREFLANG,
+                severity: IssueSeverity::WARNING,
+                title: 'Hreflang lacks return reference',
+                summary: 'This page declares hreflang to another URL that does not link back via hreflang.',
+                why: 'Google requires hreflang clusters to be reciprocal: each page must reference the others, and the others must reference back. A missing return link invalidates the annotation and Google falls back to language detection.',
+                how: 'Add an hreflang entry on the target page that points back to this URL with the matching language/region code, or remove the unidirectional reference.',
+                source: 'https://developers.google.com/search/docs/specialty/international/localized-versions#expected-attributes',
             ),
 
             // ── PERFORMANCE ────────────────────────────────────────────

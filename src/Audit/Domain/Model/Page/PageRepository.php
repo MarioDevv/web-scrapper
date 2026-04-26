@@ -22,6 +22,15 @@ interface PageRepository
 
     public function nextId(): PageId;
 
+    /**
+     * Append issues to an already-persisted page without rewriting the
+     * other columns. Used by site-wide analyzers that produce extra
+     * issues after the per-page pipeline has already run.
+     *
+     * @param Issue[] $issues
+     */
+    public function appendIssues(PageId $pageId, array $issues): void;
+
     /** @return array<string, Fingerprint> */
     public function fingerprintsByAudit(AuditId $auditId): array;
 }

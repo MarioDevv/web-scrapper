@@ -94,4 +94,18 @@ final class InMemoryFrontier implements Frontier
     {
         return count($this->queues[$auditId->value()] ?? []);
     }
+
+    public function urlsBySource(AuditId $auditId, DiscoverySource $source): array
+    {
+        $byUrl = $this->sources[$auditId->value()] ?? [];
+
+        $matching = [];
+        foreach ($byUrl as $urlString => $entrySource) {
+            if ($entrySource === $source) {
+                $matching[] = Url::fromString($urlString);
+            }
+        }
+
+        return $matching;
+    }
 }
