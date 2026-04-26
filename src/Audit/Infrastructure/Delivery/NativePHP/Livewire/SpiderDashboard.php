@@ -790,121 +790,35 @@ class SpiderDashboard extends Component
     }
 
     /**
+     * Completed audits read a frozen snapshot built once when the
+     * crawl finished — a single SELECT instead of recomputing the
+     * aggregations on every render. Live audits (still crawling) fall
+     * back to running the SQL builder against the current state.
+     *
      * @return array<string, mixed>
      */
     public function getOverviewProperty(): array
     {
-        if (count($this->pages) === 0) {
+        if ($this->auditId === null) {
             return [];
         }
 
-        $statusGroups = ['2xx' => 0, '3xx' => 0, '4xx' => 0, '5xx' => 0];
-        /** @var array<int, int> $depthDist */
-        $depthDist = [];
-        $responseTimeBuckets = ['<200ms' => 0, '200-500ms' => 0, '500ms-1s' => 0, '1-3s' => 0, '>3s' => 0];
-        /** @var array<string, int> $issuesByCategory */
-        $issuesByCategory = [];
-        $issuesBySeverity = ['error' => 0, 'warning' => 0, 'notice' => 0, 'info' => 0];
-        $totalWords = 0;
-        $totalImages = 0;
-        $pagesWithoutH1 = 0;
+        $auditId = new \SeoSpider\Audit\Domain\Model\Audit\AuditId($this->auditId);
 
-        foreach ($this->pages as $p) {
-            $sc = (int) $p['statusCode'];
-            if ($sc >= 200 && $sc < 300) {
-                $statusGroups['2xx']++;
-            } elseif ($sc >= 300 && $sc < 400) {
-                $statusGroups['3xx']++;
-            } elseif ($sc >= 400 && $sc < 500) {
-                $statusGroups['4xx']++;
-            } elseif ($sc >= 500) {
-                $statusGroups['5xx']++;
-            }
+        $snapshot = app(\SeoSpider\Audit\Domain\Model\Audit\AuditSnapshotRepository::class)
+            ->findByAudit($auditId);
 
-            $d = (int) $p['crawlDepth'];
-            $depthDist[$d] = ($depthDist[$d] ?? 0) + 1;
-
-            $rt = (float) $p['responseTime'];
-            if ($rt < 200) {
-                $responseTimeBuckets['<200ms']++;
-            } elseif ($rt < 500) {
-                $responseTimeBuckets['200-500ms']++;
-            } elseif ($rt < 1000) {
-                $responseTimeBuckets['500ms-1s']++;
-            } elseif ($rt < 3000) {
-                $responseTimeBuckets['1-3s']++;
-            } else {
-                $responseTimeBuckets['>3s']++;
-            }
-
-            $totalWords += (int) $p['wordCount'];
-            $totalImages += (int) $p['imageCount'];
-
-            if ((int) $p['h1Count'] === 0 && str_contains((string) ($p['contentType'] ?? ''), 'html')) {
-                $pagesWithoutH1++;
-            }
+        if ($snapshot !== null) {
+            return $snapshot->overview + ['totalExternal' => count($this->externalLinks)];
         }
 
-        $pagesWithoutTitle = 0;
-        $pagesWithoutDesc = 0;
-
-        $pdo = app(\PDO::class);
-        if ($this->auditId !== null) {
-            $stmt = $pdo->prepare(
-                'SELECT i.category, i.severity, COUNT(*) as cnt
-                 FROM issues i
-                 JOIN pages p ON p.id = i.page_id
-                 WHERE p.audit_id = ?
-                 GROUP BY i.category, i.severity'
-            );
-            $stmt->execute([$this->auditId]);
-            /** @var array<int, array{category: string, severity: string, cnt: string}> $rows */
-            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            foreach ($rows as $row) {
-                $cat = $row['category'];
-                $sev = $row['severity'];
-                $issuesByCategory[$cat] = ($issuesByCategory[$cat] ?? 0) + (int) $row['cnt'];
-                $issuesBySeverity[$sev] = ($issuesBySeverity[$sev] ?? 0) + (int) $row['cnt'];
-            }
-
-            $stmt2 = $pdo->prepare(
-                "SELECT
-                    SUM(CASE WHEN title IS NULL OR title = '' THEN 1 ELSE 0 END) as no_title,
-                    SUM(CASE WHEN meta_description IS NULL OR meta_description = '' THEN 1 ELSE 0 END) as no_desc
-                 FROM pages WHERE audit_id = ? AND is_html = 1"
-            );
-            $stmt2->execute([$this->auditId]);
-            /** @var array{no_title: string|null, no_desc: string|null}|false $meta */
-            $meta = $stmt2->fetch(\PDO::FETCH_ASSOC);
-            if (is_array($meta)) {
-                $pagesWithoutTitle = (int) ($meta['no_title'] ?? 0);
-                $pagesWithoutDesc = (int) ($meta['no_desc'] ?? 0);
-            }
+        if ($this->pagesTotal === 0) {
+            return [];
         }
 
-        ksort($depthDist);
-
-        $responseTimes = array_column($this->pages, 'responseTime');
-        $avgResponseTime = count($responseTimes) > 0
-            ? round(array_sum($responseTimes) / count($responseTimes), 0)
-            : 0;
-
-        return [
-            'statusGroups' => $statusGroups,
-            'depthDistribution' => $depthDist,
-            'responseTimeBuckets' => $responseTimeBuckets,
-            'issuesByCategory' => $issuesByCategory,
-            'issuesBySeverity' => $issuesBySeverity,
-            'totalIssues' => array_sum($issuesBySeverity),
-            'totalPages' => count($this->pages),
-            'totalExternal' => count($this->externalLinks),
-            'avgResponseTime' => $avgResponseTime,
-            'totalWords' => $totalWords,
-            'totalImages' => $totalImages,
-            'pagesWithoutTitle' => $pagesWithoutTitle,
-            'pagesWithoutDesc' => $pagesWithoutDesc,
-            'pagesWithoutH1' => $pagesWithoutH1,
-        ];
+        return app(\SeoSpider\Audit\Application\AuditOverview\AuditOverviewBuilder::class)
+            ->build($auditId)
+            + ['totalExternal' => count($this->externalLinks)];
     }
 
     // ═══════════════════════════════════════

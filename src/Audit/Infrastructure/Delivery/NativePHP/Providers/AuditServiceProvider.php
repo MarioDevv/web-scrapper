@@ -56,6 +56,10 @@ use SeoSpider\Audit\Domain\Model\Page\SiteIssueRepository;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteSiteIssueRepository;
 use SeoSpider\Audit\Application\GetAuditPages\PageSummaryReader;
 use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageSummaryReader;
+use SeoSpider\Audit\Application\AuditOverview\AuditOverviewBuilder;
+use SeoSpider\Audit\Application\BuildAuditSnapshot\BuildAuditSnapshotOnAuditCompleted;
+use SeoSpider\Audit\Domain\Model\Audit\AuditSnapshotRepository;
+use SeoSpider\Audit\Infrastructure\Persistence\SqliteAuditSnapshotRepository;
 use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
@@ -99,6 +103,13 @@ final class AuditServiceProvider extends ServiceProvider
         $this->app->singleton(SiteIssueRepository::class, fn($app) => new SqliteSiteIssueRepository($app->make(PDO::class)));
 
         $this->app->singleton(PageSummaryReader::class, fn($app) => new SqlitePageSummaryReader($app->make(PDO::class)));
+
+        $this->app->singleton(AuditSnapshotRepository::class, fn($app) => new SqliteAuditSnapshotRepository($app->make(PDO::class)));
+        $this->app->singleton(AuditOverviewBuilder::class, fn($app) => new AuditOverviewBuilder($app->make(PDO::class)));
+        $this->app->singleton(BuildAuditSnapshotOnAuditCompleted::class, fn($app) => new BuildAuditSnapshotOnAuditCompleted(
+            builder: $app->make(AuditOverviewBuilder::class),
+            repository: $app->make(AuditSnapshotRepository::class),
+        ));
 
         $this->app->singleton(UrlCanonicalizer::class, fn() => new UrlCanonicalizer());
 
@@ -252,6 +263,14 @@ final class AuditServiceProvider extends ServiceProvider
         $bus->subscribe(AuditCompleted::class, static function (\SeoSpider\Shared\Domain\DomainEvent $event) use ($app): void {
             if ($event instanceof AuditCompleted) {
                 ($app->make(AnalyzeSiteOnAuditCompleted::class))($event);
+            }
+        });
+
+        // Snapshot must run AFTER AnalyzeSiteOnAuditCompleted so it picks
+        // up the site-wide issues that reactor persists.
+        $bus->subscribe(AuditCompleted::class, static function (\SeoSpider\Shared\Domain\DomainEvent $event) use ($app): void {
+            if ($event instanceof AuditCompleted) {
+                ($app->make(BuildAuditSnapshotOnAuditCompleted::class))($event);
             }
         });
     }
