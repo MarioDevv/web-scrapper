@@ -28,6 +28,14 @@ final readonly class GetAuditIssueReportHandler
      */
     private const int MAX_PAGE_PENALTY = 30;
 
+    /**
+     * Cap on the affectedPages array shipped per group. The full count
+     * stays accurate via IssueGroup::affectedPageCount; the array just
+     * holds enough rows for the UI to preview without bloating the
+     * Livewire payload (a 3000-issue audit otherwise pushes ~750 KB).
+     */
+    private const int AFFECTED_PAGES_PREVIEW = 10;
+
     public function __construct(
         private AuditRepository $auditRepository,
         private IssueReportReader $reader,
@@ -112,7 +120,7 @@ final readonly class GetAuditIssueReportHandler
                 source: $rule?->source,
                 count: $raw['count'],
                 affectedPageCount: count($raw['pages']),
-                affectedPages: $affected,
+                affectedPages: array_slice($affected, 0, self::AFFECTED_PAGES_PREVIEW),
                 weight: $raw['weight'],
             );
         }

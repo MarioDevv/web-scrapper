@@ -96,10 +96,14 @@
                 $sev = $group['severity'];
                 $hasProse = $group['title'] !== null;
             @endphp
-            <section class="bg-app2 border border-line">
-                {{-- Group header --}}
-                <header class="flex items-center justify-between px-3 h-9 border-b border-line">
+            <section class="bg-app2 border border-line" x-data="{ open: false }">
+                {{-- Group header (clickable to expand) --}}
+                <header class="flex items-center justify-between px-3 h-9 border-b border-line cursor-pointer hover:bg-panel2 transition-colors"
+                        @click="open = !open"
+                        :class="open ? 'border-line' : 'border-transparent'">
                     <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="text-muted text-[10px] font-mono shrink-0 w-3"
+                              x-text="open ? '▾' : '▸'"></span>
                         <span class="badge {{ $severityBadge[$sev] ?? 'badge-muted' }} uppercase tracking-[0.14em] text-[9px]">{{ $sev }}</span>
                         <span class="font-mono text-[11px] text-primary">{{ $group['title'] ?? $group['code'] }}</span>
                         <span class="font-mono text-[10px] text-muted">{{ $group['code'] }}</span>
@@ -121,50 +125,68 @@
                     </div>
                 </header>
 
-                {{-- Prose --}}
-                <div class="p-4 font-mono text-[11px] leading-relaxed border-b border-line">
-                    @if($hasProse)
-                        <p class="text-secondary mb-3">{{ $group['summary'] }}</p>
-                        <div class="space-y-1.5">
-                            <div class="flex gap-2.5">
-                                <span class="text-muted uppercase tracking-[0.14em] text-[9px] pt-0.5 shrink-0 w-10">why</span>
-                                <span class="text-tertiary">{{ $group['why'] }}</span>
-                            </div>
-                            <div class="flex gap-2.5">
-                                <span class="text-muted uppercase tracking-[0.14em] text-[9px] pt-0.5 shrink-0 w-10">how</span>
-                                <span class="text-tertiary">{{ $group['how'] }}</span>
-                            </div>
-                            @if($group['source'])
-                                <div class="flex gap-2.5 pt-1">
-                                    <span class="text-muted uppercase tracking-[0.14em] text-[9px] pt-0.5 shrink-0 w-10">ref</span>
-                                    <a href="{{ $group['source'] }}" target="_blank" rel="noopener"
-                                       class="c-accent hover:underline truncate">{{ $group['source'] }}</a>
+                {{-- Body: rendered only when expanded (template x-if keeps the
+                     DOM out of the initial paint and out of Livewire's morphdom
+                     diff, so a 50-group report stays cheap to load).         --}}
+                <template x-if="open">
+                    <div>
+                        {{-- Prose --}}
+                        <div class="p-4 font-mono text-[11px] leading-relaxed border-b border-line">
+                            @if($hasProse)
+                                <p class="text-secondary mb-3">{{ $group['summary'] }}</p>
+                                <div class="space-y-1.5">
+                                    <div class="flex gap-2.5">
+                                        <span class="text-muted uppercase tracking-[0.14em] text-[9px] pt-0.5 shrink-0 w-10">why</span>
+                                        <span class="text-tertiary">{{ $group['why'] }}</span>
+                                    </div>
+                                    <div class="flex gap-2.5">
+                                        <span class="text-muted uppercase tracking-[0.14em] text-[9px] pt-0.5 shrink-0 w-10">how</span>
+                                        <span class="text-tertiary">{{ $group['how'] }}</span>
+                                    </div>
+                                    @if($group['source'])
+                                        <div class="flex gap-2.5 pt-1">
+                                            <span class="text-muted uppercase tracking-[0.14em] text-[9px] pt-0.5 shrink-0 w-10">ref</span>
+                                            <a href="{{ $group['source'] }}" target="_blank" rel="noopener"
+                                               class="c-accent hover:underline truncate">{{ $group['source'] }}</a>
+                                        </div>
+                                    @endif
                                 </div>
+                            @else
+                                <p class="text-tertiary">No catalog entry for <code class="text-secondary">{{ $group['code'] }}</code>.</p>
                             @endif
                         </div>
-                    @else
-                        <p class="text-tertiary">No catalog entry for <code class="text-secondary">{{ $group['code'] }}</code>.</p>
-                    @endif
-                </div>
 
-                {{-- Affected pages --}}
-                <div class="px-3 py-2 font-mono text-[11px]">
-                    <div class="text-[9px] text-muted uppercase tracking-[0.14em] mb-1.5">affected pages</div>
-                    <ul class="space-y-0.5">
-                        @foreach($group['affectedPages'] as $ap)
-                            <li class="flex items-baseline gap-2 min-w-0">
-                                <span class="text-muted shrink-0">·</span>
-                                <button wire:click="selectPage('{{ $ap['pageId'] }}')"
-                                        class="text-secondary hover:c-accent transition-colors truncate text-left"
-                                        title="{{ $ap['url'] }}">{{ $ap['url'] }}</button>
-                                @if($ap['context'])
-                                    <span class="text-muted shrink-0">→</span>
-                                    <span class="text-tertiary truncate">{{ $ap['context'] }}</span>
+                        {{-- Affected pages (preview, capped server-side) --}}
+                        <div class="px-3 py-2 font-mono text-[11px]">
+                            <div class="text-[9px] text-muted uppercase tracking-[0.14em] mb-1.5">
+                                affected pages
+                                @if($group['affectedPageCount'] > count($group['affectedPages']))
+                                    <span class="text-tertiary normal-case tracking-normal ml-1">
+                                        showing {{ count($group['affectedPages']) }} of {{ $group['affectedPageCount'] }}
+                                    </span>
                                 @endif
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
+                            </div>
+                            <ul class="space-y-0.5">
+                                @foreach($group['affectedPages'] as $ap)
+                                    <li class="flex items-baseline gap-2 min-w-0">
+                                        <span class="text-muted shrink-0">·</span>
+                                        @if($ap['pageId'])
+                                            <button wire:click="selectPage('{{ $ap['pageId'] }}')"
+                                                    class="text-secondary hover:c-accent transition-colors truncate text-left"
+                                                    title="{{ $ap['url'] }}">{{ $ap['url'] }}</button>
+                                        @else
+                                            <span class="text-secondary truncate" title="{{ $ap['url'] }}">{{ $ap['url'] }}</span>
+                                        @endif
+                                        @if($ap['context'])
+                                            <span class="text-muted shrink-0">→</span>
+                                            <span class="text-tertiary truncate">{{ $ap['context'] }}</span>
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </template>
             </section>
         @endforeach
 
