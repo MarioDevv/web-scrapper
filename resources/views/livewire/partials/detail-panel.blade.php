@@ -2,7 +2,7 @@
 {{--  DETAIL PANEL — bottom split inspector                                     --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 @if($detailOpen && $selectedPage)
-<div class="flex-none border-t-2 border-line2 bg-panel anim-slide" style="height: 280px;">
+<div class="flex-none border-t-2 border-line2 bg-panel anim-slide" style="height: 280px; contain: layout style paint;">
 
     {{-- ── HEADER ─────────────────────────────────────────────── --}}
     <div class="flex items-center justify-between gap-3 px-3 h-9 border-b border-line bg-panel2 chrome-nosel">
