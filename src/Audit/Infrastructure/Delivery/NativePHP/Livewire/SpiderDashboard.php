@@ -172,6 +172,9 @@ class SpiderDashboard extends Component
         if ($this->status !== null && in_array($this->status['status'], ['completed', 'failed', 'cancelled'], true)) {
             $this->crawling = false;
             $this->loadAuditHistory();
+            // Tells AuditPageTable to drop its unbounded live buffer
+            // and re-fetch through the paginated read model.
+            $this->dispatch('crawl-completed');
         }
     }
 

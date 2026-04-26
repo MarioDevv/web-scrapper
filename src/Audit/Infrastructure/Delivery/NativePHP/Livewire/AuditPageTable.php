@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use Illuminate\Contracts\View\View;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Reactive;
 use Livewire\Component;
+use PDO;
+use SeoSpider\Audit\Application\AuditOverview\AuditOverviewBuilder;
 use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesHandler;
 use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Audit\Application\GetAuditPages\PageSummaryReader;
@@ -53,6 +56,15 @@ class AuditPageTable extends Component
     public int $currentPage = 0;
     public int $pageSize = 50;
     public int $pagesTotal = 0;
+
+    /**
+     * Cap on the in-memory page list during a live crawl. Without it,
+     * a 5000-page crawl would balloon $pages (and its mirror in the
+     * Livewire payload) by ~3.4 KB per row every poll tick. After the
+     * crawl finishes the user-facing view paginates anyway so trimming
+     * the live buffer to the most recent N rows costs nothing in UX.
+     */
+    private const int LIVE_PAGES_CAP = 500;
 
     /** @var array<string, int> */
     public array $rawTabCounts = [
@@ -216,6 +228,16 @@ class AuditPageTable extends Component
         ));
 
         $this->pagesTotal = $r->total;
+
+        // Empty delta during a poll tick: nothing crawled this second,
+        // so neither $pages nor the per-tab aggregates can have changed.
+        // Skipping the rest avoids re-running the tabCounts aggregation
+        // and rebuilding the merged array for every quiet second.
+        if ($useDelta && $r->pages === []) {
+            $this->newPageIds = [];
+            return;
+        }
+
         $this->rawTabCounts = app(PageSummaryReader::class)->tabCounts(new AuditId($this->auditId));
 
         $previousIds = $this->knownPageIds;
@@ -246,6 +268,14 @@ class AuditPageTable extends Component
             foreach ($incoming as $row) {
                 $merged[$row['pageId']] = $row;
             }
+            // Drop the oldest rows once the live buffer fills up so the
+            // Livewire payload stays bounded on long crawls; the user sees
+            // newly arrived rows via the tab counts and switches to the
+            // paginated view once the crawl finishes.
+            if (count($merged) > self::LIVE_PAGES_CAP) {
+                uasort($merged, static fn(array $a, array $b) => $b['crawledAt'] <=> $a['crawledAt']);
+                $merged = array_slice($merged, 0, self::LIVE_PAGES_CAP, true);
+            }
             $this->pages = array_values($merged);
         } else {
             $this->pages = $incoming;
@@ -257,6 +287,27 @@ class AuditPageTable extends Component
         $this->knownPageIds = $currentIds;
     }
 
+    /**
+     * Listener invoked when the parent dashboard's poll detects that
+     * the crawl has just finished. The live view kept $pages unbounded
+     * (no limit/offset) for real-time row arrival; once the audit
+     * settles we need to switch back to the paginated read so the
+     * user sees the regular page-by-page table without a manual reload.
+     */
+    #[On('crawl-completed')]
+    public function onCrawlCompleted(): void
+    {
+        if ($this->auditId === null) {
+            return;
+        }
+
+        $this->currentPage = 0;
+        $this->pages = [];
+        $this->knownPageIds = [];
+        $this->refreshPages();
+        $this->loadExternalLinks();
+    }
+
     public function loadExternalLinks(): void
     {
         if ($this->auditId === null) {
@@ -264,7 +315,7 @@ class AuditPageTable extends Component
             return;
         }
 
-        $pdo = app(\PDO::class);
+        $pdo = app(PDO::class);
         $stmt = $pdo->prepare(
             'SELECT e.url, e.status_code, e.response_time, e.error, e.anchor_text, p.url as source_url
              FROM external_url_checks e
@@ -273,7 +324,7 @@ class AuditPageTable extends Component
              ORDER BY e.status_code DESC, e.url ASC'
         );
         $stmt->execute([$this->auditId]);
-        $this->externalLinks = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $this->externalLinks = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function exportCsv(): StreamedResponse
@@ -457,7 +508,7 @@ class AuditPageTable extends Component
             return [];
         }
 
-        return app(\SeoSpider\Audit\Application\AuditOverview\AuditOverviewBuilder::class)
+        return app(AuditOverviewBuilder::class)
             ->build($auditId)
             + ['totalExternal' => count($this->externalLinks)];
     }
