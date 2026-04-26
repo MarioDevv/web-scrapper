@@ -159,9 +159,14 @@
                 <span class="font-mono text-[10px] uppercase tracking-[0.16em] c-accent">── audit/summary ──────</span>
                 <span class="font-mono text-[10px] text-muted">readonly</span>
             </div>
-            <div class="grid grid-cols-5 divide-x divide-[var(--c-border)]">
+            <div class="grid grid-cols-6 divide-x divide-[var(--c-border)]">
                 @php
+                    $siteScore = $this->auditReport['siteScore'] ?? 100;
+                    $siteScoreColor = $siteScore >= 90
+                        ? 'var(--c-ok)'
+                        : ($siteScore >= 50 ? 'var(--c-warn)' : 'var(--c-err)');
                     $summaryCards = [
+                        ['score',      $siteScore,                           $siteScoreColor],
                         ['pages',      $ov['totalPages'],                    null],
                         ['external',   $ov['totalExternal'],                 null],
                         ['issues',     $ov['totalIssues'],                   $ov['totalIssues']    > 0 ? 'var(--c-warn)' : 'var(--c-ok)'],

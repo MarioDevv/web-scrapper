@@ -21,12 +21,13 @@ use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 final readonly class GetAuditIssueReportHandler
 {
     /**
-     * Per-page weight cap used to normalise the score: equal to the
-     * maximum rule weight (10), so a single ERROR-class issue costs at
-     * most 10/(pages×10) of the score, and a page with worst-case
-     * issues clamps at a 10-point penalty rather than runaway negatives.
+     * Per-page weight cap used to compute each page's individual score.
+     * Calibrated so that a page with three top-severity issues
+     * (3 × weight 10 = 30) reaches a 0 page score; the audit score is
+     * the average of per-page scores, so a single broken page in a
+     * large audit only drags the global figure down proportionally.
      */
-    private const int MAX_WEIGHT_PER_PAGE = 10;
+    private const int MAX_PAGE_PENALTY = 30;
 
     public function __construct(
         private AuditRepository $auditRepository,
@@ -49,9 +50,12 @@ final readonly class GetAuditIssueReportHandler
         $categoryTotals = [];
         $affectedPageIds = [];
         $totalIssues = 0;
-        $totalWeight = 0;
+        $weightByPage = [];
 
         foreach ($pages as $page) {
+            $pageId = $page->id()->value();
+            $weightByPage[$pageId] ??= 0;
+
             foreach ($page->issues() as $issue) {
                 $code = $issue->code();
                 $severity = $issue->severity()->value;
@@ -72,7 +76,6 @@ final readonly class GetAuditIssueReportHandler
 
                 $groupsByCode[$code]['count']++;
 
-                $pageId = $page->id()->value();
                 $groupsByCode[$code]['pages'][$pageId] ??= new AffectedPage(
                     pageId: $pageId,
                     url: $page->url()->toString(),
@@ -83,7 +86,7 @@ final readonly class GetAuditIssueReportHandler
                 $categoryTotals[$category] = ($categoryTotals[$category] ?? 0) + 1;
                 $affectedPageIds[$pageId] = true;
                 $totalIssues++;
-                $totalWeight += $weight;
+                $weightByPage[$pageId] += $weight;
             }
         }
 
@@ -130,19 +133,39 @@ final readonly class GetAuditIssueReportHandler
             severityTotals: $severityTotals,
             categoryTotals: $categoryTotals,
             groups: $groups,
-            siteScore: $this->computeSiteScore(count($pages), $totalWeight),
+            siteScore: $this->computeSiteScore(count($pages), $weightByPage),
         );
     }
 
-    private function computeSiteScore(int $pageCount, int $totalWeight): int
+    /**
+     * Per-page score is 100 × (1 − min(pageWeight, MAX_PAGE_PENALTY) / MAX_PAGE_PENALTY).
+     * A clean page contributes 100; a page with three top-severity issues
+     * contributes 0. The audit score is the unweighted average across
+     * crawled pages so coverage matters: a single broken page in a large
+     * audit barely moves the global figure, while a sweep of mid-severity
+     * issues across the whole site does.
+     *
+     * @param array<string, int> $weightByPage
+     */
+    private function computeSiteScore(int $pageCount, array $weightByPage): int
     {
         if ($pageCount === 0) {
             return 100;
         }
 
-        $denominator = $pageCount * self::MAX_WEIGHT_PER_PAGE;
-        $raw = 100 * (1 - $totalWeight / $denominator);
+        $sumOfPageScores = 0.0;
+        $accountedPages = 0;
+        foreach ($weightByPage as $pageWeight) {
+            $clamped = min($pageWeight, self::MAX_PAGE_PENALTY);
+            $sumOfPageScores += 100 * (1 - $clamped / self::MAX_PAGE_PENALTY);
+            $accountedPages++;
+        }
 
-        return (int) round(max(0, min(100, $raw)));
+        // Pages without any issue never registered in $weightByPage; they
+        // each contribute a perfect 100.
+        $cleanPages = $pageCount - $accountedPages;
+        $sumOfPageScores += 100 * $cleanPages;
+
+        return (int) round($sumOfPageScores / $pageCount);
     }
 }

@@ -634,6 +634,7 @@ class SpiderDashboard extends Component
                 'severityTotals' => [],
                 'categoryTotals' => [],
                 'groups' => [],
+                'siteScore' => 100,
             ];
         }
 
@@ -644,6 +645,7 @@ class SpiderDashboard extends Component
             'affectedPages' => $r->affectedPages,
             'severityTotals' => $r->severityTotals,
             'categoryTotals' => $r->categoryTotals,
+            'siteScore' => $r->siteScore,
             'groups' => array_map(static fn($g): array => [
                 'code' => $g->code,
                 'category' => $g->category,
@@ -655,6 +657,7 @@ class SpiderDashboard extends Component
                 'source' => $g->source,
                 'count' => $g->count,
                 'affectedPageCount' => $g->affectedPageCount,
+                'weight' => $g->weight,
                 'affectedPages' => array_map(static fn($p): array => [
                     'pageId' => $p->pageId,
                     'url' => $p->url,
