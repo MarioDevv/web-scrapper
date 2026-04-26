@@ -409,12 +409,12 @@
 {{--  PAGES TABLE                                                               --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 @else
-<div class="flex-1 overflow-auto min-h-0">
+<div class="flex-1 overflow-auto min-h-0" style="contain: layout style paint;">
     @if(count($this->filteredPages) > 0)
     <div class="overflow-x-auto">
-    <table class="w-full text-[12px] border-collapse font-mono" style="min-width:1200px">
+    <table class="w-full text-[12px] border-collapse font-mono" style="min-width:1200px; contain: layout style;">
         <thead class="sticky top-0 z-10">
-            <tr class="bg-panel2 border-b border-line2" style="backdrop-filter: blur(8px);">
+            <tr class="bg-panel2 border-b border-line2">
                 @php
                     $cols = [
                         ['url',               'url',      'text-left',   'px-3 min-w-[260px]'],

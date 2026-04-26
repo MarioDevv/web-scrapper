@@ -6,11 +6,13 @@
         @include('livewire.partials.sidebar')
 
         <main class="flex-1 flex flex-col min-h-0 min-w-0">
-            @include('livewire.partials.page-table')
-            @include('livewire.partials.detail-panel')
+            <livewire:audit-page-table
+                :audit-id="$auditId"
+                :crawling="$crawling"
+                :key="'apt-' . ($auditId ?? 'none')" />
 
             {{-- ══════════════════════════════════════════════════════════ --}}
-            {{--  STATUS BAR — tmux-style                                    --}}
+            {{--  STATUS BAR — minimal, parent-owned counters                --}}
             {{-- ══════════════════════════════════════════════════════════ --}}
             <footer class="flex-none h-7 app-no-drag chrome-nosel bg-panel2 border-t border-line2 px-3
                            flex items-center justify-between text-[10px] font-mono tabular-nums leading-none">
@@ -40,31 +42,13 @@
                     @endif
                 </div>
 
-                {{-- ── RIGHT: counts + state ── --}}
+                {{-- ── RIGHT: status counters + state pill ── --}}
                 <div class="flex items-center gap-2.5 shrink-0">
 
-                    @if($searchQuery)
-                        <span class="c-accent flex items-center gap-1">
-                            <span class="text-muted">/</span>{{ $searchQuery }}
-                        </span>
-                        <span class="text-muted">│</span>
-                    @endif
-
-                    @php
-                        $useTotal    = in_array($activeTab, ['overview', 'audit', 'all'], true);
-                        $displayCnt  = $useTotal ? count($pages) : count($this->filteredPages);
-                        $showFilter  = !$useTotal && count($this->filteredPages) !== count($pages);
-                    @endphp
-                    <span>
-                        <span class="text-primary">{{ $displayCnt }}</span>@if($showFilter)<span class="text-muted">/</span><span class="text-tertiary">{{ count($pages) }}</span>@endif
-                        <span class="text-muted ml-1">pages</span>
-                    </span>
-
-                    @if($crawling && count($newPageIds) > 0)
-                        <span class="text-muted">│</span>
-                        <span class="c-accent flex items-center gap-1">
-                            <span class="w-1 h-1 rounded-full dot-pulse" style="background:var(--c-accent); box-shadow:0 0 4px var(--c-accent-glow);"></span>
-                            +{{ count($newPageIds) }}
+                    @if($status && $status['pagesCrawled'])
+                        <span>
+                            <span class="text-primary">{{ $status['pagesCrawled'] }}</span>
+                            <span class="text-muted ml-1">pages</span>
                         </span>
                     @endif
 
