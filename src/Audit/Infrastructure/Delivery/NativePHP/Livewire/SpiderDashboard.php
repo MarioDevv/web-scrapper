@@ -418,11 +418,23 @@ class SpiderDashboard extends Component
             return;
         }
 
-        $r = app(GetAuditPagesHandler::class)(new GetAuditPagesQuery($this->auditId));
+        // During a live crawl with pages already in memory, only fetch
+        // the rows added since the latest crawledAt we know about.
+        // The first poll of a session and any non-crawl refresh fall
+        // back to the full snapshot — needed because previously-seen
+        // pages can pick up new issues from site-wide analyzers when
+        // the audit completes.
+        $useDelta = $this->crawling && $this->pages !== [];
+        $since = $useDelta ? $this->latestCrawledAt() : null;
+
+        $r = app(GetAuditPagesHandler::class)(new GetAuditPagesQuery(
+            auditId: $this->auditId,
+            since: $since,
+        ));
 
         $previousIds = $this->knownPageIds;
 
-        $this->pages = array_map(fn(object $p): array => [
+        $incoming = array_map(fn(object $p): array => [
             'pageId' => $p->pageId,
             'url' => $p->url,
             'statusCode' => $p->statusCode,
@@ -440,12 +452,35 @@ class SpiderDashboard extends Component
             'imageCount' => $p->imageCount,
             'canonicalStatus' => $p->canonicalStatus,
             'h1Count' => $p->h1Count,
+            'crawledAt' => $p->crawledAt,
         ], $r->pages);
+
+        if ($useDelta) {
+            $merged = array_column($this->pages, null, 'pageId');
+            foreach ($incoming as $row) {
+                $merged[$row['pageId']] = $row;
+            }
+            $this->pages = array_values($merged);
+        } else {
+            $this->pages = $incoming;
+        }
 
         /** @var array<int, string> $currentIds */
         $currentIds = array_map(fn(array $p): string => (string) $p['pageId'], $this->pages);
         $this->newPageIds = array_values(array_diff($currentIds, $previousIds));
         $this->knownPageIds = $currentIds;
+    }
+
+    private function latestCrawledAt(): ?string
+    {
+        $timestamps = array_column($this->pages, 'crawledAt');
+        if ($timestamps === []) {
+            return null;
+        }
+
+        $max = max($timestamps);
+
+        return is_string($max) && $max !== '' ? $max : null;
     }
 
     public function loadExternalLinks(): void

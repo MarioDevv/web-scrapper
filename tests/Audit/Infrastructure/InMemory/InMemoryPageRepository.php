@@ -47,6 +47,19 @@ final class InMemoryPageRepository implements PageRepository
         ));
     }
 
+    /** @return Page[] */
+    public function findByAuditSince(AuditId $auditId, ?string $sinceIso): array
+    {
+        if ($sinceIso === null || $sinceIso === '') {
+            return $this->findByAudit($auditId);
+        }
+
+        return array_values(array_filter(
+            $this->findByAudit($auditId),
+            static fn(Page $page) => $page->crawledAt()->format('c') > $sinceIso,
+        ));
+    }
+
     public function countByAudit(AuditId $auditId): int
     {
         return count($this->findByAudit($auditId));

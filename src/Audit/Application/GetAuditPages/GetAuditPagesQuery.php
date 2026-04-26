@@ -6,7 +6,14 @@ namespace SeoSpider\Audit\Application\GetAuditPages;
 
 final readonly class GetAuditPagesQuery
 {
-    public function __construct(public string $auditId)
-    {
+    /**
+     * @param ?string $since ISO-8601 timestamp; when set, the handler
+     *                       only returns pages crawled strictly after it
+     *                       (delta fetch for the polling UI).
+     */
+    public function __construct(
+        public string $auditId,
+        public ?string $since = null,
+    ) {
     }
 }

@@ -26,12 +26,18 @@ final readonly class GetAuditPagesHandler
             throw AuditNotFound::withId($query->auditId);
         }
 
-        $pages = $this->pageRepository->findByAudit($auditId);
+        $pages = $query->since !== null
+            ? $this->pageRepository->findByAuditSince($auditId, $query->since)
+            : $this->pageRepository->findByAudit($auditId);
+
+        $total = $query->since !== null
+            ? $this->pageRepository->countByAudit($auditId)
+            : count($pages);
 
         return new GetAuditPagesResponse(
             auditId: $query->auditId,
             pages: array_map($this->toSummary(...), $pages),
-            total: count($pages),
+            total: $total,
         );
     }
 
