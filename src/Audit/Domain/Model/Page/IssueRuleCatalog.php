@@ -12,6 +12,14 @@ namespace SeoSpider\Audit\Domain\Model\Page;
  */
 final class IssueRuleCatalog
 {
+    /**
+     * Catalog version stamped onto every Issue at persist time. Bump the
+     * tag (YYYY-MM) when rule wording, severity, or weight changes
+     * materially, so historical audits can later be hydrated against the
+     * catalog they were produced against.
+     */
+    public const string VERSION = '2026-04';
+
     /** @var array<string, IssueRule>|null */
     private static ?array $cache = null;
 
