@@ -13,6 +13,7 @@ final class Issue
         private readonly string $code,
         private readonly string $message,
         private readonly ?string $context = null,
+        private readonly ?string $catalogVersion = null,
     ) {
     }
 
@@ -44,6 +45,11 @@ final class Issue
     public function context(): ?string
     {
         return $this->context;
+    }
+
+    public function catalogVersion(): ?string
+    {
+        return $this->catalogVersion;
     }
 
     public function isError(): bool
