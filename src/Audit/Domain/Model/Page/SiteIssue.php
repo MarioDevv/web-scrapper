@@ -20,6 +20,7 @@ final readonly class SiteIssue
         public string $code,
         public string $message,
         public ?string $context = null,
+        public ?string $catalogVersion = null,
     ) {
     }
 }
