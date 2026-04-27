@@ -8,8 +8,15 @@ use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 
 /**
- * Builds an in-memory SQLite PDO with the production schema applied,
- * so repository tests can exercise real SQL without booting Laravel.
+ * Builds an in-memory SQLite PDO with a *subset* of the production schema —
+ * just the tables and columns referenced by the repositories under test
+ * (audits, pages, issues, site_issues). Excludes folders, frontier,
+ * external_url_checks, audit_snapshots, and most non-load-bearing indexes
+ * because no current test exercises them.
+ *
+ * If a new test needs a column or table that's missing here, add it. If
+ * the production schema gains a column on a table this factory mirrors,
+ * mirror it here too. Source of truth: `database/migrations/`.
  */
 final class SqliteSchemaFactory
 {
@@ -26,7 +33,7 @@ final class SqliteSchemaFactory
                 seed_url TEXT NOT NULL,
                 status TEXT NOT NULL DEFAULT 'pending',
                 completed_at TEXT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                created_at TEXT NOT NULL
             );
         SQL);
 
@@ -76,7 +83,8 @@ final class SqliteSchemaFactory
                 redirect_chain TEXT DEFAULT '[]',
                 links TEXT DEFAULT '[]',
                 hreflangs TEXT DEFAULT '[]',
-                crawled_at TEXT NOT NULL
+                crawled_at TEXT NOT NULL,
+                FOREIGN KEY (audit_id) REFERENCES audits(id) ON DELETE CASCADE
             );
         SQL);
 
@@ -89,7 +97,8 @@ final class SqliteSchemaFactory
                 code TEXT NOT NULL,
                 catalog_version TEXT NULL,
                 message TEXT NOT NULL,
-                context TEXT NULL
+                context TEXT NULL,
+                FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
             );
         SQL);
 
@@ -102,7 +111,8 @@ final class SqliteSchemaFactory
                 code TEXT NOT NULL,
                 catalog_version TEXT NULL,
                 message TEXT NOT NULL,
-                context TEXT NULL
+                context TEXT NULL,
+                FOREIGN KEY (audit_id) REFERENCES audits(id) ON DELETE CASCADE
             );
         SQL);
 
@@ -116,13 +126,14 @@ final class SqliteSchemaFactory
         ?string $completedAt = null,
     ): void {
         $stmt = $pdo->prepare(
-            'INSERT INTO audits (id, seed_url, status, completed_at) VALUES (:id, :seed, :status, :completed)',
+            'INSERT INTO audits (id, seed_url, status, completed_at, created_at) VALUES (:id, :seed, :status, :completed, :created_at)',
         );
         $stmt->execute([
             'id' => $id->value(),
             'seed' => $seedUrl,
             'status' => $completedAt === null ? 'running' : 'completed',
             'completed' => $completedAt,
+            'created_at' => (new \DateTimeImmutable())->format('c'),
         ]);
     }
 }

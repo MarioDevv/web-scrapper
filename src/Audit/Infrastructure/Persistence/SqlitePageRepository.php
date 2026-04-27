@@ -307,6 +307,8 @@ final readonly class SqlitePageRepository implements PageRepository
             VALUES (:id, :page_id, :category, :severity, :code, :catalog_version, :message, :context)
         ');
 
+        // Default to the active catalog version when the analyzer didn't pin one,
+        // so persisted issues always carry the version that produced them.
         foreach ($issues as $issue) {
             $stmt->execute([
                 'id' => $issue->id()->value(),
