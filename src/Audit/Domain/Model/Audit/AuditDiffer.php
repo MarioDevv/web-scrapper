@@ -18,6 +18,9 @@ use SeoSpider\Audit\Domain\Model\Page\Page;
  */
 final class AuditDiffer
 {
+    // Stricter than Fingerprint::DEFAULT_NEAR_DUPLICATE_THRESHOLD (3): we have
+    // the URL change as additional evidence of a move, so we tolerate more
+    // simhash drift before declaring "this is the same page, just reformatted."
     private const int NEAR_DUPLICATE_THRESHOLD = 5;
 
     /**
@@ -59,12 +62,12 @@ final class AuditDiffer
         foreach ($remainingTarget as $url => $targetPage) {
             $targetFp = $targetPage->fingerprint();
             if ($targetFp === null) {
-                continue;
+                continue; // no fingerprint → falls through to pagesAdded below
             }
 
             $matchUrl = $this->findFingerprintMatch($targetFp, $remainingBase);
             if ($matchUrl === null) {
-                continue;
+                continue; // no close base candidate → falls through to pagesAdded below
             }
 
             $moved[] = $this->buildPageChange(
@@ -125,9 +128,9 @@ final class AuditDiffer
             url: $url,
             kind: $kind,
             movedFromUrl: $movedFromUrl,
-            addedIssueCodes: array_values(array_diff($targetCodes, $baseCodes)),
-            removedIssueCodes: array_values(array_diff($baseCodes, $targetCodes)),
-            persistentIssueCodes: array_values(array_intersect($baseCodes, $targetCodes)),
+            addedIssueCodes: array_values(array_unique(array_diff($targetCodes, $baseCodes))),
+            removedIssueCodes: array_values(array_unique(array_diff($baseCodes, $targetCodes))),
+            persistentIssueCodes: array_values(array_unique(array_intersect($baseCodes, $targetCodes))),
         );
     }
 

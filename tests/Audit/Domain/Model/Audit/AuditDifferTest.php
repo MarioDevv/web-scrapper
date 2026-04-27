@@ -112,6 +112,22 @@ final class AuditDifferTest extends TestCase
         self::assertSame(['title_missing'], $moved->persistentIssueCodes);
     }
 
+    public function test_duplicate_issue_codes_on_one_page_are_reported_once(): void
+    {
+        $diff = (new AuditDiffer())->diff(
+            AuditId::generate(),
+            AuditId::generate(),
+            base: [$this->page('https://example.com/', ['title_missing', 'title_missing', 'h1_multiple'])],
+            target: [$this->page('https://example.com/', ['title_missing'])],
+        );
+
+        self::assertCount(1, $diff->pagesUnchanged);
+        $change = $diff->pagesUnchanged[0];
+        self::assertSame(['title_missing'], $change->persistentIssueCodes);
+        self::assertSame(['h1_multiple'], $change->removedIssueCodes);
+        self::assertSame([], $change->addedIssueCodes);
+    }
+
     /** @param string[] $issueCodes */
     private function page(string $url, array $issueCodes = [], ?Fingerprint $fingerprint = null): Page
     {
