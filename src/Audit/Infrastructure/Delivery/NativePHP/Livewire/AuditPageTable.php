@@ -10,6 +10,10 @@ use Livewire\Attributes\Reactive;
 use Livewire\Component;
 use PDO;
 use SeoSpider\Audit\Application\AuditOverview\AuditOverviewBuilder;
+use SeoSpider\Audit\Application\CompareAudits\CompareAuditsHandler;
+use SeoSpider\Audit\Application\CompareAudits\CompareAuditsQuery;
+use SeoSpider\Audit\Application\CompareAudits\CompareAuditsResponse;
+use SeoSpider\Audit\Application\CompareAudits\IssueChangeRow;
 use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesHandler;
 use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Audit\Application\GetAuditPages\PageSummaryReader;
@@ -18,6 +22,7 @@ use SeoSpider\Audit\Application\GetAuditIssueReport\GetAuditIssueReportQuery;
 use SeoSpider\Audit\Application\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Audit\Application\GetPageDetail\GetPageDetailQuery;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Audit\AuditSnapshotRepository;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -52,6 +57,11 @@ class AuditPageTable extends Component
     public string $searchQuery = '';
     public string $sortField = 'crawlDepth';
     public string $sortDir = 'asc';
+
+    /** @var array<string, mixed>|null */
+    public ?array $diff = null;
+    public ?string $diffBaseAuditId = null;
+    public bool $diffUnavailable = false;
 
     public int $currentPage = 0;
     public int $pageSize = 50;
@@ -146,9 +156,79 @@ class AuditPageTable extends Component
     {
         $this->activeTab = $tab;
         $this->currentPage = 0;
-        if ($this->auditId !== null && !$this->crawling) {
+        if ($this->auditId !== null && !$this->crawling && $tab !== 'diff') {
             $this->refreshPages();
         }
+    }
+
+    public function compareWithPrevious(): void
+    {
+        if ($this->auditId === null) {
+            return;
+        }
+
+        $audits = app(AuditRepository::class);
+        $targetId = new AuditId($this->auditId);
+        $target = $audits->findById($targetId);
+        if ($target === null) {
+            $this->diffUnavailable = true;
+            $this->diff = null;
+            $this->setTab('diff');
+            return;
+        }
+
+        $previous = $audits->findPreviousCompletedByHost(
+            $target->configuration()->seedUrl->host(),
+            $targetId,
+        );
+
+        if ($previous === null) {
+            $this->diffUnavailable = true;
+            $this->diff = null;
+            $this->diffBaseAuditId = null;
+            $this->setTab('diff');
+            return;
+        }
+
+        $response = app(CompareAuditsHandler::class)(new CompareAuditsQuery(
+            baseAuditId: $previous->id(),
+            targetAuditId: $targetId,
+        ));
+
+        $this->diffUnavailable = false;
+        $this->diffBaseAuditId = $previous->id()->value();
+        $this->diff = $this->serialiseDiff($response);
+        $this->setTab('diff');
+    }
+
+    /** @return array<string, mixed> */
+    private function serialiseDiff(CompareAuditsResponse $r): array
+    {
+        $rows = static fn(array $list): array => array_map(
+            static fn(IssueChangeRow $row): array => [
+                'pageUrl' => $row->pageUrl,
+                'movedFromUrl' => $row->movedFromUrl,
+                'code' => $row->code,
+                'title' => $row->title,
+                'severity' => $row->severity,
+            ],
+            $list,
+        );
+
+        return [
+            'baseAuditId' => $r->baseAuditId,
+            'targetAuditId' => $r->targetAuditId,
+            'host' => $r->host,
+            'baseCompletedAt' => $r->baseCompletedAt->format('Y-m-d H:i'),
+            'targetCompletedAt' => $r->targetCompletedAt->format('Y-m-d H:i'),
+            'pagesAddedCount' => $r->pagesAddedCount,
+            'pagesRemovedCount' => $r->pagesRemovedCount,
+            'pagesMovedCount' => $r->pagesMovedCount,
+            'pagesUnchangedCount' => $r->pagesUnchangedCount,
+            'issuesAdded' => $rows($r->issuesAdded),
+            'issuesRemoved' => $rows($r->issuesRemoved),
+            'issuesPersistent' => $rows($r->issuesPersistent),
+        ];
     }
 
     public function toggleSort(string $field): void
