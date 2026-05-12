@@ -8,6 +8,7 @@ use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
+use SeoSpider\Audit\Domain\Model\Page\IssueRuleCatalog;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
 use SeoSpider\Audit\Domain\Model\Page\SiteIssue;
 use SeoSpider\Audit\Domain\Model\Page\SiteIssueRepository;
@@ -26,10 +27,12 @@ final readonly class SqliteSiteIssueRepository implements SiteIssueRepository
         }
 
         $stmt = $this->pdo->prepare('
-            INSERT INTO site_issues (id, audit_id, category, severity, code, message, context)
-            VALUES (:id, :audit_id, :category, :severity, :code, :message, :context)
+            INSERT INTO site_issues (id, audit_id, category, severity, code, catalog_version, message, context)
+            VALUES (:id, :audit_id, :category, :severity, :code, :catalog_version, :message, :context)
         ');
 
+        // Default to the active catalog version when the site analyzer didn't
+        // pin one, so persisted site issues carry the version that produced them.
         foreach ($issues as $issue) {
             $stmt->execute([
                 'id' => $issue->id->value(),
@@ -37,6 +40,7 @@ final readonly class SqliteSiteIssueRepository implements SiteIssueRepository
                 'category' => $issue->category->value,
                 'severity' => $issue->severity->value,
                 'code' => $issue->code,
+                'catalog_version' => $issue->catalogVersion ?? IssueRuleCatalog::VERSION,
                 'message' => $issue->message,
                 'context' => $issue->context,
             ]);
@@ -57,6 +61,7 @@ final readonly class SqliteSiteIssueRepository implements SiteIssueRepository
                 code: $row['code'],
                 message: $row['message'],
                 context: $row['context'],
+                catalogVersion: $row['catalog_version'] ?? null,
             ),
             $stmt->fetchAll() ?: [],
         );

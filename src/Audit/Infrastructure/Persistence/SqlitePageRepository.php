@@ -16,6 +16,7 @@ use SeoSpider\Audit\Domain\Model\Page\HreflangSource;
 use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
+use SeoSpider\Audit\Domain\Model\Page\IssueRuleCatalog;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
 use SeoSpider\Audit\Domain\Model\Page\Link;
 use SeoSpider\Audit\Domain\Model\Page\LinkRelation;
@@ -302,10 +303,12 @@ final readonly class SqlitePageRepository implements PageRepository
         }
 
         $stmt = $this->pdo->prepare('
-            INSERT INTO issues (id, page_id, category, severity, code, message, context)
-            VALUES (:id, :page_id, :category, :severity, :code, :message, :context)
+            INSERT INTO issues (id, page_id, category, severity, code, catalog_version, message, context)
+            VALUES (:id, :page_id, :category, :severity, :code, :catalog_version, :message, :context)
         ');
 
+        // Default to the active catalog version when the analyzer didn't pin one,
+        // so persisted issues always carry the version that produced them.
         foreach ($issues as $issue) {
             $stmt->execute([
                 'id' => $issue->id()->value(),
@@ -313,6 +316,7 @@ final readonly class SqlitePageRepository implements PageRepository
                 'category' => $issue->category()->value,
                 'severity' => $issue->severity()->value,
                 'code' => $issue->code(),
+                'catalog_version' => $issue->catalogVersion() ?? IssueRuleCatalog::VERSION,
                 'message' => $issue->message(),
                 'context' => $issue->context(),
             ]);
@@ -419,6 +423,7 @@ final readonly class SqlitePageRepository implements PageRepository
             code: $row['code'],
             message: $row['message'],
             context: $row['context'],
+            catalogVersion: $row['catalog_version'] ?? null,
         );
     }
 
