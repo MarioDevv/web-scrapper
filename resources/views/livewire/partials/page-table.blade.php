@@ -4,7 +4,8 @@
 @php
     $isOverview = $activeTab === 'overview';
     $isAudit = $activeTab === 'audit';
-    $inPages = !$isOverview && !$isAudit;
+    $isDiff = $activeTab === 'diff';
+    $inPages = !$isOverview && !$isAudit && !$isDiff;
 @endphp
 
 <nav class="flex-none bg-panel2 border-b border-line chrome-nosel">
@@ -56,6 +57,20 @@
                 <span class="text-muted font-normal">·{{ $this->tabCounts['all'] }}</span>
             </span>
             <span class="{{ $inPages ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">]</span>
+        </button>
+
+        {{-- [ diff ] --}}
+        <button wire:click="compareWithPrevious"
+                class="group h-7 px-3 flex items-center gap-1 text-[11px] font-mono uppercase tracking-[0.14em] transition-colors
+                       {{ $isDiff ? 'c-accent' : 'text-tertiary hover:text-secondary' }}">
+            <span class="{{ $isDiff ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">[</span>
+            <span class="flex items-center gap-1.5">
+                @if($isDiff)
+                    <span class="w-1.5 h-1.5 rounded-full dot-pulse" style="background:var(--c-accent); box-shadow:0 0 6px var(--c-accent-glow);"></span>
+                @endif
+                diff
+            </span>
+            <span class="{{ $isDiff ? 'text-muted' : 'text-muted group-hover:text-tertiary' }}">]</span>
         </button>
 
         <span class="h-4 w-px mx-2" style="background: var(--c-border);"></span>
@@ -142,6 +157,12 @@
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 @if($activeTab === 'audit')
     @include('livewire.partials.audit-report')
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{--  DIFF PANEL — Compare current audit with previous of same host             --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@elseif($activeTab === 'diff')
+    @include('livewire.partials.audit-diff')
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 {{--  OVERVIEW PANEL — Terminal-style audit dashboard                           --}}
