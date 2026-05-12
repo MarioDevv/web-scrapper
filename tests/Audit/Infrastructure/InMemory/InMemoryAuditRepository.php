@@ -7,6 +7,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 use SeoSpider\Audit\Domain\Model\Audit\Audit;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
 
 final class InMemoryAuditRepository implements AuditRepository
 {
@@ -26,5 +27,34 @@ final class InMemoryAuditRepository implements AuditRepository
     public function nextId(): AuditId
     {
         return AuditId::generate();
+    }
+
+    public function findPreviousCompletedByHost(string $host, AuditId $excluding): ?Audit
+    {
+        $candidates = [];
+        foreach ($this->audits as $audit) {
+            if ($audit->id()->value() === $excluding->value()) {
+                continue;
+            }
+            if ($audit->status() !== AuditStatus::COMPLETED) {
+                continue;
+            }
+            if ($audit->configuration()->seedUrl->host() !== $host) {
+                continue;
+            }
+            $completedAt = $audit->statistics()->completedAt;
+            if ($completedAt === null) {
+                continue;
+            }
+            $candidates[] = [$audit, $completedAt];
+        }
+
+        if ($candidates === []) {
+            return null;
+        }
+
+        usort($candidates, static fn(array $a, array $b) => $b[1] <=> $a[1]);
+
+        return $candidates[0][0];
     }
 }

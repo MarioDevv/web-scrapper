@@ -100,6 +100,35 @@ final readonly class SqliteAuditRepository implements AuditRepository
         return AuditId::generate();
     }
 
+    public function findPreviousCompletedByHost(string $host, AuditId $excluding): ?Audit
+    {
+        $stmt = $this->pdo->prepare(<<<'SQL'
+            SELECT * FROM audits
+            WHERE status = 'completed'
+              AND completed_at IS NOT NULL
+              AND id != :excluding
+              AND (
+                seed_url LIKE :host_pattern_https
+                OR seed_url LIKE :host_pattern_http
+              )
+            ORDER BY completed_at DESC
+            LIMIT 1
+        SQL);
+
+        $stmt->execute([
+            'excluding' => $excluding->value(),
+            'host_pattern_https' => 'https://' . $host . '%',
+            'host_pattern_http' => 'http://' . $host . '%',
+        ]);
+
+        $row = $stmt->fetch();
+        if ($row === false) {
+            return null;
+        }
+
+        return $this->hydrate($row);
+    }
+
     /** @param array<string, mixed> $row */
     private function hydrate(array $row): Audit
     {

@@ -32,6 +32,23 @@ final class SqliteSchemaFactory
                 id TEXT PRIMARY KEY,
                 seed_url TEXT NOT NULL,
                 status TEXT NOT NULL DEFAULT 'pending',
+                max_pages INTEGER NOT NULL DEFAULT 500,
+                max_depth INTEGER NOT NULL DEFAULT 10,
+                concurrency INTEGER NOT NULL DEFAULT 5,
+                request_delay REAL NOT NULL DEFAULT 0.25,
+                respect_robots_txt INTEGER NOT NULL DEFAULT 1,
+                custom_user_agent TEXT NULL,
+                exclude_patterns TEXT NOT NULL DEFAULT '[]',
+                include_patterns TEXT NOT NULL DEFAULT '[]',
+                follow_external_links INTEGER NOT NULL DEFAULT 0,
+                crawl_subdomains INTEGER NOT NULL DEFAULT 0,
+                pages_discovered INTEGER NOT NULL DEFAULT 0,
+                pages_crawled INTEGER NOT NULL DEFAULT 0,
+                pages_failed INTEGER NOT NULL DEFAULT 0,
+                issues_found INTEGER NOT NULL DEFAULT 0,
+                errors_found INTEGER NOT NULL DEFAULT 0,
+                warnings_found INTEGER NOT NULL DEFAULT 0,
+                started_at TEXT NULL,
                 completed_at TEXT NULL,
                 created_at TEXT NOT NULL
             );
@@ -126,12 +143,14 @@ final class SqliteSchemaFactory
         ?string $completedAt = null,
     ): void {
         $stmt = $pdo->prepare(
-            'INSERT INTO audits (id, seed_url, status, completed_at, created_at) VALUES (:id, :seed, :status, :completed, :created_at)',
+            'INSERT INTO audits (id, seed_url, status, started_at, completed_at, created_at)
+             VALUES (:id, :seed, :status, :started, :completed, :created_at)',
         );
         $stmt->execute([
             'id' => $id->value(),
             'seed' => $seedUrl,
             'status' => $completedAt === null ? 'running' : 'completed',
+            'started' => $completedAt,
             'completed' => $completedAt,
             'created_at' => (new \DateTimeImmutable())->format('c'),
         ]);
