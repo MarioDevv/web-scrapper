@@ -13,6 +13,9 @@ use SeoSpider\Audit\Domain\Model\Page\Page;
  * frontier. This is domain policy — depth limits, anchor vs resource, the
  * crawlResources flag — that used to live as a private method in the crawl
  * command handler and now has a name of its own.
+ *
+ * @phase3 Stays in SeoSpider\Audit until Phase 3 splits Page; couples to
+ *         Page::internalLinks().
  */
 interface UrlDiscoverer
 {

@@ -10,6 +10,10 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 
+/**
+ * @phase3 Stays in SeoSpider\Audit until Phase 3 splits Page; couples to
+ *         Page::internalLinks().
+ */
 final readonly class FrontierUrlDiscoverer implements UrlDiscoverer
 {
     public function __construct(private Frontier $frontier)
