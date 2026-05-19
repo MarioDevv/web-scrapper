@@ -21,7 +21,9 @@ use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Audit\Domain\Model\UrlDiscoverer;
+use SeoSpider\Crawling\Application\CrawledPagePayloadFactory;
 use SeoSpider\Shared\Domain\Bus\EventBus;
+use SeoSpider\Shared\Integration\CrawledPageReady;
 
 final readonly class CrawlPageHandler
 {
@@ -101,12 +103,18 @@ final readonly class CrawlPageHandler
 
         $this->pageRepository->save($page);
 
-        $this->eventBus->publish(new PageFetched(
-            pageId: $page->id(),
-            auditId: $auditId,
-            newUrlsDiscovered: $newUrls,
-            occurredAt: new DateTimeImmutable(),
-        ));
+        $this->eventBus->publish(
+            new PageFetched(
+                pageId: $page->id(),
+                auditId: $auditId,
+                newUrlsDiscovered: $newUrls,
+                occurredAt: new DateTimeImmutable(),
+            ),
+            new CrawledPageReady(
+                (new CrawledPagePayloadFactory())->fromPage($page),
+                new DateTimeImmutable(),
+            ),
+        );
     }
 
     public function handleFetchFailure(CrawlPageCommand $command, string $reason): void
