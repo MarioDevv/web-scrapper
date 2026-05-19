@@ -17,3 +17,5 @@ composer.lock
 database/*.sqlite*
 /docs/private/
 /scripts/
+/.spc-build/
+*.bak-nosqlite
