@@ -15,8 +15,7 @@ composer.lock
 /.phpstan-cache/
 .phpunit.result.cache
 database/*.sqlite*
-/docs/private/
+/docs/
 /scripts/
 /.spc-build/
 *.bak-nosqlite
-/docs/superpowers/
