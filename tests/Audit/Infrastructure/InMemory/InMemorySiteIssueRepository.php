@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Page\SiteIssue;
+use SeoSpider\Auditing\Domain\Model\Issue\SiteIssue;
 use SeoSpider\Audit\Domain\Model\Page\SiteIssueRepository;
 
 final class InMemorySiteIssueRepository implements SiteIssueRepository

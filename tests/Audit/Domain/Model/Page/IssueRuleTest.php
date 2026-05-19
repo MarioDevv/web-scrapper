@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Domain\Model\Page;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
-use SeoSpider\Audit\Domain\Model\Page\IssueRule;
-use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueRule;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 
 final class IssueRuleTest extends TestCase
 {

@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
-use SeoSpider\Audit\Domain\Model\Page\Issue;
+use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;

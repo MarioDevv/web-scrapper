@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Page;
+namespace SeoSpider\Auditing\Domain\Model\Issue;
 
 /**
  * Issue that does not belong to any single Page — emitted by site-wide

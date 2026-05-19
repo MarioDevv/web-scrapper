@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Analyzer;
 
-use SeoSpider\Audit\Domain\Model\Page\Issue;
+use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 
 /**
  * The page surface an analyzer operates on: the read signals it inspects

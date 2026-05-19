@@ -6,11 +6,11 @@ namespace SeoSpider\Audit\Infrastructure\Persistence;
 
 use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
-use SeoSpider\Audit\Domain\Model\Page\IssueId;
-use SeoSpider\Audit\Domain\Model\Page\IssueRuleCatalog;
-use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\SiteIssue;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
+use SeoSpider\Auditing\Domain\Model\Issue\SiteIssue;
 use SeoSpider\Audit\Domain\Model\Page\SiteIssueRepository;
 
 final readonly class SqliteSiteIssueRepository implements SiteIssueRepository

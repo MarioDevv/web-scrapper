@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Domain\Model\Page;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Page\IssueRuleCatalog;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
 
 final class IssueRuleCatalogTest extends TestCase
 {

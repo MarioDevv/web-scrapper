@@ -7,8 +7,8 @@ namespace SeoSpider\Audit\Application\GetAuditIssueReport;
 use SeoSpider\Audit\Application\AuditNotFound;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Audit\Domain\Model\Page\IssueRuleCatalog;
-use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 
 /**
  * Read model that projects an audit's per-page issues into a site-wide

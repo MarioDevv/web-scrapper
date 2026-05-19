@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Audit;
+use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 
 final readonly class PageChange
 {

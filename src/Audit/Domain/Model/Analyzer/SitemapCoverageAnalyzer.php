@@ -6,11 +6,11 @@ namespace SeoSpider\Audit\Domain\Model\Analyzer;
 
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Domain\Model\Frontier;
-use SeoSpider\Audit\Domain\Model\Page\Issue;
-use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
-use SeoSpider\Audit\Domain\Model\Page\IssueId;
-use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\SiteIssue;
+use SeoSpider\Auditing\Domain\Model\Issue\Issue;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
+use SeoSpider\Auditing\Domain\Model\Issue\SiteIssue;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final class SitemapCoverageAnalyzer implements SiteAnalyzer

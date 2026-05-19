@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Page;
+namespace SeoSpider\Auditing\Domain\Model\Issue;
 
 /**
  * Static metadata for an issue code: the ubiquitous prose used to

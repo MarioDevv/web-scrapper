@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Analyzer;
 
-use SeoSpider\Audit\Domain\Model\Page\Issue;
+use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 
 /**
  * Write port through which analyzers emit findings, instead of mutating

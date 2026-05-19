@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Analyzer;
 
-use SeoSpider\Audit\Domain\Model\Page\Issue;
-use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
-use SeoSpider\Audit\Domain\Model\Page\IssueId;
-use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
+use SeoSpider\Auditing\Domain\Model\Issue\Issue;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 
 final class DuplicateAnalyzer implements Analyzer

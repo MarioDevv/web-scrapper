@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Analyzer;
 
-use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 
 interface Analyzer
 {

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Page;
+use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;

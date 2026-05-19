@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Page;
-use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
+namespace SeoSpider\Auditing\Domain\Model\Issue;
 
 /**
  * Registry of every issue code the analyzers can emit. The catalog
