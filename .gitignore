@@ -19,3 +19,4 @@ database/*.sqlite*
 /scripts/
 /.spc-build/
 *.bak-nosqlite
+/docs/superpowers/
