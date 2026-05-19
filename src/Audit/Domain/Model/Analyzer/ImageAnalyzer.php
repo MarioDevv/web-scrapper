@@ -10,13 +10,12 @@ use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class ImageAnalyzer implements Analyzer
 {
     private const int ALT_MAX_LENGTH = 125;
 
-    public function analyze(Page $page): void
+    public function analyze(AnalyzablePage $page): void
     {
         if (!$page->isHtml()) {
             return;

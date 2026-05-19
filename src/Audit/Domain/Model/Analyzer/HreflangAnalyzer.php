@@ -8,11 +8,10 @@ use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class HreflangAnalyzer implements Analyzer
 {
-    public function analyze(Page $page): void
+    public function analyze(AnalyzablePage $page): void
     {
         if (!$page->isHtml() || count($page->hreflangs()) === 0) {
             return;
@@ -29,7 +28,7 @@ final class HreflangAnalyzer implements Analyzer
         return IssueCategory::HREFLANG;
     }
 
-    private function checkInvalidLanguageCodes(Page $page): void
+    private function checkInvalidLanguageCodes(AnalyzablePage $page): void
     {
         foreach ($page->hreflangs() as $hreflang) {
             if (!$hreflang->isValidLanguageCode()) {
@@ -45,7 +44,7 @@ final class HreflangAnalyzer implements Analyzer
         }
     }
 
-    private function checkInvalidRegionCodes(Page $page): void
+    private function checkInvalidRegionCodes(AnalyzablePage $page): void
     {
         foreach ($page->hreflangs() as $hreflang) {
             if (!$hreflang->isValidRegionCode()) {
@@ -61,7 +60,7 @@ final class HreflangAnalyzer implements Analyzer
         }
     }
 
-    private function checkMissingSelfReference(Page $page): void
+    private function checkMissingSelfReference(AnalyzablePage $page): void
     {
         $hasSelf = false;
         foreach ($page->hreflangs() as $hreflang) {
@@ -82,7 +81,7 @@ final class HreflangAnalyzer implements Analyzer
         }
     }
 
-    private function checkDuplicateLanguageRegion(Page $page): void
+    private function checkDuplicateLanguageRegion(AnalyzablePage $page): void
     {
         $seen = [];
         foreach ($page->hreflangs() as $hreflang) {

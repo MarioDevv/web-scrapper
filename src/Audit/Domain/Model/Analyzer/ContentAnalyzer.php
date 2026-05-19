@@ -8,7 +8,6 @@ use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class ContentAnalyzer implements Analyzer
 {
@@ -20,7 +19,7 @@ final class ContentAnalyzer implements Analyzer
     private const int THIN_CONTENT_THRESHOLD = 80;
     private const int EMPTY_CONTENT_THRESHOLD = 50;
 
-    public function analyze(Page $page): void
+    public function analyze(AnalyzablePage $page): void
     {
         if (!$page->isHtml() || $page->metadata() === null) {
             return;

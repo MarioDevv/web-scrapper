@@ -8,7 +8,6 @@ use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class PerformanceAnalyzer implements Analyzer
 {
@@ -16,7 +15,7 @@ final class PerformanceAnalyzer implements Analyzer
     private const float VERY_SLOW_THRESHOLD_MS = 3000.0;
     private const int LARGE_PAGE_BYTES = 512 * 1024;
 
-    public function analyze(Page $page): void
+    public function analyze(AnalyzablePage $page): void
     {
         $this->checkResponseTime($page);
         $this->checkPageSize($page);
@@ -27,7 +26,7 @@ final class PerformanceAnalyzer implements Analyzer
         return IssueCategory::PERFORMANCE;
     }
 
-    private function checkResponseTime(Page $page): void
+    private function checkResponseTime(AnalyzablePage $page): void
     {
         $time = $page->response()->responseTime();
 
@@ -50,7 +49,7 @@ final class PerformanceAnalyzer implements Analyzer
         }
     }
 
-    private function checkPageSize(Page $page): void
+    private function checkPageSize(AnalyzablePage $page): void
     {
         if (!$page->isHtml()) {
             return;

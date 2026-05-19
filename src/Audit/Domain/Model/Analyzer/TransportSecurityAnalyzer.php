@@ -10,7 +10,6 @@ use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class TransportSecurityAnalyzer implements Analyzer
 {
@@ -24,7 +23,7 @@ final class TransportSecurityAnalyzer implements Analyzer
         LinkType::FONT,
     ];
 
-    public function analyze(Page $page): void
+    public function analyze(AnalyzablePage $page): void
     {
         $effectiveUrl = $page->response()->finalUrl() ?? $page->url();
         $pageScheme = strtolower($effectiveUrl->scheme());

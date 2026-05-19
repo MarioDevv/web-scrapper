@@ -8,7 +8,6 @@ use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 
 final class DuplicateAnalyzer implements Analyzer
@@ -17,7 +16,7 @@ final class DuplicateAnalyzer implements Analyzer
     {
     }
 
-    public function analyze(Page $page): void
+    public function analyze(AnalyzablePage $page): void
     {
         if (!$page->isHtml() || $page->fingerprint() === null) {
             return;

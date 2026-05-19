@@ -10,6 +10,7 @@ use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
 use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Domain\Model\Analyzer\Analyzer;
+use SeoSpider\Audit\Domain\Model\Analyzer\AnalyzablePage;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\Issue;
@@ -158,7 +159,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
         return new class ($severity) implements Analyzer {
             public function __construct(private IssueSeverity $severity) {}
 
-            public function analyze(Page $page): void
+            public function analyze(AnalyzablePage $page): void
             {
                 $page->addIssue(new Issue(
                     id: IssueId::generate(),

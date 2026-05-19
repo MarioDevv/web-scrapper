@@ -9,11 +9,10 @@ use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class BrokenLinkAnalyzer implements Analyzer
 {
-    public function analyze(Page $page): void
+    public function analyze(AnalyzablePage $page): void
     {
         $this->checkStatusCode($page);
         $this->checkRedirectChain($page);
@@ -28,7 +27,7 @@ final class BrokenLinkAnalyzer implements Analyzer
         return IssueCategory::LINKS;
     }
 
-    private function checkStatusCode(Page $page): void
+    private function checkStatusCode(AnalyzablePage $page): void
     {
         $status = $page->response()->statusCode();
 
@@ -53,7 +52,7 @@ final class BrokenLinkAnalyzer implements Analyzer
         }
     }
 
-    private function checkRedirectChain(Page $page): void
+    private function checkRedirectChain(AnalyzablePage $page): void
     {
         $chain = $page->redirectChain();
 
@@ -74,7 +73,7 @@ final class BrokenLinkAnalyzer implements Analyzer
         ));
     }
 
-    private function checkRedirectLoop(Page $page): void
+    private function checkRedirectLoop(AnalyzablePage $page): void
     {
         if (!$page->redirectChain()->hasLoop()) {
             return;
@@ -89,7 +88,7 @@ final class BrokenLinkAnalyzer implements Analyzer
         ));
     }
 
-    private function checkMixedProtocols(Page $page): void
+    private function checkMixedProtocols(AnalyzablePage $page): void
     {
         if (!$page->redirectChain()->hasMixedProtocols()) {
             return;
@@ -104,7 +103,7 @@ final class BrokenLinkAnalyzer implements Analyzer
         ));
     }
 
-    private function checkRedirectNotPermanent(Page $page): void
+    private function checkRedirectNotPermanent(AnalyzablePage $page): void
     {
         $chain = $page->redirectChain();
 
@@ -127,7 +126,7 @@ final class BrokenLinkAnalyzer implements Analyzer
         ));
     }
 
-    private function checkInternalNofollow(Page $page): void
+    private function checkInternalNofollow(AnalyzablePage $page): void
     {
         if (!$page->isHtml()) {
             return;

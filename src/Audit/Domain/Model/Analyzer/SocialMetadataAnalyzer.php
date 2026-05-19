@@ -8,11 +8,10 @@ use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class SocialMetadataAnalyzer implements Analyzer
 {
-    public function analyze(Page $page): void
+    public function analyze(AnalyzablePage $page): void
     {
         if (!$page->isHtml() || !$page->response()->statusCode()->isSuccessful()) {
             return;

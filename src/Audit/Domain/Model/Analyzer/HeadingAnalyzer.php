@@ -9,11 +9,10 @@ use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class HeadingAnalyzer implements Analyzer
 {
-    public function analyze(Page $page): void
+    public function analyze(AnalyzablePage $page): void
     {
         if (!$page->isHtml() || $page->metadata() === null) {
             return;
@@ -29,7 +28,7 @@ final class HeadingAnalyzer implements Analyzer
         return IssueCategory::METADATA;
     }
 
-    private function checkH2(Page $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkH2(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
     {
         $h2s = $metadata->h2s();
 
@@ -44,7 +43,7 @@ final class HeadingAnalyzer implements Analyzer
         }
     }
 
-    private function checkHeadingOrder(Page $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkHeadingOrder(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
     {
         $hierarchy = $metadata->headingHierarchy();
         if (count($hierarchy) === 0) {

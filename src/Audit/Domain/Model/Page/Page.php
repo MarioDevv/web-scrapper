@@ -16,7 +16,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Shared\Domain\AggregateRoot;
 
-final class Page extends AggregateRoot implements \SeoSpider\Audit\Domain\Model\Analyzer\PageSignals
+final class Page extends AggregateRoot implements \SeoSpider\Audit\Domain\Model\Analyzer\AnalyzablePage
 {
     private PageId $id;
     private AuditId $auditId;
