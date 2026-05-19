@@ -8,6 +8,7 @@ use RuntimeException;
 use SeoSpider\Audit\Domain\Model\Audit\AuditDiffer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Audit\PageChange;
+use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 
@@ -17,6 +18,7 @@ final readonly class CompareAuditsHandler
         private AuditRepository $audits,
         private PageRepository $pages,
         private AuditDiffer $differ,
+        private AuditedPageRepository $auditedPages,
     ) {
     }
 
@@ -32,6 +34,8 @@ final readonly class CompareAuditsHandler
             targetId: $query->targetAuditId,
             base: $this->pages->findByAudit($query->baseAuditId),
             target: $this->pages->findByAudit($query->targetAuditId),
+            baseCodesByUrl: $this->auditedPages->issueCodesByUrl($query->baseAuditId->value()),
+            targetCodesByUrl: $this->auditedPages->issueCodesByUrl($query->targetAuditId->value()),
         );
 
         $added = [];

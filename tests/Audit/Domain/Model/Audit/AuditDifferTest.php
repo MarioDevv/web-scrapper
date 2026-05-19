@@ -11,27 +11,29 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\PageMatchKind;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
-use SeoSpider\Auditing\Domain\Model\Issue\Issue;
-use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
-use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
-use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
 
+/**
+ * Issue codes are supplied to AuditDiffer as URL->codes maps (owned by
+ * the Auditing context); the differ no longer reads findings from the
+ * crawl-side Page.
+ */
 final class AuditDifferTest extends TestCase
 {
     public function test_unchanged_page_with_identical_issues_yields_no_change(): void
     {
-        $baseId = AuditId::generate();
-        $targetId = AuditId::generate();
-
-        $base = [$this->page('https://example.com/', issueCodes: ['title_missing'])];
-        $target = [$this->page('https://example.com/', issueCodes: ['title_missing'])];
-
-        $diff = (new AuditDiffer())->diff($baseId, $targetId, $base, $target);
+        $diff = (new AuditDiffer())->diff(
+            AuditId::generate(),
+            AuditId::generate(),
+            [$this->page('https://example.com/')],
+            [$this->page('https://example.com/')],
+            ['https://example.com/' => ['title_missing']],
+            ['https://example.com/' => ['title_missing']],
+        );
 
         self::assertCount(1, $diff->pagesUnchanged);
         self::assertCount(0, $diff->pagesAdded);
@@ -47,13 +49,14 @@ final class AuditDifferTest extends TestCase
 
     public function test_classifies_added_removed_and_persistent_issue_codes(): void
     {
-        $baseId = AuditId::generate();
-        $targetId = AuditId::generate();
-
-        $base = [$this->page('https://example.com/', ['title_missing', 'h1_multiple'])];
-        $target = [$this->page('https://example.com/', ['title_missing', 'thin_content'])];
-
-        $diff = (new AuditDiffer())->diff($baseId, $targetId, $base, $target);
+        $diff = (new AuditDiffer())->diff(
+            AuditId::generate(),
+            AuditId::generate(),
+            [$this->page('https://example.com/')],
+            [$this->page('https://example.com/')],
+            ['https://example.com/' => ['title_missing', 'h1_multiple']],
+            ['https://example.com/' => ['title_missing', 'thin_content']],
+        );
 
         self::assertCount(1, $diff->pagesUnchanged);
         $change = $diff->pagesUnchanged[0];
@@ -68,7 +71,9 @@ final class AuditDifferTest extends TestCase
             AuditId::generate(),
             AuditId::generate(),
             base: [],
-            target: [$this->page('https://example.com/new', ['title_missing'])],
+            target: [$this->page('https://example.com/new')],
+            baseCodesByUrl: [],
+            targetCodesByUrl: ['https://example.com/new' => ['title_missing']],
         );
 
         self::assertCount(1, $diff->pagesAdded);
@@ -81,8 +86,10 @@ final class AuditDifferTest extends TestCase
         $diff = (new AuditDiffer())->diff(
             AuditId::generate(),
             AuditId::generate(),
-            base: [$this->page('https://example.com/gone', ['h1_multiple'])],
+            base: [$this->page('https://example.com/gone')],
             target: [],
+            baseCodesByUrl: ['https://example.com/gone' => ['h1_multiple']],
+            targetCodesByUrl: [],
         );
 
         self::assertCount(1, $diff->pagesRemoved);
@@ -97,8 +104,10 @@ final class AuditDifferTest extends TestCase
         $diff = (new AuditDiffer())->diff(
             AuditId::generate(),
             AuditId::generate(),
-            base: [$this->page('https://example.com/old', ['title_missing'], $shared)],
-            target: [$this->page('https://example.com/new', ['title_missing'], $shared)],
+            base: [$this->page('https://example.com/old', $shared)],
+            target: [$this->page('https://example.com/new', $shared)],
+            baseCodesByUrl: ['https://example.com/old' => ['title_missing']],
+            targetCodesByUrl: ['https://example.com/new' => ['title_missing']],
         );
 
         self::assertCount(1, $diff->pagesMoved);
@@ -117,8 +126,10 @@ final class AuditDifferTest extends TestCase
         $diff = (new AuditDiffer())->diff(
             AuditId::generate(),
             AuditId::generate(),
-            base: [$this->page('https://example.com/', ['title_missing', 'title_missing', 'h1_multiple'])],
-            target: [$this->page('https://example.com/', ['title_missing'])],
+            base: [$this->page('https://example.com/')],
+            target: [$this->page('https://example.com/')],
+            baseCodesByUrl: ['https://example.com/' => ['title_missing', 'title_missing', 'h1_multiple']],
+            targetCodesByUrl: ['https://example.com/' => ['title_missing']],
         );
 
         self::assertCount(1, $diff->pagesUnchanged);
@@ -128,20 +139,8 @@ final class AuditDifferTest extends TestCase
         self::assertSame([], $change->addedIssueCodes);
     }
 
-    /** @param string[] $issueCodes */
-    private function page(string $url, array $issueCodes = [], ?Fingerprint $fingerprint = null): Page
+    private function page(string $url, ?Fingerprint $fingerprint = null): Page
     {
-        $issues = array_map(
-            static fn(string $code) => new Issue(
-                id: IssueId::generate(),
-                category: IssueCategory::METADATA,
-                severity: IssueSeverity::ERROR,
-                code: $code,
-                message: $code,
-            ),
-            $issueCodes,
-        );
-
         return Page::reconstitute(
             id: PageId::generate(),
             auditId: AuditId::generate(),
@@ -162,7 +161,7 @@ final class AuditDifferTest extends TestCase
             fingerprint: $fingerprint,
             links: [],
             hreflangs: [],
-            issues: $issues,
+            issues: [],
             crawledAt: new DateTimeImmutable(),
         );
     }

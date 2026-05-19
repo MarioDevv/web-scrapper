@@ -19,4 +19,13 @@ interface AuditedPageRepository
      * re-analysis is idempotent. No-op if the page row does not exist.
      */
     public function save(AuditedPage $page): void;
+
+    /**
+     * Issue codes recorded for every audited page of an audit, keyed by
+     * page URL. Used by reporting/diff so it never reads findings through
+     * the crawl-side Page.
+     *
+     * @return array<string, string[]>
+     */
+    public function issueCodesByUrl(string $auditId): array;
 }

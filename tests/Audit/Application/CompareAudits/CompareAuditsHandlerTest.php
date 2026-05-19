@@ -24,23 +24,28 @@ use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
+use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
+use SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository;
 
 final class CompareAuditsHandlerTest extends TestCase
 {
     private InMemoryAuditRepository $audits;
     private InMemoryPageRepository $pages;
+    private InMemoryAuditedPageRepository $auditedPages;
     private CompareAuditsHandler $handler;
 
     protected function setUp(): void
     {
         $this->audits = new InMemoryAuditRepository();
         $this->pages = new InMemoryPageRepository();
+        $this->auditedPages = new InMemoryAuditedPageRepository();
         $this->handler = new CompareAuditsHandler(
             $this->audits,
             $this->pages,
             new AuditDiffer(),
+            $this->auditedPages,
         );
     }
 
@@ -113,6 +118,14 @@ final class CompareAuditsHandlerTest extends TestCase
             ),
             $codes,
         );
+
+        // Findings are owned by the Auditing context; seed them there so
+        // the handler reads issue codes via AuditedPageRepository.
+        $audited = AuditedPage::forUrl($auditId->value(), $url);
+        foreach ($issues as $issue) {
+            $audited->recordIssue($issue);
+        }
+        $this->auditedPages->save($audited);
 
         return Page::reconstitute(
             id: PageId::generate(),

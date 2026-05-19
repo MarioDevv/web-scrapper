@@ -21,4 +21,20 @@ final class InMemoryAuditedPageRepository implements AuditedPageRepository
     {
         $this->byKey[$page->auditId() . '|' . $page->url()] = $page;
     }
+
+    public function issueCodesByUrl(string $auditId): array
+    {
+        $map = [];
+        foreach ($this->byKey as $key => $page) {
+            if ($page->auditId() !== $auditId) {
+                continue;
+            }
+            $map[$page->url()] = array_map(
+                static fn ($i): string => $i->code(),
+                $page->issues(),
+            );
+        }
+
+        return $map;
+    }
 }

@@ -24,11 +24,19 @@ final class AuditDiffer
     private const int NEAR_DUPLICATE_THRESHOLD = 5;
 
     /**
-     * @param Page[] $base
-     * @param Page[] $target
+     * @param Page[]                  $base
+     * @param Page[]                  $target
+     * @param array<string, string[]> $baseCodesByUrl   issue codes per base page URL
+     * @param array<string, string[]> $targetCodesByUrl issue codes per target page URL
      */
-    public function diff(AuditId $baseId, AuditId $targetId, array $base, array $target): AuditDiff
-    {
+    public function diff(
+        AuditId $baseId,
+        AuditId $targetId,
+        array $base,
+        array $target,
+        array $baseCodesByUrl = [],
+        array $targetCodesByUrl = [],
+    ): AuditDiff {
         /** @var array<string, Page> $baseByUrl */
         $baseByUrl = [];
         foreach ($base as $page) {
@@ -51,8 +59,8 @@ final class AuditDiffer
                     url: $url,
                     kind: PageMatchKind::BY_URL,
                     movedFromUrl: null,
-                    basePage: $baseByUrl[$url],
-                    targetPage: $targetPage,
+                    baseCodes: $baseCodesByUrl[$url] ?? [],
+                    targetCodes: $targetCodesByUrl[$url] ?? [],
                 );
                 unset($remainingBase[$url], $remainingTarget[$url]);
             }
@@ -74,8 +82,8 @@ final class AuditDiffer
                 url: $url,
                 kind: PageMatchKind::BY_FINGERPRINT,
                 movedFromUrl: $matchUrl,
-                basePage: $remainingBase[$matchUrl],
-                targetPage: $targetPage,
+                baseCodes: $baseCodesByUrl[$matchUrl] ?? [],
+                targetCodes: $targetCodesByUrl[$url] ?? [],
             );
             unset($remainingBase[$matchUrl], $remainingTarget[$url]);
         }
@@ -86,7 +94,7 @@ final class AuditDiffer
                 url: $url,
                 kind: PageMatchKind::ADDED,
                 movedFromUrl: null,
-                addedIssueCodes: $this->codes($targetPage),
+                addedIssueCodes: $targetCodesByUrl[$url] ?? [],
                 removedIssueCodes: [],
                 persistentIssueCodes: [],
             );
@@ -99,7 +107,7 @@ final class AuditDiffer
                 kind: PageMatchKind::REMOVED,
                 movedFromUrl: null,
                 addedIssueCodes: [],
-                removedIssueCodes: $this->codes($basePage),
+                removedIssueCodes: $baseCodesByUrl[$url] ?? [],
                 persistentIssueCodes: [],
             );
         }
@@ -114,16 +122,17 @@ final class AuditDiffer
         );
     }
 
+    /**
+     * @param string[] $baseCodes
+     * @param string[] $targetCodes
+     */
     private function buildPageChange(
         string $url,
         PageMatchKind $kind,
         ?string $movedFromUrl,
-        Page $basePage,
-        Page $targetPage,
+        array $baseCodes,
+        array $targetCodes,
     ): PageChange {
-        $baseCodes = $this->codes($basePage);
-        $targetCodes = $this->codes($targetPage);
-
         return new PageChange(
             url: $url,
             kind: $kind,
@@ -158,12 +167,4 @@ final class AuditDiffer
         return $bestUrl;
     }
 
-    /** @return string[] */
-    private function codes(Page $page): array
-    {
-        return array_map(
-            static fn($issue) => $issue->code(),
-            $page->issues(),
-        );
-    }
 }

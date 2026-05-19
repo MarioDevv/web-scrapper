@@ -96,4 +96,21 @@ final readonly class SqliteAuditedPageRepository implements AuditedPageRepositor
             ]);
         }
     }
+
+    public function issueCodesByUrl(string $auditId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT p.url AS url, i.code AS code
+             FROM pages p JOIN issues i ON i.page_id = p.id
+             WHERE p.audit_id = :audit_id',
+        );
+        $stmt->execute(['audit_id' => $auditId]);
+
+        $map = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $map[$row['url']][] = $row['code'];
+        }
+
+        return $map;
+    }
 }
