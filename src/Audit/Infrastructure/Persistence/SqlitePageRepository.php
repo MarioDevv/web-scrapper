@@ -41,8 +41,10 @@ final readonly class SqlitePageRepository implements PageRepository
         $this->pdo->beginTransaction();
 
         try {
+            // Issues are owned and persisted by the Auditing context
+            // (AuditedPageRepository) since the 3d cutover; this
+            // repository only persists the crawl-side page row.
             $this->upsertPage($page);
-            $this->replaceIssues($page);
             $this->pdo->commit();
         } catch (\Throwable $e) {
             $this->pdo->rollBack();
@@ -248,16 +250,6 @@ final readonly class SqlitePageRepository implements PageRepository
             'hreflangs' => json_encode($this->serializeHreflangs($page->hreflangs())),
             'crawled_at' => $page->crawledAt()->format('c'),
         ]);
-    }
-
-    private function replaceIssues(Page $page): void
-    {
-        $pageId = $page->id()->value();
-
-        $this->pdo->prepare('DELETE FROM issues WHERE page_id = :page_id')
-            ->execute(['page_id' => $pageId]);
-
-        $this->insertIssues($pageId, $page->issues());
     }
 
     /** @param Issue[] $issues */
