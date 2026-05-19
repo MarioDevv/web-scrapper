@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\Parser;
+namespace SeoSpider\Crawling\Infrastructure\Parser;
 
 use SeoSpider\Crawling\Domain\Model\HtmlParser;
 use SeoSpider\Crawling\Domain\Model\Page\Directive;

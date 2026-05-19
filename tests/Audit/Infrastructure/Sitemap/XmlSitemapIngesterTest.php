@@ -11,7 +11,7 @@ use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
-use SeoSpider\Audit\Infrastructure\Sitemap\XmlSitemapIngester;
+use SeoSpider\Crawling\Infrastructure\Sitemap\XmlSitemapIngester;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubHttpClient;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\Sitemap;
+namespace SeoSpider\Crawling\Infrastructure\Sitemap;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;

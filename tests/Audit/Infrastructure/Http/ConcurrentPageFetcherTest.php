@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\Http;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Crawling\Domain\Model\Url;
-use SeoSpider\Audit\Infrastructure\Http\ConcurrentPageFetcher;
+use SeoSpider\Crawling\Infrastructure\Http\ConcurrentPageFetcher;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 

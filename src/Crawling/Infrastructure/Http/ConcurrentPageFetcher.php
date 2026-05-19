@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\Http;
+namespace SeoSpider\Crawling\Infrastructure\Http;
 use SeoSpider\Crawling\Domain\Model\HttpClient;
 
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;

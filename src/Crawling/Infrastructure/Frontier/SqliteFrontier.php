@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\Frontier;
+namespace SeoSpider\Crawling\Infrastructure\Frontier;
 
 use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;

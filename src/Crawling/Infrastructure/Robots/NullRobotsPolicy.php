@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\Robots;
+namespace SeoSpider\Crawling\Infrastructure\Robots;
 
 use SeoSpider\Crawling\Domain\Model\RobotsPolicy;
 use SeoSpider\Crawling\Domain\Model\Url;
