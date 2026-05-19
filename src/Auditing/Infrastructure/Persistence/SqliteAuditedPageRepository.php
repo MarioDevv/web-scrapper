@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+namespace SeoSpider\Auditing\Infrastructure\Persistence;
+
+use PDO;
+use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
+use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
+use SeoSpider\Auditing\Domain\Model\Issue\Issue;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
+
+/**
+ * ACL adapter: reconstitutes the Auditing AuditedPage aggregate from the
+ * shared `pages`/`issues` rows the crawl+analysis path persists. Reads
+ * only primitive columns — no Crawling or legacy Page types cross the
+ * boundary. This is the transfer medium chosen over fattening the
+ * CrawledPageReady event with the whole parsed model.
+ */
+final readonly class SqliteAuditedPageRepository implements AuditedPageRepository
+{
+    public function __construct(private PDO $pdo)
+    {
+    }
+
+    public function findByAuditAndUrl(string $auditId, string $url): ?AuditedPage
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id FROM pages WHERE audit_id = :audit_id AND url = :url',
+        );
+        $stmt->execute(['audit_id' => $auditId, 'url' => $url]);
+        $row = $stmt->fetch();
+
+        if ($row === false) {
+            return null;
+        }
+
+        $page = AuditedPage::forUrl($auditId, $url);
+
+        $issuesStmt = $this->pdo->prepare(
+            'SELECT id, category, severity, code, message, context, catalog_version
+             FROM issues WHERE page_id = :page_id',
+        );
+        $issuesStmt->execute(['page_id' => $row['id']]);
+
+        foreach ($issuesStmt->fetchAll() as $issueRow) {
+            $page->recordIssue(new Issue(
+                id: new IssueId($issueRow['id']),
+                category: IssueCategory::from($issueRow['category']),
+                severity: IssueSeverity::from($issueRow['severity']),
+                code: $issueRow['code'],
+                message: $issueRow['message'],
+                context: $issueRow['context'],
+                catalogVersion: $issueRow['catalog_version'],
+            ));
+        }
+
+        return $page;
+    }
+}
