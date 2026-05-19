@@ -6,8 +6,8 @@ namespace SeoSpider\Tests\Audit\Domain\Model\Page;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
-use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
-use SeoSpider\Audit\Domain\Model\Page\RedirectHop;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectHop;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final class RedirectChainTest extends TestCase

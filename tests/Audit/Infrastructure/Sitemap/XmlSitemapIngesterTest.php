@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
-use SeoSpider\Audit\Domain\Model\Page\PageResponse;
+use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Audit\Infrastructure\Sitemap\XmlSitemapIngester;

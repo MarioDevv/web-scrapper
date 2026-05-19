@@ -6,19 +6,19 @@ namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
-use SeoSpider\Audit\Domain\Model\Page\Directive;
+use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;
-use SeoSpider\Audit\Domain\Model\Page\Hreflang;
+use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
 use SeoSpider\Crawling\Domain\Model\Page\HreflangSource;
-use SeoSpider\Audit\Domain\Model\Page\Link;
+use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
-use SeoSpider\Audit\Domain\Model\Page\PageMetadata;
-use SeoSpider\Audit\Domain\Model\Page\PageResponse;
-use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
-use SeoSpider\Audit\Domain\Model\Page\RedirectHop;
+use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
+use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectHop;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 /**

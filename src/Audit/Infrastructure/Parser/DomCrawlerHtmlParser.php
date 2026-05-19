@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Infrastructure\Parser;
 
 use SeoSpider\Audit\Domain\Model\HtmlParser;
-use SeoSpider\Audit\Domain\Model\Page\Directive;
+use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;
-use SeoSpider\Audit\Domain\Model\Page\Hreflang;
+use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
 use SeoSpider\Crawling\Domain\Model\Page\HreflangSource;
-use SeoSpider\Audit\Domain\Model\Page\Link;
+use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Audit\Domain\Model\Page\PageMetadata;
-use SeoSpider\Audit\Domain\Model\Page\ParsedPage;
+use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
+use SeoSpider\Crawling\Domain\Model\Page\ParsedPage;
 use SeoSpider\Crawling\Domain\Model\Url;
 use Symfony\Component\DomCrawler\Crawler;
 

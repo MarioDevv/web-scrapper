@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Analyzer;
 
-use SeoSpider\Audit\Domain\Model\Page\Hreflang;
+use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
 use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;

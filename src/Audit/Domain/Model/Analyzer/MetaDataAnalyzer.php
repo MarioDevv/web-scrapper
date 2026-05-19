@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Analyzer;
+use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
 
 use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
@@ -32,7 +33,7 @@ final class MetaDataAnalyzer implements Analyzer
         return IssueCategory::METADATA;
     }
 
-    private function checkTitle(Page $page, \SeoSpider\Audit\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkTitle(Page $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
     {
         if (!$metadata->hasTitle()) {
             $page->addIssue(new Issue(
@@ -69,7 +70,7 @@ final class MetaDataAnalyzer implements Analyzer
         }
     }
 
-    private function checkMetaDescription(Page $page, \SeoSpider\Audit\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkMetaDescription(Page $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
     {
         if (!$metadata->hasMetaDescription()) {
             $page->addIssue(new Issue(
@@ -94,7 +95,7 @@ final class MetaDataAnalyzer implements Analyzer
         }
     }
 
-    private function checkH1(Page $page, \SeoSpider\Audit\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkH1(Page $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
     {
         if ($metadata->hasNoH1()) {
             $page->addIssue(new Issue(
@@ -117,7 +118,7 @@ final class MetaDataAnalyzer implements Analyzer
         }
     }
 
-    private function checkViewport(Page $page, \SeoSpider\Audit\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkViewport(Page $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
     {
         if (!$metadata->hasViewport()) {
             $page->addIssue(new Issue(
@@ -130,7 +131,7 @@ final class MetaDataAnalyzer implements Analyzer
         }
     }
 
-    private function checkHtmlLang(Page $page, \SeoSpider\Audit\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkHtmlLang(Page $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
     {
         $lang = $metadata->lang();
 

@@ -7,7 +7,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Audit\Domain\Model\Frontier;
-use SeoSpider\Audit\Domain\Model\FrontierEntry;
+use SeoSpider\Crawling\Domain\Model\FrontierEntry;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Analyzer;
+use SeoSpider\Crawling\Domain\Model\Page\Directive;
 
 use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
@@ -30,7 +31,7 @@ final class DirectiveAnalyzer implements Analyzer
         return IssueCategory::DIRECTIVES;
     }
 
-    private function checkNoindex(Page $page, \SeoSpider\Audit\Domain\Model\Page\Directive $directives): void
+    private function checkNoindex(Page $page, \SeoSpider\Crawling\Domain\Model\Page\Directive $directives): void
     {
         if ($directives->noindex()) {
             $page->addIssue(new Issue(
@@ -53,7 +54,7 @@ final class DirectiveAnalyzer implements Analyzer
         }
     }
 
-    private function checkCanonical(Page $page, \SeoSpider\Audit\Domain\Model\Page\Directive $directives): void
+    private function checkCanonical(Page $page, \SeoSpider\Crawling\Domain\Model\Page\Directive $directives): void
     {
         if (!$page->isHtml() || !$page->response()->statusCode()->isSuccessful()) {
             return;
@@ -83,7 +84,7 @@ final class DirectiveAnalyzer implements Analyzer
         }
     }
 
-    private function checkNoindexWithCanonical(Page $page, \SeoSpider\Audit\Domain\Model\Page\Directive $directives): void
+    private function checkNoindexWithCanonical(Page $page, \SeoSpider\Crawling\Domain\Model\Page\Directive $directives): void
     {
         if ($directives->noindex() && $directives->hasCanonical()) {
             $page->addIssue(new Issue(

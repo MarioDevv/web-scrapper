@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
+use SeoSpider\Crawling\Domain\Model\Page\Directive;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Analyzer\DirectiveAnalyzer;

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Analyzer;
+use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
 
 use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
@@ -28,7 +29,7 @@ final class HeadingAnalyzer implements Analyzer
         return IssueCategory::METADATA;
     }
 
-    private function checkH2(Page $page, \SeoSpider\Audit\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkH2(Page $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
     {
         $h2s = $metadata->h2s();
 
@@ -43,7 +44,7 @@ final class HeadingAnalyzer implements Analyzer
         }
     }
 
-    private function checkHeadingOrder(Page $page, \SeoSpider\Audit\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkHeadingOrder(Page $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
     {
         $hierarchy = $metadata->headingHierarchy();
         if (count($hierarchy) === 0) {

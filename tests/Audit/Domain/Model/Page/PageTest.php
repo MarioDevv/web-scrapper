@@ -3,11 +3,12 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Tests\Audit\Domain\Model\Page;
+use SeoSpider\Crawling\Domain\Model\Page\Link;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
-use SeoSpider\Audit\Domain\Model\Page\Directive;
+use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
@@ -15,7 +16,7 @@ use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
-use SeoSpider\Audit\Domain\Model\Page\PageResponse;
+use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final class PageTest extends TestCase
@@ -197,12 +198,12 @@ final class PageTest extends TestCase
         $page = $this->createHtmlPage();
 
         $page->enrichWithLinks([
-            new \SeoSpider\Audit\Domain\Model\Page\Link(
+            new \SeoSpider\Crawling\Domain\Model\Page\Link(
                 Url::fromString('https://example.com/about'),
                 \SeoSpider\Crawling\Domain\Model\Page\LinkType::ANCHOR,
                 'About', \SeoSpider\Crawling\Domain\Model\Page\LinkRelation::FOLLOW, true,
             ),
-            new \SeoSpider\Audit\Domain\Model\Page\Link(
+            new \SeoSpider\Crawling\Domain\Model\Page\Link(
                 Url::fromString('https://external.com'),
                 \SeoSpider\Crawling\Domain\Model\Page\LinkType::ANCHOR,
                 'External', \SeoSpider\Crawling\Domain\Model\Page\LinkRelation::NOFOLLOW, false,

@@ -7,7 +7,7 @@ namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Analyzer\BrokenLinkAnalyzer;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
-use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 
 final class BrokenLinkAnalyzerTest extends TestCase
 {

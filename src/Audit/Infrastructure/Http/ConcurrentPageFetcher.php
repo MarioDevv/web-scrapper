@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Infrastructure\Http;
 
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
-use SeoSpider\Audit\Domain\Model\Page\FetchOutcome;
-use SeoSpider\Audit\Domain\Model\Page\PageResponse;
-use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
-use SeoSpider\Audit\Domain\Model\Page\RedirectHop;
+use SeoSpider\Crawling\Domain\Model\Page\FetchOutcome;
+use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectHop;
 use SeoSpider\Audit\Domain\Model\PageFetcher;
 use SeoSpider\Crawling\Domain\Model\Url;
 use Symfony\Component\HttpClient\CurlHttpClient;

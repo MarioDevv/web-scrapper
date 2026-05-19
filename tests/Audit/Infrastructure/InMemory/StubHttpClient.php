@@ -7,8 +7,8 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
-use SeoSpider\Audit\Domain\Model\Page\PageResponse;
-use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
+use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final class StubHttpClient implements HttpClient

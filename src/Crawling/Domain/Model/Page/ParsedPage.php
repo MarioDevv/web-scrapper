@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Page;
+namespace SeoSpider\Crawling\Domain\Model\Page;
 
 /**
  * Aggregate result of a single HTML parsing pass. Read-model VO: the fields

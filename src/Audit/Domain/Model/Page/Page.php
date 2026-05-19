@@ -3,6 +3,12 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
+use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
+use SeoSpider\Crawling\Domain\Model\Page\Directive;
+use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
+use SeoSpider\Crawling\Domain\Model\Page\Link;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 
 use DateTimeImmutable;

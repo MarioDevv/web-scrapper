@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Infrastructure\Http;
 
-use SeoSpider\Audit\Domain\Model\Page\RedirectHop;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectHop;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 /**

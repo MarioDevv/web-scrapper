@@ -10,7 +10,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
 use SeoSpider\Audit\Domain\Model\Frontier;
-use SeoSpider\Audit\Domain\Model\FrontierEntry;
+use SeoSpider\Crawling\Domain\Model\FrontierEntry;
 use SeoSpider\Audit\Domain\Model\PageFetcher;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
 use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;

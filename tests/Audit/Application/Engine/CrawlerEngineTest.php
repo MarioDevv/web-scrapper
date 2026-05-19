@@ -15,7 +15,7 @@ use SeoSpider\Audit\Domain\Model\Analyzer\DirectiveAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\MetaDataAnalyzer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
-use SeoSpider\Audit\Domain\Model\Page\Link;
+use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\FrontierUrlDiscoverer;

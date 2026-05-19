@@ -6,8 +6,8 @@ namespace SeoSpider\Audit\Domain\Model;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 
-use SeoSpider\Audit\Domain\Model\Page\PageResponse;
-use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
+use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 
 interface HttpClient
 {
