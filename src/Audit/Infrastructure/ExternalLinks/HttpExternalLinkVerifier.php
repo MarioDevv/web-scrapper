@@ -12,7 +12,7 @@ use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class HttpExternalLinkVerifier implements ExternalLinkVerifier
 {

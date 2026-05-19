@@ -14,8 +14,8 @@ use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
-use SeoSpider\Audit\Domain\Model\Url;
-use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
+use SeoSpider\Crawling\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 
 final class FrontierUrlDiscovererTest extends TestCase

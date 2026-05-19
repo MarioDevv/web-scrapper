@@ -8,7 +8,7 @@ use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class SqliteExternalLinkRepository implements ExternalLinkRepository
 {

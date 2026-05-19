@@ -6,8 +6,8 @@ namespace SeoSpider\Tests\Audit\Domain\Model;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Url;
-use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
+use SeoSpider\Crawling\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 
 final class UrlCanonicalizerTest extends TestCase
 {

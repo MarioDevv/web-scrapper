@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Domain\Model\Audit;
 
 use DateTimeImmutable;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Shared\Domain\DomainEvent;
 
 final readonly class AuditStarted implements DomainEvent

@@ -19,7 +19,7 @@ use SeoSpider\Audit\Domain\Model\Page\PageMetadata;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
 use SeoSpider\Audit\Domain\Model\Page\RedirectHop;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 /**
  * Shared builders for analyzer tests. Both per-page and site-wide

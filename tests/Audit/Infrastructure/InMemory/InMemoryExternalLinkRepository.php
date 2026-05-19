@@ -7,7 +7,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class InMemoryExternalLinkRepository implements ExternalLinkRepository
 {

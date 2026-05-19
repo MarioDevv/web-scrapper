@@ -12,7 +12,7 @@ use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class PageFixture
 {

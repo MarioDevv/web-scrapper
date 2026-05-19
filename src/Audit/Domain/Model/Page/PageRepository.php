@@ -6,7 +6,7 @@ namespace SeoSpider\Audit\Domain\Model\Page;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 interface PageRepository
 {

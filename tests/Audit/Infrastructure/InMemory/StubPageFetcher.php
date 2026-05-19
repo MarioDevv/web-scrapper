@@ -8,7 +8,7 @@ use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Audit\Domain\Model\Page\FetchOutcome;
 use SeoSpider\Audit\Domain\Model\PageFetcher;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 /**
  * Test-only PageFetcher that delegates to the existing StubHttpClient so

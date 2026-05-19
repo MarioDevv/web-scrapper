@@ -12,7 +12,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatistics;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class SqliteAuditRepository implements AuditRepository
 {

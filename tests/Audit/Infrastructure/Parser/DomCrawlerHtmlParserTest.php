@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Infrastructure\Parser;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Audit\Infrastructure\Parser\DomCrawlerHtmlParser;
 
 final class DomCrawlerHtmlParserTest extends TestCase

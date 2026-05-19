@@ -20,12 +20,12 @@ use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
 use SeoSpider\Audit\Domain\Model\Page\PageFetched;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
-use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
+use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 
 final class AnalyzePageOnPageFetchedTest extends TestCase
 {

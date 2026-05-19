@@ -7,7 +7,7 @@ namespace SeoSpider\Tests\Audit\Domain\Model\Page;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Page\Directive;
 use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class DirectiveTest extends TestCase
 {

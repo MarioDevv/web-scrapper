@@ -6,7 +6,7 @@ namespace SeoSpider\Audit\Domain\Model\Page;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class Link
 {

@@ -16,7 +16,7 @@ use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class PageTest extends TestCase
 {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Domain\Model\Sitemap;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 /**
  * Seeds the frontier with URLs declared in the site's sitemap(s). Essential

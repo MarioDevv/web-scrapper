@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Infrastructure\Http;
 
 use SeoSpider\Audit\Domain\Model\Page\RedirectHop;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 /**
  * Internal mutable state tracked by ConcurrentPageFetcher for each in-flight

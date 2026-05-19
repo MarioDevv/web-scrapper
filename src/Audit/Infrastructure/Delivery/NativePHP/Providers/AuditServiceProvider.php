@@ -18,7 +18,7 @@ use SeoSpider\Audit\Domain\Model\FrontierUrlDiscoverer;
 use SeoSpider\Audit\Domain\Model\Page\PageFetched;
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
 use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;
-use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
+use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Audit\Domain\Model\UrlDiscoverer;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteExternalLinkRepository;
 use SeoSpider\Audit\Infrastructure\Robots\RobotsTxtPolicy;

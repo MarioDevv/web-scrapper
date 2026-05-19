@@ -10,7 +10,7 @@ use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
 use SeoSpider\Audit\Domain\Model\Page\InvalidUrl;
-use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
+use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;

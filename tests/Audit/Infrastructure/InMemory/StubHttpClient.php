@@ -9,7 +9,7 @@ use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class StubHttpClient implements HttpClient
 {

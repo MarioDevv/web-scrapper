@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Analyzer\CanonicalTargetAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\SiteAuditContext;
 use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class CanonicalTargetAnalyzerTest extends TestCase
 {

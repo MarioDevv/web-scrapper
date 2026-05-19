@@ -16,7 +16,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditResumed;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStarted;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
 use SeoSpider\Audit\Domain\Model\Audit\InvalidAuditStateTransition;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class AuditTest extends TestCase
 {

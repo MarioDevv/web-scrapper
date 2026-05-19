@@ -10,7 +10,7 @@ use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HttpClient;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class XmlSitemapIngester implements SitemapIngester
 {

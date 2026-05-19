@@ -7,7 +7,7 @@ namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Analyzer\HreflangReturnAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\SiteAuditContext;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class HreflangReturnAnalyzerTest extends TestCase
 {

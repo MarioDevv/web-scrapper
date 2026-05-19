@@ -19,7 +19,7 @@ use SeoSpider\Audit\Domain\Model\Page\PageFetched;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Audit\Domain\Model\UrlDiscoverer;
 use SeoSpider\Crawling\Application\CrawledPagePayloadFactory;
 use SeoSpider\Shared\Domain\Bus\EventBus;

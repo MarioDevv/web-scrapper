@@ -10,7 +10,7 @@ use SeoSpider\Audit\Domain\Model\Page\Hreflang;
 use SeoSpider\Audit\Domain\Model\Page\Link;
 use SeoSpider\Audit\Domain\Model\Page\PageMetadata;
 use SeoSpider\Audit\Domain\Model\Page\ParsedPage;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class StubHtmlParser implements HtmlParser
 {

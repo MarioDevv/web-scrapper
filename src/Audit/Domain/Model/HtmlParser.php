@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 use SeoSpider\Audit\Domain\Model\Page\ParsedPage;
 

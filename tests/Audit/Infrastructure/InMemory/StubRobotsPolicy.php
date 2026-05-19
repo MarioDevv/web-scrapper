@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 use SeoSpider\Audit\Domain\Model\RobotsPolicy;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class StubRobotsPolicy implements RobotsPolicy
 {

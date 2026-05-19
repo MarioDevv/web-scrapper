@@ -7,7 +7,7 @@ use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 
 use DateTimeImmutable;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Shared\Domain\AggregateRoot;
 
 final class Page extends AggregateRoot

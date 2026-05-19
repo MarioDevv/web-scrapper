@@ -14,7 +14,7 @@ use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\PageMetadata;
 use SeoSpider\Audit\Domain\Model\Page\ParsedPage;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 use Symfony\Component\DomCrawler\Crawler;
 
 final class DomCrawlerHtmlParser implements HtmlParser

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model;
+namespace SeoSpider\Crawling\Domain\Model;
 
 /**
  * Canonicalizes URLs to a form that represents the same logical resource

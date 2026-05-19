@@ -7,7 +7,7 @@ namespace SeoSpider\Audit\Domain\Model\Page;
 use DateTimeImmutable;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Shared\Domain\DomainEvent;
 
 final readonly class PageCrawled implements DomainEvent

@@ -11,7 +11,7 @@ use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
 use SeoSpider\Audit\Domain\Model\Page\SiteIssue;
-use SeoSpider\Audit\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final class SitemapCoverageAnalyzer implements SiteAnalyzer
 {
