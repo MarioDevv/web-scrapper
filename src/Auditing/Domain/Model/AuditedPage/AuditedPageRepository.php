@@ -13,4 +13,10 @@ namespace SeoSpider\Auditing\Domain\Model\AuditedPage;
 interface AuditedPageRepository
 {
     public function findByAuditAndUrl(string $auditId, string $url): ?AuditedPage;
+
+    /**
+     * Persists the page's findings. Replaces the page's issue rows so
+     * re-analysis is idempotent. No-op if the page row does not exist.
+     */
+    public function save(AuditedPage $page): void;
 }

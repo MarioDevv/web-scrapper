@@ -10,6 +10,7 @@ use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
+use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 
 /**
@@ -58,5 +59,41 @@ final readonly class SqliteAuditedPageRepository implements AuditedPageRepositor
         }
 
         return $page;
+    }
+
+    public function save(AuditedPage $page): void
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id FROM pages WHERE audit_id = :audit_id AND url = :url',
+        );
+        $stmt->execute(['audit_id' => $page->auditId(), 'url' => $page->url()]);
+        $row = $stmt->fetch();
+
+        if ($row === false) {
+            return;
+        }
+
+        $pageId = $row['id'];
+
+        $this->pdo->prepare('DELETE FROM issues WHERE page_id = :page_id')
+            ->execute(['page_id' => $pageId]);
+
+        $insert = $this->pdo->prepare(
+            'INSERT INTO issues (id, page_id, category, severity, code, catalog_version, message, context)
+             VALUES (:id, :page_id, :category, :severity, :code, :catalog_version, :message, :context)',
+        );
+
+        foreach ($page->issues() as $issue) {
+            $insert->execute([
+                'id' => $issue->id()->value(),
+                'page_id' => $pageId,
+                'category' => $issue->category()->value,
+                'severity' => $issue->severity()->value,
+                'code' => $issue->code(),
+                'catalog_version' => $issue->catalogVersion() ?? IssueRuleCatalog::VERSION,
+                'message' => $issue->message(),
+                'context' => $issue->context(),
+            ]);
+        }
     }
 }

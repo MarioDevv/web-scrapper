@@ -65,6 +65,70 @@ final class SqliteAuditedPageRepositoryTest extends TestCase
         $this->assertSame(max(0, 100 - $expectedWeight), $audited->score()->value());
     }
 
+    public function test_save_round_trips_findings_idempotently(): void
+    {
+        $auditId = AuditId::generate();
+        SqliteSchemaFactory::insertAuditRow($this->pdo, $auditId, 'https://example.com/');
+        // a pages row must exist (crawl side); reuse the legacy writer for setup only
+        $legacyPage = PageFixture::buildWithIssue(
+            auditId: $auditId,
+            issue: new Issue(
+                id: IssueId::generate(),
+                category: IssueCategory::METADATA,
+                severity: IssueSeverity::ERROR,
+                code: 'title_missing',
+                message: 'old',
+            ),
+            url: 'https://example.com/p',
+        );
+        (new SqlitePageRepository($this->pdo))->save($legacyPage);
+
+        $repo = new SqliteAuditedPageRepository($this->pdo);
+
+        $audited = $repo->findByAuditAndUrl($auditId->value(), 'https://example.com/p');
+        $this->assertNotNull($audited);
+        $audited->recordIssue(new Issue(
+            id: IssueId::generate(),
+            category: IssueCategory::CONTENT,
+            severity: IssueSeverity::WARNING,
+            code: 'content_thin',
+            message: 'thin',
+        ));
+
+        $repo->save($audited);
+        $repo->save($audited); // idempotent: replaces, not appends
+
+        $reloaded = $repo->findByAuditAndUrl($auditId->value(), 'https://example.com/p');
+        $this->assertNotNull($reloaded);
+        $codes = array_map(static fn (Issue $i): string => $i->code(), $reloaded->issues());
+        sort($codes);
+        $this->assertSame(['content_thin', 'title_missing'], $codes);
+    }
+
+    public function test_save_is_a_noop_for_unknown_page(): void
+    {
+        $auditId = AuditId::generate();
+        SqliteSchemaFactory::insertAuditRow($this->pdo, $auditId, 'https://example.com/');
+        $page = \SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage::forUrl(
+            $auditId->value(),
+            'https://example.com/ghost',
+        );
+        $page->recordIssue(new Issue(
+            id: IssueId::generate(),
+            category: IssueCategory::CONTENT,
+            severity: IssueSeverity::WARNING,
+            code: 'content_thin',
+            message: 'x',
+        ));
+
+        (new SqliteAuditedPageRepository($this->pdo))->save($page); // must not throw
+
+        $this->assertNull(
+            (new SqliteAuditedPageRepository($this->pdo))
+                ->findByAuditAndUrl($auditId->value(), 'https://example.com/ghost'),
+        );
+    }
+
     public function test_returns_null_for_unknown_page(): void
     {
         $auditId = AuditId::generate();
