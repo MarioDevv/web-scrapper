@@ -2,18 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model;
+namespace SeoSpider\Crawling\Domain\Model;
 use SeoSpider\Crawling\Domain\Model\Frontier;
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\CrawledPage;
 
-/**
- * @phase3 Stays in SeoSpider\Audit until Phase 3 splits Page; couples to
- *         Page::internalLinks().
- */
 final readonly class FrontierUrlDiscoverer implements UrlDiscoverer
 {
     public function __construct(private Frontier $frontier)
@@ -21,7 +17,7 @@ final readonly class FrontierUrlDiscoverer implements UrlDiscoverer
     }
 
     public function discoverFrom(
-        Page $page,
+        CrawledPage $page,
         AuditId $auditId,
         int $currentDepth,
         AuditConfiguration $config,

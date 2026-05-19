@@ -23,7 +23,7 @@ use SeoSpider\Audit\Domain\Model\Page\PageFailed;
 use SeoSpider\Audit\Domain\Model\Page\PageFetched;
 use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
-use SeoSpider\Audit\Domain\Model\FrontierUrlDiscoverer;
+use SeoSpider\Crawling\Domain\Model\FrontierUrlDiscoverer;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;

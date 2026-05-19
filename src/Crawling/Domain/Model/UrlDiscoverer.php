@@ -2,26 +2,23 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model;
+namespace SeoSpider\Crawling\Domain\Model;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\CrawledPage;
 
 /**
  * Decides which of a page's internal links are worth adding to the crawl
  * frontier. This is domain policy — depth limits, anchor vs resource, the
  * crawlResources flag — that used to live as a private method in the crawl
  * command handler and now has a name of its own.
- *
- * @phase3 Stays in SeoSpider\Audit until Phase 3 splits Page; couples to
- *         Page::internalLinks().
  */
 interface UrlDiscoverer
 {
     /** Returns the count of URLs newly enqueued (deduped) from this page. */
     public function discoverFrom(
-        Page $page,
+        CrawledPage $page,
         AuditId $auditId,
         int $currentDepth,
         AuditConfiguration $config,

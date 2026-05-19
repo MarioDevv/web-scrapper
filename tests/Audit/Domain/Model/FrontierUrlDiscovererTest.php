@@ -7,8 +7,10 @@ namespace SeoSpider\Tests\Audit\Domain\Model;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\FrontierUrlDiscoverer;
+use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
+use SeoSpider\Crawling\Domain\Model\FrontierUrlDiscoverer;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
+use SeoSpider\Crawling\Domain\Model\Page\CrawledPage;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
@@ -97,7 +99,7 @@ final class FrontierUrlDiscovererTest extends TestCase
     }
 
     /** @param Link[] $links */
-    private function pageWithLinks(array $links): Page
+    private function pageWithLinks(array $links): CrawledPage
     {
         $page = Page::fromCrawl(
             id: \SeoSpider\Audit\Domain\Model\Page\PageId::generate(),
@@ -117,7 +119,7 @@ final class FrontierUrlDiscovererTest extends TestCase
         );
         $page->enrichWithLinks($links);
 
-        return $page;
+        return (new LegacyPageToCrawledPage())($page);
     }
 
     private function anchor(string $url, bool $follow): Link

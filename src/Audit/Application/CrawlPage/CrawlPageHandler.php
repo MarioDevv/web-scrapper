@@ -20,8 +20,9 @@ use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
-use SeoSpider\Audit\Domain\Model\UrlDiscoverer;
+use SeoSpider\Crawling\Domain\Model\UrlDiscoverer;
 use SeoSpider\Crawling\Application\CrawledPagePayloadFactory;
+use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 use SeoSpider\Shared\Integration\CrawledPageReady;
 
@@ -92,7 +93,7 @@ final readonly class CrawlPageHandler
         if ($page->isHtml() && $response->body() !== null) {
             $this->enrichHtmlPage($page, $response->body(), $url);
             $newUrls = $this->urlDiscoverer->discoverFrom(
-                $page,
+                (new LegacyPageToCrawledPage())($page),
                 $auditId,
                 $command->depth,
                 $audit->configuration(),
