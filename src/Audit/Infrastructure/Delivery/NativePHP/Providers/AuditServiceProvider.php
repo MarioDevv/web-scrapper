@@ -60,6 +60,8 @@ use SeoSpider\Audit\Application\AuditOverview\AuditOverviewBuilder;
 use SeoSpider\Audit\Application\BuildAuditSnapshot\BuildAuditSnapshotOnAuditCompleted;
 use SeoSpider\Audit\Domain\Model\Audit\AuditSnapshotRepository;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteAuditSnapshotRepository;
+use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
+use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditedPageRepository;
 use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
@@ -95,6 +97,8 @@ final class AuditServiceProvider extends ServiceProvider
         $this->app->singleton(AuditRepository::class, fn($app) => new SqliteAuditRepository($app->make(PDO::class)));
 
         $this->app->singleton(PageRepository::class, fn($app) => new SqlitePageRepository($app->make(PDO::class)));
+
+        $this->app->singleton(AuditedPageRepository::class, fn($app) => new SqliteAuditedPageRepository($app->make(PDO::class)));
 
         $this->app->singleton(ExternalLinkRepository::class, fn($app) => new SqliteExternalLinkRepository($app->make(PDO::class)));
 
@@ -184,6 +188,7 @@ final class AuditServiceProvider extends ServiceProvider
             auditRepository: $app->make(AuditRepository::class),
             eventBus: $app->make(EventBus::class),
             analyzers: iterator_to_array($app->tagged('analyzers')),
+            auditedPageRepository: $app->make(AuditedPageRepository::class),
         ));
 
         $this->app->singleton(ExternalLinkVerifier::class, fn($app) => new HttpExternalLinkVerifier(

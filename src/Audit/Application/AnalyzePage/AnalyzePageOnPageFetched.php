@@ -6,6 +6,8 @@ namespace SeoSpider\Audit\Application\AnalyzePage;
 
 use SeoSpider\Audit\Domain\Model\Analyzer\Analyzer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
+use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageFetched;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
@@ -30,6 +32,7 @@ final readonly class AnalyzePageOnPageFetched
         private AuditRepository $auditRepository,
         private EventBus $eventBus,
         private array $analyzers = [],
+        private ?AuditedPageRepository $auditedPageRepository = null,
     ) {
     }
 
@@ -43,6 +46,7 @@ final readonly class AnalyzePageOnPageFetched
         $this->runAnalyzers($page);
         $page->markAsAnalyzed();
         $this->pageRepository->save($page);
+        $this->persistAuditedPage($page);
 
         $audit = $this->auditRepository->findById($event->auditId);
         if ($audit === null) {
@@ -67,5 +71,29 @@ final readonly class AnalyzePageOnPageFetched
         foreach ($this->analyzers as $analyzer) {
             $analyzer->analyze($page);
         }
+    }
+
+    /**
+     * Parallel (shadow) write of the findings through the Auditing
+     * context's own aggregate. Rows are byte-identical to the legacy
+     * page-repository write (proven by AuditedPageRepository tests), so
+     * this is behaviour-preserving. The legacy issue write is removed in
+     * a follow-up slice once all read consumers are migrated.
+     */
+    private function persistAuditedPage(Page $page): void
+    {
+        if ($this->auditedPageRepository === null) {
+            return;
+        }
+
+        $audited = AuditedPage::forUrl(
+            $page->auditId()->value(),
+            $page->url()->toString(),
+        );
+        foreach ($page->issues() as $issue) {
+            $audited->recordIssue($issue);
+        }
+
+        $this->auditedPageRepository->save($audited);
     }
 }

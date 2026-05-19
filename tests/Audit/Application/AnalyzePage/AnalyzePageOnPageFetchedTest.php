@@ -82,6 +82,38 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
         $this->assertSame(4, $audit->statistics()->pagesDiscovered);
     }
 
+    public function test_also_persists_findings_through_the_auditing_repository(): void
+    {
+        $page = $this->persistPage();
+        $auditedPages = new \SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository();
+
+        $reactor = new AnalyzePageOnPageFetched(
+            pageRepository: $this->pages,
+            auditRepository: $this->audits,
+            eventBus: $this->events,
+            analyzers: [$this->analyzerThatAppends(IssueSeverity::ERROR)],
+            auditedPageRepository: $auditedPages,
+        );
+
+        ($reactor)(new PageFetched(
+            pageId: $page->id(),
+            auditId: $this->auditId,
+            newUrlsDiscovered: 0,
+            occurredAt: new DateTimeImmutable(),
+        ));
+
+        $audited = $auditedPages->findByAuditAndUrl(
+            $this->auditId->value(),
+            'https://example.com/page',
+        );
+        $this->assertNotNull($audited);
+        $this->assertSame(
+            ['test-code'],
+            array_map(static fn ($i) => $i->code(), $audited->issues()),
+        );
+        $this->assertSame(1, $audited->errorCount());
+    }
+
     public function test_publishes_page_crawled_downstream(): void
     {
         $page = $this->persistPage();
