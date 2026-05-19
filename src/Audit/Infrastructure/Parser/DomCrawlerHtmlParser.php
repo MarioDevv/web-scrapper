@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Infrastructure\Parser;
 
-use SeoSpider\Audit\Domain\Model\HtmlParser;
+use SeoSpider\Crawling\Domain\Model\HtmlParser;
 use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;
 use SeoSpider\Crawling\Domain\Model\Page\Hreflang;

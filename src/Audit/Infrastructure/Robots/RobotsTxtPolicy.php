@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Infrastructure\Robots;
 
-use SeoSpider\Audit\Domain\Model\HttpClient;
+use SeoSpider\Crawling\Domain\Model\HttpClient;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
-use SeoSpider\Audit\Domain\Model\RobotsPolicy;
+use SeoSpider\Crawling\Domain\Model\RobotsPolicy;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final class RobotsTxtPolicy implements RobotsPolicy

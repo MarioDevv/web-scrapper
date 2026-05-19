@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Infrastructure\Robots;
 
-use SeoSpider\Audit\Domain\Model\RobotsPolicy;
+use SeoSpider\Crawling\Domain\Model\RobotsPolicy;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final class NullRobotsPolicy implements RobotsPolicy

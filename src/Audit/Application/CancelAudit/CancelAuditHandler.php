@@ -7,7 +7,7 @@ namespace SeoSpider\Audit\Application\CancelAudit;
 use SeoSpider\Audit\Application\AuditNotFound;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Audit\Domain\Model\Frontier;
+use SeoSpider\Crawling\Domain\Model\Frontier;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 
 final readonly class CancelAuditHandler
