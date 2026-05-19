@@ -232,6 +232,7 @@ final class AuditServiceProvider extends ServiceProvider
 
         $this->app->singleton(GetPageDetailHandler::class, fn($app) => new GetPageDetailHandler(
             pageRepository: $app->make(PageRepository::class),
+            auditedPageRepository: $app->make(AuditedPageRepository::class),
         ));
 
         $this->app->singleton(PageFetcher::class, fn() => new ConcurrentPageFetcher());

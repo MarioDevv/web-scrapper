@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Application\GetPageDetail;
 
 use SeoSpider\Audit\Application\PageNotFound;
+use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
@@ -12,8 +13,10 @@ use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 
 final readonly class GetPageDetailHandler
 {
-    public function __construct(private PageRepository $pageRepository)
-    {
+    public function __construct(
+        private PageRepository $pageRepository,
+        private AuditedPageRepository $auditedPageRepository,
+    ) {
     }
 
     public function __invoke(GetPageDetailQuery $query): GetPageDetailResponse
@@ -24,10 +27,18 @@ final readonly class GetPageDetailHandler
             throw PageNotFound::withId($query->pageId);
         }
 
-        return $this->toResponse($page);
+        // Findings are owned by the Auditing context since the 3d
+        // cutover; read them from there, not the crawl-side Page.
+        $audited = $this->auditedPageRepository->findByAuditAndUrl(
+            $page->auditId()->value(),
+            $page->url()->toString(),
+        );
+
+        return $this->toResponse($page, $audited?->issues() ?? []);
     }
 
-    private function toResponse(Page $page): GetPageDetailResponse
+    /** @param Issue[] $issues */
+    private function toResponse(Page $page, array $issues): GetPageDetailResponse
     {
         $metadata = $page->metadata();
         $directives = $page->directives();
@@ -84,7 +95,7 @@ final readonly class GetPageDetailHandler
                 ],
                 $page->links(),
             ),
-            issues: array_map($this->toIssueSummary(...), $page->issues()),
+            issues: array_map($this->toIssueSummary(...), $issues),
             crawledAt: $page->crawledAt()->format('c'),
         );
     }
