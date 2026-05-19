@@ -6,7 +6,7 @@ namespace SeoSpider\Audit\Infrastructure\Frontier;
 
 use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\DiscoverySource;
+use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\FrontierEntry;
 use SeoSpider\Audit\Domain\Model\Url;

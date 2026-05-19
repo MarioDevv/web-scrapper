@@ -9,7 +9,7 @@ use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
 use SeoSpider\Audit\Domain\Model\Page\Link;
-use SeoSpider\Audit\Domain\Model\Page\LinkType;
+use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class ImageAnalyzer implements Analyzer

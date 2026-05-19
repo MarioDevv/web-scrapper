@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model;
+use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 

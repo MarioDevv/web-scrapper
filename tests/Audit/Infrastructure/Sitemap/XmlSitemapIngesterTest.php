@@ -6,8 +6,8 @@ namespace SeoSpider\Tests\Audit\Infrastructure\Sitemap;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\DiscoverySource;
-use SeoSpider\Audit\Domain\Model\HttpStatusCode;
+use SeoSpider\Crawling\Domain\Model\DiscoverySource;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;

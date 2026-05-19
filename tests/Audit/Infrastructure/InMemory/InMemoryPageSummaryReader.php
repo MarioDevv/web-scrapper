@@ -8,7 +8,7 @@ use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Audit\Application\GetAuditPages\PageSummary;
 use SeoSpider\Audit\Application\GetAuditPages\PageSummaryReader;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Page\LinkType;
+use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 
 /**

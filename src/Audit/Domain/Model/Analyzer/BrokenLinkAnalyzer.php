@@ -8,7 +8,7 @@ use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;
 use SeoSpider\Audit\Domain\Model\Page\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\LinkRelation;
+use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class BrokenLinkAnalyzer implements Analyzer

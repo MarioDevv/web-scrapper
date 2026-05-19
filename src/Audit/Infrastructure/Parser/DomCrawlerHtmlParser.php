@@ -6,12 +6,12 @@ namespace SeoSpider\Audit\Infrastructure\Parser;
 
 use SeoSpider\Audit\Domain\Model\HtmlParser;
 use SeoSpider\Audit\Domain\Model\Page\Directive;
-use SeoSpider\Audit\Domain\Model\Page\DirectiveSource;
+use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;
 use SeoSpider\Audit\Domain\Model\Page\Hreflang;
-use SeoSpider\Audit\Domain\Model\Page\HreflangSource;
+use SeoSpider\Crawling\Domain\Model\Page\HreflangSource;
 use SeoSpider\Audit\Domain\Model\Page\Link;
-use SeoSpider\Audit\Domain\Model\Page\LinkRelation;
-use SeoSpider\Audit\Domain\Model\Page\LinkType;
+use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
+use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\PageMetadata;
 use SeoSpider\Audit\Domain\Model\Page\ParsedPage;
 use SeoSpider\Audit\Domain\Model\Url;

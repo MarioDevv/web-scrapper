@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 use SeoSpider\Audit\Domain\Model\HttpClient;
-use SeoSpider\Audit\Domain\Model\HttpRequestFailed;
+use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Audit\Domain\Model\Page\FetchOutcome;
 use SeoSpider\Audit\Domain\Model\PageFetcher;
 use SeoSpider\Audit\Domain\Model\Url;

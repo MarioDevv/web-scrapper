@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model;
+namespace SeoSpider\Crawling\Domain\Model;
+use SeoSpider\Audit\Domain\Model\Url;
 
 use SeoSpider\Shared\Domain\DomainException;
 

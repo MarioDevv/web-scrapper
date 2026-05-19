@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model;
+namespace SeoSpider\Crawling\Domain\Model;
 
 /**
  * How a URL made it into the crawl frontier. Tracked so that reports can

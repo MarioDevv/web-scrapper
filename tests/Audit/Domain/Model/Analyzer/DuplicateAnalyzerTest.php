@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Analyzer\DuplicateAnalyzer;
-use SeoSpider\Audit\Domain\Model\Page\Fingerprint;
+use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 
 final class DuplicateAnalyzerTest extends TestCase

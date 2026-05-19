@@ -7,7 +7,7 @@ namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Analyzer\SiteAuditContext;
 use SeoSpider\Audit\Domain\Model\Analyzer\SitemapCoverageAnalyzer;
-use SeoSpider\Audit\Domain\Model\DiscoverySource;
+use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Audit\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;

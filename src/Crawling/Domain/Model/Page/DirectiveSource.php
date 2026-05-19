@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Page;
+namespace SeoSpider\Crawling\Domain\Model\Page;
 
 enum DirectiveSource: string
 {

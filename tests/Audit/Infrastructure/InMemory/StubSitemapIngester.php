@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\DiscoverySource;
+use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;
 use SeoSpider\Audit\Domain\Model\Url;

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Infrastructure\Sitemap;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\DiscoverySource;
+use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\HttpClient;
-use SeoSpider\Audit\Domain\Model\HttpRequestFailed;
+use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Audit\Domain\Model\Sitemap\SitemapIngester;
 use SeoSpider\Audit\Domain\Model\Url;
 

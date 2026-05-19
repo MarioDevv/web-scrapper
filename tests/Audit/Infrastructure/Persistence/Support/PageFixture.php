@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\Persistence\Support;
 
 use DateTimeImmutable;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\HttpStatusCode;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;

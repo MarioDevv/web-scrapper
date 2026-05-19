@@ -14,7 +14,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditDiffer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatistics;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
-use SeoSpider\Audit\Domain\Model\HttpStatusCode;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
 use SeoSpider\Audit\Domain\Model\Page\IssueId;

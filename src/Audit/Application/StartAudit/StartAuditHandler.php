@@ -7,7 +7,7 @@ namespace SeoSpider\Audit\Application\StartAudit;
 use SeoSpider\Audit\Domain\Model\Audit\Audit;
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Audit\Domain\Model\DiscoverySource;
+use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Audit\Domain\Model\Frontier;
 use SeoSpider\Audit\Domain\Model\Url;
 use SeoSpider\Shared\Domain\Bus\EventBus;

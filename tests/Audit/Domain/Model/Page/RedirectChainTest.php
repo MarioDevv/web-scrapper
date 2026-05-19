@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Domain\Model\Page;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\HttpStatusCode;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
 use SeoSpider\Audit\Domain\Model\Page\RedirectHop;
 use SeoSpider\Audit\Domain\Model\Url;

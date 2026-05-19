@@ -8,7 +8,7 @@ use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
 use SeoSpider\Audit\Domain\Model\HttpClient;
-use SeoSpider\Audit\Domain\Model\HttpRequestFailed;
+use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;

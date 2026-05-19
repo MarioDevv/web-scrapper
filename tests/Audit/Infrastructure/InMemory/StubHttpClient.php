@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 use SeoSpider\Audit\Domain\Model\HttpClient;
-use SeoSpider\Audit\Domain\Model\HttpRequestFailed;
-use SeoSpider\Audit\Domain\Model\HttpStatusCode;
+use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Page\RedirectChain;
 use SeoSpider\Audit\Domain\Model\Url;

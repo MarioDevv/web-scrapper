@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Domain\Model\Page;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Page\Fingerprint;
+use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 
 final class FingerprintTest extends TestCase
 {

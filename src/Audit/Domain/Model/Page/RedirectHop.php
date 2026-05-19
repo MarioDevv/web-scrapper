@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Page;
 
-use SeoSpider\Audit\Domain\Model\HttpStatusCode;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Url;
 
 final readonly class RedirectHop

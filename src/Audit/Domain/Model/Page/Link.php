@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Page;
+use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
+use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 
 use SeoSpider\Audit\Domain\Model\Url;
 

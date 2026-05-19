@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Domain\Model;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\HttpStatusCode;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 
 final class HttpStatusCodeTest extends TestCase
 {

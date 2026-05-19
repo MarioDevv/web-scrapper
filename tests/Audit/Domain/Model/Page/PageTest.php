@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Domain\Model\Page;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\HttpStatusCode;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\Directive;
 use SeoSpider\Audit\Domain\Model\Page\Issue;
 use SeoSpider\Audit\Domain\Model\Page\IssueCategory;
@@ -199,13 +199,13 @@ final class PageTest extends TestCase
         $page->enrichWithLinks([
             new \SeoSpider\Audit\Domain\Model\Page\Link(
                 Url::fromString('https://example.com/about'),
-                \SeoSpider\Audit\Domain\Model\Page\LinkType::ANCHOR,
-                'About', \SeoSpider\Audit\Domain\Model\Page\LinkRelation::FOLLOW, true,
+                \SeoSpider\Crawling\Domain\Model\Page\LinkType::ANCHOR,
+                'About', \SeoSpider\Crawling\Domain\Model\Page\LinkRelation::FOLLOW, true,
             ),
             new \SeoSpider\Audit\Domain\Model\Page\Link(
                 Url::fromString('https://external.com'),
-                \SeoSpider\Audit\Domain\Model\Page\LinkType::ANCHOR,
-                'External', \SeoSpider\Audit\Domain\Model\Page\LinkRelation::NOFOLLOW, false,
+                \SeoSpider\Crawling\Domain\Model\Page\LinkType::ANCHOR,
+                'External', \SeoSpider\Crawling\Domain\Model\Page\LinkRelation::NOFOLLOW, false,
             ),
         ]);
 

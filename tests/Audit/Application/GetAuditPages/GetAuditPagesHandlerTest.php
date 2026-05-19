@@ -13,7 +13,7 @@ use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\HttpStatusCode;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageResponse;
 use SeoSpider\Audit\Domain\Model\Url;
