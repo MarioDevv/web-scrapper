@@ -26,6 +26,7 @@ use SeoSpider\Crawling\Application\CrawledPagePayloadFactory;
 use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 use SeoSpider\Shared\Integration\CrawledPageReady;
+use SeoSpider\Shared\Integration\PageWasCrawled;
 
 final readonly class CrawlPageHandler
 {
@@ -116,6 +117,13 @@ final readonly class CrawlPageHandler
             new CrawledPageReady(
                 (new CrawledPagePayloadFactory())->fromPage($page),
                 new DateTimeImmutable(),
+            ),
+            new PageWasCrawled(
+                pageId: $page->id()->value(),
+                auditId: $auditId->value(),
+                url: $page->url()->toString(),
+                newUrlsDiscovered: $newUrls,
+                occurredAt: new DateTimeImmutable(),
             ),
         );
     }
