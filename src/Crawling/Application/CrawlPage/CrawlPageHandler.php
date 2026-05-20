@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\CrawlPage;
+namespace SeoSpider\Crawling\Application\CrawlPage;
 
 use DateTimeImmutable;
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
-use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Crawling\Application\AuditCoordinator;
 use SeoSpider\Crawling\Application\CrawlPolicy;
 use SeoSpider\Crawling\Application\HtmlParser;
 use SeoSpider\Crawling\Application\HttpClient;
+use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
+use SeoSpider\Crawling\Application\UrlDiscoverer;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;
@@ -20,15 +21,13 @@ use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
-use SeoSpider\Crawling\Application\UrlDiscoverer;
-use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 use SeoSpider\Shared\Integration\PageWasCrawled;
 
 final readonly class CrawlPageHandler
 {
     public function __construct(
-        private AuditRepository $auditRepository,
+        private AuditCoordinator $auditCoordinator,
         private PageRepository $pageRepository,
         private HttpClient $httpClient,
         private HtmlParser $htmlParser,
@@ -39,19 +38,15 @@ final readonly class CrawlPageHandler
 
     public function __invoke(CrawlPageCommand $command): void
     {
-        $auditId = new AuditId($command->auditId);
         $url = Url::fromString($command->url);
 
-        $audit = $this->auditRepository->findById($auditId);
-        if ($audit === null || !$audit->canAcceptMorePages()) {
+        $snapshot = $this->auditCoordinator->snapshot($command->auditId);
+        if ($snapshot === null || !$snapshot->canAcceptMorePages) {
             return;
         }
 
         try {
-            $result = $this->httpClient->followRedirects(
-                $url,
-                $audit->configuration()->customUserAgent,
-            );
+            $result = $this->httpClient->followRedirects($url, $snapshot->config->customUserAgent);
         } catch (HttpRequestFailed $e) {
             $this->handleFetchFailure($command, $e->getMessage());
             return;
@@ -65,17 +60,16 @@ final readonly class CrawlPageHandler
         PageResponse $response,
         RedirectChain $chain,
     ): void {
-        $auditId = new AuditId($command->auditId);
         $url = Url::fromString($command->url);
 
-        $audit = $this->auditRepository->findById($auditId);
-        if ($audit === null || !$audit->canAcceptMorePages()) {
+        $snapshot = $this->auditCoordinator->snapshot($command->auditId);
+        if ($snapshot === null || !$snapshot->canAcceptMorePages) {
             return;
         }
 
         $page = Page::fromCrawl(
             id: $this->pageRepository->nextId(),
-            auditId: $auditId->value(),
+            auditId: $command->auditId,
             url: $url,
             response: $response,
             redirectChain: $chain,
@@ -84,12 +78,14 @@ final readonly class CrawlPageHandler
 
         if ($page->isHtml() && $response->body() !== null) {
             $this->enrichHtmlPage($page, $response->body(), $url);
-            $config = $audit->configuration();
             $newUrls = $this->urlDiscoverer->discoverFrom(
                 (new LegacyPageToCrawledPage())($page),
-                $auditId->value(),
+                $command->auditId,
                 $command->depth,
-                new CrawlPolicy(maxDepth: $config->maxDepth, crawlResources: $config->crawlResources),
+                new CrawlPolicy(
+                    maxDepth: $snapshot->config->maxDepth,
+                    crawlResources: $snapshot->config->crawlResources,
+                ),
             );
         } else {
             $newUrls = 0;
@@ -100,7 +96,7 @@ final readonly class CrawlPageHandler
         $this->eventBus->publish(
             new PageWasCrawled(
                 pageId: $page->id()->value(),
-                auditId: $auditId->value(),
+                auditId: $command->auditId,
                 url: $page->url()->toString(),
                 newUrlsDiscovered: $newUrls,
                 occurredAt: new DateTimeImmutable(),
@@ -110,10 +106,8 @@ final readonly class CrawlPageHandler
 
     public function handleFetchFailure(CrawlPageCommand $command, string $reason): void
     {
-        $auditId = new AuditId($command->auditId);
         $url = Url::fromString($command->url);
-
-        $this->handleFailure($auditId, $url, $reason);
+        $this->handleFailure($command->auditId, $url, $reason);
     }
 
     private function enrichHtmlPage(Page $page, string $html, Url $pageUrl): void
@@ -151,25 +145,18 @@ final readonly class CrawlPageHandler
         );
     }
 
-    private function handleFailure(AuditId $auditId, Url $url, string $reason): void
+    private function handleFailure(string $auditId, Url $url, string $reason): void
     {
-        $audit = $this->auditRepository->findById($auditId);
-        if ($audit === null) {
-            return;
-        }
-
-        $audit->registerPageFailed();
-        $this->auditRepository->save($audit);
+        $this->auditCoordinator->registerPageFailed($auditId);
 
         $this->eventBus->publish(
             new PageFailed(
                 pageId: $this->pageRepository->nextId(),
-                auditId: $auditId->value(),
+                auditId: $auditId,
                 url: $url,
                 reason: $reason,
                 occurredAt: new DateTimeImmutable(),
             ),
-            ...$audit->pullDomainEvents(),
         );
     }
 }

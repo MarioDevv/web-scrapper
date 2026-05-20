@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Application\CrawlPage;
+namespace SeoSpider\Tests\Crawling\Application\CrawlPage;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Auditing\Application\Reactors\AnalyzePageOnPageWasCrawled;
 use SeoSpider\Auditing\Infrastructure\Acl\CrawlingPageSignalsReader;
-use SeoSpider\Audit\Application\CrawlPage\CrawlPageCommand;
-use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
+use SeoSpider\Crawling\Application\CrawlPage\CrawlPageCommand;
+use SeoSpider\Crawling\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Analysis\BrokenLinkAnalyzer;
@@ -56,7 +56,7 @@ final class CrawlPageHandlerTest extends TestCase
         $this->auditedPages = new \SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository();
 
         $this->handler = new CrawlPageHandler(
-            auditRepository: $this->auditRepository,
+            auditCoordinator: new \SeoSpider\Auditing\Infrastructure\Acl\AuditingAuditCoordinator($this->auditRepository, $this->eventBus),
             pageRepository: $this->pageRepository,
             httpClient: $this->httpClient,
             htmlParser: $this->htmlParser,

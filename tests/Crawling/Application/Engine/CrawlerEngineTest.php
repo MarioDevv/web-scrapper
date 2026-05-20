@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Application\Engine;
+namespace SeoSpider\Tests\Crawling\Application\Engine;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
-use SeoSpider\Audit\Application\Engine\CrawlerEngine;
-use SeoSpider\Audit\Application\Engine\CrawlProgress;
+use SeoSpider\Crawling\Application\CrawlPage\CrawlPageHandler;
+use SeoSpider\Crawling\Application\Engine\CrawlerEngine;
+use SeoSpider\Crawling\Application\Engine\CrawlProgress;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Analysis\BrokenLinkAnalyzer;
@@ -64,7 +64,7 @@ final class CrawlerEngineTest extends TestCase
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         $crawlHandler = new CrawlPageHandler(
-            auditRepository: $this->auditRepository,
+            auditCoordinator: new \SeoSpider\Auditing\Infrastructure\Acl\AuditingAuditCoordinator($this->auditRepository, $this->eventBus),
             pageRepository: $this->pageRepository,
             httpClient: $this->httpClient,
             htmlParser: $this->htmlParser,
@@ -87,7 +87,7 @@ final class CrawlerEngineTest extends TestCase
         );
 
         $this->engine = new CrawlerEngine(
-            auditRepository: $this->auditRepository,
+            auditCoordinator: new \SeoSpider\Auditing\Infrastructure\Acl\AuditingAuditCoordinator($this->auditRepository, $this->eventBus),
             frontier: $this->frontier,
             crawlPageHandler: $crawlHandler,
             robotsPolicy: $this->robotsPolicy,
@@ -361,7 +361,7 @@ final class CrawlerEngineTest extends TestCase
         $fetcher = new StubPageFetcher($this->httpClient);
 
         $crawlHandler = new CrawlPageHandler(
-            auditRepository: $this->auditRepository,
+            auditCoordinator: new \SeoSpider\Auditing\Infrastructure\Acl\AuditingAuditCoordinator($this->auditRepository, $this->eventBus),
             pageRepository: $this->pageRepository,
             httpClient: $this->httpClient,
             htmlParser: $this->htmlParser,
@@ -376,7 +376,7 @@ final class CrawlerEngineTest extends TestCase
         );
 
         $this->engine = new CrawlerEngine(
-            auditRepository: $this->auditRepository,
+            auditCoordinator: new \SeoSpider\Auditing\Infrastructure\Acl\AuditingAuditCoordinator($this->auditRepository, $this->eventBus),
             frontier: $this->frontier,
             crawlPageHandler: $crawlHandler,
             robotsPolicy: $this->robotsPolicy,

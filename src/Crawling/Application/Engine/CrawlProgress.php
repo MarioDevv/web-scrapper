@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\Engine;
+namespace SeoSpider\Crawling\Application\Engine;
 
 final readonly class CrawlProgress
 {

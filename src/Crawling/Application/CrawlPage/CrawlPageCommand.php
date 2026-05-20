@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\CrawlPage;
+namespace SeoSpider\Crawling\Application\CrawlPage;
 
 final readonly class CrawlPageCommand
 {

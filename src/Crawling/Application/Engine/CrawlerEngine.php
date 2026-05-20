@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\Engine;
+namespace SeoSpider\Crawling\Application\Engine;
 
-use SeoSpider\Audit\Application\CrawlPage\CrawlPageCommand;
-use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
-use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Crawling\Domain\Model\ExternalLink\ExternalLinkVerifier;
+use SeoSpider\Crawling\Application\AuditCoordinator;
+use SeoSpider\Crawling\Application\AuditSnapshot;
+use SeoSpider\Crawling\Application\CrawlPage\CrawlPageCommand;
+use SeoSpider\Crawling\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Crawling\Application\Frontier;
-use SeoSpider\Crawling\Domain\Model\FrontierEntry;
 use SeoSpider\Crawling\Application\PageFetcher;
 use SeoSpider\Crawling\Application\RobotsPolicy;
 use SeoSpider\Crawling\Application\SitemapIngester;
+use SeoSpider\Crawling\Domain\Model\ExternalLink\ExternalLinkVerifier;
+use SeoSpider\Crawling\Domain\Model\FrontierEntry;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class CrawlerEngine
 {
     public function __construct(
-        private AuditRepository $auditRepository,
+        private AuditCoordinator $auditCoordinator,
         private Frontier $frontier,
         private CrawlPageHandler $crawlPageHandler,
         private RobotsPolicy $robotsPolicy,
@@ -32,61 +32,56 @@ final readonly class CrawlerEngine
     /** @param ?callable(CrawlProgress): void $onProgress */
     public function run(string $auditId, ?callable $onProgress = null): void
     {
-        $id = new AuditId($auditId);
-
-        $audit = $this->auditRepository->findById($id);
-        if ($audit === null || $audit->isFinished()) {
+        $snapshot = $this->auditCoordinator->snapshot($auditId);
+        if ($snapshot === null || $snapshot->isFinished) {
             return;
         }
 
-        $seedUrl = Url::fromString($audit->configuration()->seedUrl);
+        $seedUrl = Url::fromString($snapshot->config->seedUrl);
 
-        if ($audit->configuration()->respectRobotsTxt) {
+        if ($snapshot->config->respectRobotsTxt) {
             $this->robotsPolicy->load($seedUrl);
         }
 
-        if ($audit->configuration()->ingestSitemaps) {
+        if ($snapshot->config->ingestSitemaps) {
             $added = $this->sitemapIngester->ingest(
-                $id->value(),
+                $auditId,
                 $seedUrl,
-                $audit->configuration()->customUserAgent,
+                $snapshot->config->customUserAgent,
             );
             if ($added > 0) {
-                $audit->registerUrlsDiscovered($added);
-                $this->auditRepository->save($audit);
+                $this->auditCoordinator->registerUrlsDiscovered($auditId, $added);
             }
         }
 
-        $delay = $this->effectiveDelay($audit);
-        $concurrency = max(1, $audit->configuration()->concurrency);
+        $delay = $this->effectiveDelay($snapshot);
+        $concurrency = max(1, $snapshot->config->concurrency);
 
         while (true) {
-            $audit = $this->auditRepository->findById($id);
-            if ($audit === null || !$audit->isRunning()) {
+            $snapshot = $this->auditCoordinator->snapshot($auditId);
+            if ($snapshot === null || !$snapshot->isRunning) {
                 break;
             }
 
-            $batch = $this->frontier->dequeueBatch($id->value(), $concurrency);
+            $batch = $this->frontier->dequeueBatch($auditId, $concurrency);
             if ($batch === []) {
-                $this->externalLinkVerifier->verify($id->value(), $audit->configuration()->customUserAgent);
-                $audit->complete();
-                $this->auditRepository->save($audit);
+                $this->externalLinkVerifier->verify($auditId, $snapshot->config->customUserAgent);
+                $this->auditCoordinator->complete($auditId);
                 break;
             }
 
-            $toFetch = $this->filterAllowed($batch, $id, $audit->configuration()->respectRobotsTxt);
+            $toFetch = $this->filterAllowed($batch, $auditId, $snapshot->config->respectRobotsTxt);
             if ($toFetch === []) {
                 continue;
             }
 
             if ($concurrency === 1) {
-                $this->processSerial($auditId, $toFetch, $id, $onProgress);
+                $this->processSerial($auditId, $toFetch, $onProgress);
             } else {
                 $this->processConcurrent(
                     $auditId,
                     $toFetch,
-                    $audit->configuration()->customUserAgent,
-                    $id,
+                    $snapshot->config->customUserAgent,
                     $onProgress,
                 );
             }
@@ -101,7 +96,7 @@ final readonly class CrawlerEngine
      * @param FrontierEntry[] $batch
      * @return FrontierEntry[]
      */
-    private function filterAllowed(array $batch, AuditId $auditId, bool $respectRobots): array
+    private function filterAllowed(array $batch, string $auditId, bool $respectRobots): array
     {
         if (!$respectRobots) {
             return $batch;
@@ -112,7 +107,7 @@ final readonly class CrawlerEngine
             if ($this->robotsPolicy->isAllowed($entry->url)) {
                 $allowed[] = $entry;
             } else {
-                $this->frontier->markVisited($auditId->value(), $entry->url);
+                $this->frontier->markVisited($auditId, $entry->url);
             }
         }
 
@@ -123,10 +118,10 @@ final readonly class CrawlerEngine
      * @param FrontierEntry[] $batch
      * @param ?callable(CrawlProgress): void $onProgress
      */
-    private function processSerial(string $auditId, array $batch, AuditId $id, ?callable $onProgress): void
+    private function processSerial(string $auditId, array $batch, ?callable $onProgress): void
     {
         foreach ($batch as $entry) {
-            $this->frontier->markVisited($id->value(), $entry->url);
+            $this->frontier->markVisited($auditId, $entry->url);
 
             ($this->crawlPageHandler)(new CrawlPageCommand(
                 auditId: $auditId,
@@ -134,7 +129,7 @@ final readonly class CrawlerEngine
                 depth: $entry->depth,
             ));
 
-            $this->reportProgress($id, $entry->url->toString(), $onProgress);
+            $this->reportProgress($auditId, $entry->url->toString(), $onProgress);
         }
     }
 
@@ -146,13 +141,10 @@ final readonly class CrawlerEngine
         string $auditId,
         array $batch,
         ?string $userAgent,
-        AuditId $id,
         ?callable $onProgress,
     ): void {
-        // Mark as visited up-front — the serial handler does this before its
-        // own fetch, so we keep the invariant for parallel fetches too.
         foreach ($batch as $entry) {
-            $this->frontier->markVisited($id->value(), $entry->url);
+            $this->frontier->markVisited($auditId, $entry->url);
         }
 
         $urls = array_map(static fn(FrontierEntry $entry) => $entry->url, $batch);
@@ -182,28 +174,28 @@ final readonly class CrawlerEngine
                 );
             }
 
-            $this->reportProgress($id, $key, $onProgress);
+            $this->reportProgress($auditId, $key, $onProgress);
         }
     }
 
     /** @param ?callable(CrawlProgress): void $onProgress */
-    private function reportProgress(AuditId $id, string $currentUrl, ?callable $onProgress): void
+    private function reportProgress(string $auditId, string $currentUrl, ?callable $onProgress): void
     {
         if ($onProgress === null) {
             return;
         }
 
-        $audit = $this->auditRepository->findById($id);
-        if ($audit !== null) {
-            $onProgress($this->buildProgress($audit, $id, $currentUrl));
+        $snapshot = $this->auditCoordinator->snapshot($auditId);
+        if ($snapshot !== null) {
+            $onProgress($this->buildProgress($snapshot, $currentUrl));
         }
     }
 
-    private function effectiveDelay(\SeoSpider\Auditing\Domain\Model\Audit\Audit $audit): float
+    private function effectiveDelay(AuditSnapshot $snapshot): float
     {
-        $configDelay = $audit->configuration()->requestDelay;
+        $configDelay = $snapshot->config->requestDelay;
 
-        if ($audit->configuration()->respectRobotsTxt) {
+        if ($snapshot->config->respectRobotsTxt) {
             $robotsDelay = $this->robotsPolicy->crawlDelay();
             if ($robotsDelay !== null) {
                 return max($configDelay, $robotsDelay);
@@ -213,22 +205,17 @@ final readonly class CrawlerEngine
         return $configDelay;
     }
 
-    private function buildProgress(
-        \SeoSpider\Auditing\Domain\Model\Audit\Audit $audit,
-        AuditId $id,
-        string $currentUrl,
-    ): CrawlProgress {
-        $stats = $audit->statistics();
-
+    private function buildProgress(AuditSnapshot $snapshot, string $currentUrl): CrawlProgress
+    {
         return new CrawlProgress(
-            auditId: $audit->id()->value(),
+            auditId: $snapshot->auditId,
             currentUrl: $currentUrl,
-            pagesCrawled: $stats->pagesCrawled,
-            pagesFailed: $stats->pagesFailed,
-            pagesDiscovered: $stats->pagesDiscovered,
-            pendingUrls: $this->frontier->pendingCount($id->value()),
-            maxPages: $audit->configuration()->maxPages,
-            status: $audit->status()->value,
+            pagesCrawled: $snapshot->stats->pagesCrawled,
+            pagesFailed: $snapshot->stats->pagesFailed,
+            pagesDiscovered: $snapshot->stats->pagesDiscovered,
+            pendingUrls: $this->frontier->pendingCount($snapshot->auditId),
+            maxPages: $snapshot->config->maxPages,
+            status: $snapshot->status,
         );
     }
 }

@@ -8,7 +8,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use SeoSpider\Audit\Application\Engine\CrawlerEngine;
+use SeoSpider\Crawling\Application\Engine\CrawlerEngine;
 
 final class RunCrawlJob implements ShouldQueue
 {

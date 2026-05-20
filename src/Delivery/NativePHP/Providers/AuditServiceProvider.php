@@ -79,7 +79,9 @@ use SeoSpider\Auditing\Domain\Model\Analysis\PageSignalsReader;
 use SeoSpider\Auditing\Domain\Model\Analysis\SiteContextFactory;
 use SeoSpider\Auditing\Infrastructure\Acl\CrawlingPageSignalsReader;
 use SeoSpider\Auditing\Infrastructure\Acl\CrawlingSiteContextFactory;
-use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
+use SeoSpider\Crawling\Application\AuditCoordinator;
+use SeoSpider\Auditing\Infrastructure\Acl\AuditingAuditCoordinator;
+use SeoSpider\Crawling\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Auditing\Application\Lifecycle\PauseAudit\PauseAuditHandler;
 use SeoSpider\Auditing\Application\Lifecycle\ResumeAudit\ResumeAuditHandler;
 use SeoSpider\Auditing\Application\Lifecycle\CancelAudit\CancelAuditHandler;
@@ -90,7 +92,7 @@ use SeoSpider\Auditing\Domain\Model\Reporting\PageDetailReader;
 use SeoSpider\Auditing\Domain\Model\Reporting\PageRowReader;
 use SeoSpider\Auditing\Infrastructure\Acl\CrawlingPageDetailReader;
 use SeoSpider\Auditing\Infrastructure\Acl\CrawlingPageRowReader;
-use SeoSpider\Audit\Application\Engine\CrawlerEngine;
+use SeoSpider\Crawling\Application\Engine\CrawlerEngine;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\PauseAudit\PauseAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\ResumeAudit\ResumeAuditCommand;
@@ -220,8 +222,13 @@ final class AuditServiceProvider extends ServiceProvider
             $app->make(Frontier::class),
         ));
 
+        $this->app->singleton(AuditCoordinator::class, fn($app) => new AuditingAuditCoordinator(
+            $app->make(AuditRepository::class),
+            $app->make(EventBus::class),
+        ));
+
         $this->app->singleton(CrawlPageHandler::class, fn($app) => new CrawlPageHandler(
-            auditRepository: $app->make(AuditRepository::class),
+            auditCoordinator: $app->make(AuditCoordinator::class),
             pageRepository: $app->make(PageRepository::class),
             httpClient: $app->make(HttpClient::class),
             htmlParser: $app->make(HtmlParser::class),
@@ -300,7 +307,7 @@ final class AuditServiceProvider extends ServiceProvider
         $this->app->singleton(PageFetcher::class, fn() => new ConcurrentPageFetcher());
 
         $this->app->singleton(CrawlerEngine::class, fn($app) => new CrawlerEngine(
-            auditRepository: $app->make(AuditRepository::class),
+            auditCoordinator: $app->make(AuditCoordinator::class),
             frontier: $app->make(Frontier::class),
             crawlPageHandler: $app->make(CrawlPageHandler::class),
             robotsPolicy: $app->make(RobotsPolicy::class),
