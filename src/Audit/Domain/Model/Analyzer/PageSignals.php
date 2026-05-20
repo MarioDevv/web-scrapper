@@ -12,12 +12,6 @@ use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
 
-/**
- * Read port: the parsed-page surface the per-page analyzers consume.
- * Identical accessor signatures to the legacy Page aggregate so Page
- * satisfies it directly. From 3c the Auditing context supplies its own
- * implementation via the ACL translator.
- */
 interface PageSignals
 {
     public function url(): Url;

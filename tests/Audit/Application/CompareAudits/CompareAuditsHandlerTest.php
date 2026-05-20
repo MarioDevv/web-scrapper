@@ -119,8 +119,6 @@ final class CompareAuditsHandlerTest extends TestCase
             $codes,
         );
 
-        // Findings are owned by the Auditing context; seed them there so
-        // the handler reads issue codes via AuditedPageRepository.
         $audited = AuditedPage::forUrl($auditId->value(), $url);
         foreach ($issues as $issue) {
             $audited->recordIssue($issue);

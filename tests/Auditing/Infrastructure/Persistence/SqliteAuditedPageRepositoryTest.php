@@ -18,13 +18,6 @@ use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditedPageRepository;
 use SeoSpider\Tests\Audit\Infrastructure\Persistence\Support\PageFixture;
 use SeoSpider\Tests\Audit\Infrastructure\Persistence\Support\SqliteSchemaFactory;
 
-/**
- * Since the 3d cutover the Auditing AuditedPageRepository is the sole
- * writer/reader of page findings. These tests exercise its round-trip
- * and the catalog-version stamping (re-homed from the retired
- * SqlitePageRepositoryIssueVersionTest, as SqlitePageRepository no
- * longer persists issues).
- */
 final class SqliteAuditedPageRepositoryTest extends TestCase
 {
     private PDO $pdo;
@@ -37,7 +30,6 @@ final class SqliteAuditedPageRepositoryTest extends TestCase
         SqliteSchemaFactory::insertAuditRow($this->pdo, $this->auditId, 'https://example.com/');
     }
 
-    /** Creates the crawl-side pages row (no issues — those are Auditing's now). */
     private function seedPageRow(string $url): void
     {
         $page = PageFixture::buildWithIssue(
@@ -86,7 +78,7 @@ final class SqliteAuditedPageRepositoryTest extends TestCase
         $audited->recordIssue($this->issue('content_thin', IssueSeverity::WARNING));
 
         $repo->save($audited);
-        $repo->save($audited); // idempotent: replace, not append
+        $repo->save($audited);
 
         $reloaded = $repo->findByAuditAndUrl($this->auditId->value(), 'https://example.com/p');
         $this->assertNotNull($reloaded);
@@ -113,7 +105,7 @@ final class SqliteAuditedPageRepositoryTest extends TestCase
         $page = AuditedPage::forUrl($this->auditId->value(), 'https://example.com/ghost');
         $page->recordIssue($this->issue('content_thin', IssueSeverity::WARNING));
 
-        (new SqliteAuditedPageRepository($this->pdo))->save($page); // must not throw
+        (new SqliteAuditedPageRepository($this->pdo))->save($page);
 
         $this->assertNull(
             (new SqliteAuditedPageRepository($this->pdo))

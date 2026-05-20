@@ -7,12 +7,6 @@ namespace SeoSpider\Crawling\Application;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Shared\Integration\CrawledPagePayload;
 
-/**
- * Transitional producer-side mapping: builds the Published-Language
- * payload from the current (legacy SeoSpider\Audit) Page aggregate.
- * The legacy import is removed in Phase 2 when the Crawling context
- * owns its own CrawledPage.
- */
 final readonly class CrawledPagePayloadFactory
 {
     public function fromPage(Page $page): CrawledPagePayload

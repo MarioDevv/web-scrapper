@@ -17,11 +17,6 @@ use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
 
-/**
- * Issue codes are supplied to AuditDiffer as URL->codes maps (owned by
- * the Auditing context); the differ no longer reads findings from the
- * crawl-side Page.
- */
 final class AuditDifferTest extends TestCase
 {
     public function test_unchanged_page_with_identical_issues_yields_no_change(): void

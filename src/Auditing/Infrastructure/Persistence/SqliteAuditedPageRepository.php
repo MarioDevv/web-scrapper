@@ -13,13 +13,6 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 
-/**
- * ACL adapter: reconstitutes the Auditing AuditedPage aggregate from the
- * shared `pages`/`issues` rows the crawl+analysis path persists. Reads
- * only primitive columns — no Crawling or legacy Page types cross the
- * boundary. This is the transfer medium chosen over fattening the
- * CrawledPageReady event with the whole parsed model.
- */
 final readonly class SqliteAuditedPageRepository implements AuditedPageRepository
 {
     public function __construct(private PDO $pdo)

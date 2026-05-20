@@ -7,17 +7,6 @@ namespace SeoSpider\Crawling\Domain\Model\Page;
 use DateTimeImmutable;
 use SeoSpider\Crawling\Domain\Model\Url;
 
-/**
- * Immutable result of fetching and parsing one URL. Built in a single
- * step — no enrichWith*(), no Issue, no domain events. This is the
- * Crawling context's notion of a "page": raw transport + parsed
- * structure, nothing about SEO findings (those belong to Auditing).
- *
- * The Auditing context never imports this type; from 3c its ACL maps
- * the persisted crawl row into its own PageSignals/AuditedPage.
- *
- * @phase3 Not yet wired into the crawl hot path; consumers switch in 3d.
- */
 final readonly class CrawledPage
 {
     /**

@@ -19,11 +19,6 @@ use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditedPageRepository;
 use SeoSpider\Tests\Audit\Infrastructure\Persistence\Support\PageFixture;
 use SeoSpider\Tests\Audit\Infrastructure\Persistence\Support\SqliteSchemaFactory;
 
-/**
- * Characterization: page detail reads its findings from the Auditing
- * AuditedPageRepository (the issue owner since the 3d cutover), not the
- * crawl-side Page aggregate.
- */
 final class GetPageDetailHandlerTest extends TestCase
 {
     private PDO $pdo;
@@ -50,7 +45,7 @@ final class GetPageDetailHandlerTest extends TestCase
             url: 'https://example.com/p',
         );
         $pageRepo = new SqlitePageRepository($this->pdo);
-        $pageRepo->save($page); // persists crawl row only (no issues since 3d-3)
+        $pageRepo->save($page);
 
         $auditedRepo = new SqliteAuditedPageRepository($this->pdo);
         $audited = AuditedPage::forUrl($auditId->value(), 'https://example.com/p');

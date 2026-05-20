@@ -41,9 +41,6 @@ final readonly class SqlitePageRepository implements PageRepository
         $this->pdo->beginTransaction();
 
         try {
-            // Issues are owned and persisted by the Auditing context
-            // (AuditedPageRepository) since the 3d cutover; this
-            // repository only persists the crawl-side page row.
             $this->upsertPage($page);
             $this->pdo->commit();
         } catch (\Throwable $e) {

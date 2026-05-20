@@ -110,14 +110,12 @@ final class LegacyPageToCrawledPageTest extends TestCase
         $this->assertSame($links, $crawled->links);
         $this->assertSame([], $crawled->hreflangs);
         $this->assertSame($crawledAt, $crawled->crawledAt);
-        // derived helpers mirror the legacy Page exactly
         $this->assertSame($page->isHtml(), $crawled->isHtml());
         $this->assertSame($page->isIndexable(), $crawled->isIndexable());
         $this->assertSame($page->isBroken(), $crawled->isBroken());
         $this->assertSame($page->isRedirect(), $crawled->isRedirect());
         $this->assertCount(1, $crawled->internalLinks());
         $this->assertSame([], $crawled->externalLinks());
-        // issues are intentionally NOT carried (they are Auditing's)
         $this->assertFalse(property_exists($crawled, 'issues'));
     }
 }

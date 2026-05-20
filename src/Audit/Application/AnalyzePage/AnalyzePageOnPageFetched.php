@@ -73,13 +73,6 @@ final readonly class AnalyzePageOnPageFetched
         }
     }
 
-    /**
-     * Parallel (shadow) write of the findings through the Auditing
-     * context's own aggregate. Rows are byte-identical to the legacy
-     * page-repository write (proven by AuditedPageRepository tests), so
-     * this is behaviour-preserving. The legacy issue write is removed in
-     * a follow-up slice once all read consumers are migrated.
-     */
     private function persistAuditedPage(Page $page): void
     {
         if ($this->auditedPageRepository === null) {

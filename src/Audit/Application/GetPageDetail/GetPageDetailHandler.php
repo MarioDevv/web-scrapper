@@ -27,8 +27,6 @@ final readonly class GetPageDetailHandler
             throw PageNotFound::withId($query->pageId);
         }
 
-        // Findings are owned by the Auditing context since the 3d
-        // cutover; read them from there, not the crawl-side Page.
         $audited = $this->auditedPageRepository->findByAuditAndUrl(
             $page->auditId()->value(),
             $page->url()->toString(),

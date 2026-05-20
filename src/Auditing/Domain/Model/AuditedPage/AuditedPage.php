@@ -8,21 +8,9 @@ use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueRule;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
 
-/**
- * The Core aggregate root: one web page as the audit dictamines it —
- * its findings and the resulting health score. References its Audit by
- * id only. Issues are findings keyed by code (purely read-only
- * occurrences; recording the same code twice is idempotent), and the
- * score is always recomputed from them so `score == f(issues, weights)`
- * holds at all times. That invariant is the aggregate boundary; it is
- * why Issue is a Value Object inside AuditedPage, not its own AR.
- *
- * Built by the Auditing ACL from crawl signals (3c-3); never imports
- * Crawling.
- */
 final class AuditedPage
 {
-    /** @var array<string, Issue> keyed by issue code */
+    /** @var array<string, Issue> */
     private array $issues = [];
 
     private function __construct(

@@ -51,10 +51,6 @@ final readonly class IssueRule
         return self::DEFAULT_WEIGHT_BY_SEVERITY[$this->severity->value];
     }
 
-    /**
-     * Penalty weight for an issue whose code is not in the catalog,
-     * derived from its severity alone.
-     */
     public static function defaultWeightFor(IssueSeverity $severity): int
     {
         return self::DEFAULT_WEIGHT_BY_SEVERITY[$severity->value];
