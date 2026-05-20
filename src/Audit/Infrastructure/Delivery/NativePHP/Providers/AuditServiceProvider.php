@@ -34,7 +34,7 @@ use SeoSpider\Crawling\Infrastructure\Parser\DomCrawlerHtmlParser;
 use SeoSpider\Shared\Infrastructure\Bus\SyncEventBus;
 use SeoSpider\Audit\Domain\Model\Analyzer\BrokenLinkAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\MetaDataAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\DirectiveAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\DirectiveAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\HeadingAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\ContentAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\ImageAnalyzer;
@@ -44,7 +44,7 @@ use SeoSpider\Audit\Domain\Model\Analyzer\HreflangAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\DuplicateAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\TransportSecurityAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\SocialMetadataAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\StructuredDataAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\StructuredDataAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\HreflangReturnAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\CanonicalTargetAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\RobotsIndexableAnalyzer;
@@ -148,13 +148,11 @@ final class AuditServiceProvider extends ServiceProvider
 
         $this->app->tag([
             BrokenLinkAnalyzer::class,
-            DirectiveAnalyzer::class,
             ImageAnalyzer::class,
             PerformanceAnalyzer::class,
             SecurityHeaderAnalyzer::class,
             TransportSecurityAnalyzer::class,
             SocialMetadataAnalyzer::class,
-            StructuredDataAnalyzer::class,
             HreflangAnalyzer::class,
             DuplicateAnalyzer::class,
         ], 'analyzers');
@@ -163,6 +161,8 @@ final class AuditServiceProvider extends ServiceProvider
             ContentAnalyzer::class,
             HeadingAnalyzer::class,
             MetaDataAnalyzer::class,
+            DirectiveAnalyzer::class,
+            StructuredDataAnalyzer::class,
         ], 'auditing-analyzers');
 
         $this->app->singleton(HreflangReturnAnalyzer::class, fn() => new HreflangReturnAnalyzer());

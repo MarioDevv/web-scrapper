@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
@@ -11,22 +11,18 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 
 final class StructuredDataAnalyzer implements Analyzer
 {
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml() || !$page->response()->statusCode()->isSuccessful()) {
+        if (!$signals->isHtml() || !$signals->response()->statusCode()->isSuccessful()) {
             return;
         }
 
-        $metadata = $page->metadata();
-        if ($metadata === null) {
+        $metadata = $signals->metadata();
+        if ($metadata === null || $metadata->hasStructuredData()) {
             return;
         }
 
-        if ($metadata->hasStructuredData()) {
-            return;
-        }
-
-        $page->addIssue(new Issue(
+        $issues->add(new Issue(
             id: IssueId::generate(),
             category: IssueCategory::METADATA,
             severity: IssueSeverity::INFO,

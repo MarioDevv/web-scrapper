@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
-use SeoSpider\Crawling\Domain\Model\Page\Directive;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Directive;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
@@ -12,17 +12,16 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 
 final class DirectiveAnalyzer implements Analyzer
 {
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        if ($page->directives() === null) {
+        $directives = $signals->directives();
+        if ($directives === null) {
             return;
         }
 
-        $directives = $page->directives();
-
-        $this->checkNoindex($page, $directives);
-        $this->checkCanonical($page, $directives);
-        $this->checkNoindexWithCanonical($page, $directives);
+        $this->checkNoindex($issues, $directives);
+        $this->checkCanonical($signals, $issues, $directives);
+        $this->checkNoindexWithCanonical($issues, $directives);
     }
 
     public function category(): IssueCategory
@@ -30,10 +29,10 @@ final class DirectiveAnalyzer implements Analyzer
         return IssueCategory::DIRECTIVES;
     }
 
-    private function checkNoindex(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\Directive $directives): void
+    private function checkNoindex(IssueCollector $issues, Directive $directives): void
     {
         if ($directives->noindex()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::DIRECTIVES,
                 severity: IssueSeverity::INFO,
@@ -43,7 +42,7 @@ final class DirectiveAnalyzer implements Analyzer
         }
 
         if ($directives->nofollow()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::DIRECTIVES,
                 severity: IssueSeverity::INFO,
@@ -53,46 +52,45 @@ final class DirectiveAnalyzer implements Analyzer
         }
     }
 
-    private function checkCanonical(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\Directive $directives): void
+    private function checkCanonical(PageSignals $signals, IssueCollector $issues, Directive $directives): void
     {
-        if (!$page->isHtml() || !$page->response()->statusCode()->isSuccessful()) {
+        if (!$signals->isHtml() || !$signals->response()->statusCode()->isSuccessful()) {
             return;
         }
 
         if (!$directives->hasCanonical()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::DIRECTIVES,
                 severity: IssueSeverity::NOTICE,
                 code: 'canonical_missing',
                 message: 'Page has no canonical tag.',
             ));
-
             return;
         }
 
-        if (!$directives->isSelfCanonical($page->url())) {
-            $page->addIssue(new Issue(
+        if (!$directives->isSelfCanonical($signals->url())) {
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::DIRECTIVES,
                 severity: IssueSeverity::INFO,
                 code: 'canonical_non_self',
                 message: 'Canonical points to a different URL.',
-                context: $directives->canonical()?->toString(),
+                context: $directives->canonical(),
             ));
         }
     }
 
-    private function checkNoindexWithCanonical(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\Directive $directives): void
+    private function checkNoindexWithCanonical(IssueCollector $issues, Directive $directives): void
     {
         if ($directives->noindex() && $directives->hasCanonical()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::DIRECTIVES,
                 severity: IssueSeverity::ERROR,
                 code: 'noindex_with_canonical',
                 message: 'Page has both noindex and canonical — conflicting directives.',
-                context: $directives->canonical()?->toString(),
+                context: $directives->canonical(),
             ));
         }
     }

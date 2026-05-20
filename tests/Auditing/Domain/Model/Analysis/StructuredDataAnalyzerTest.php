@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Analyzer\StructuredDataAnalyzer;
+use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Auditing\Domain\Model\Analysis\StructuredDataAnalyzer;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
@@ -19,66 +20,62 @@ final class StructuredDataAnalyzerTest extends TestCase
 {
     public function test_does_not_flag_when_json_ld_types_are_present(): void
     {
-        $page = $this->pageWithStructuredData(jsonLdTypes: ['Article', 'Person']);
+        $collector = $this->runOn($this->pageWithStructuredData(jsonLdTypes: ['Article', 'Person']));
 
-        (new StructuredDataAnalyzer())->analyze($page);
-
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_does_not_flag_when_microdata_present(): void
     {
-        $page = $this->pageWithStructuredData(jsonLdTypes: [], hasMicrodata: true);
+        $collector = $this->runOn($this->pageWithStructuredData(jsonLdTypes: [], hasMicrodata: true));
 
-        (new StructuredDataAnalyzer())->analyze($page);
-
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_flags_when_no_json_ld_and_no_microdata(): void
     {
-        $page = $this->pageWithStructuredData(jsonLdTypes: [], hasMicrodata: false);
+        $codes = $this->runOn($this->pageWithStructuredData(jsonLdTypes: [], hasMicrodata: false))->codes();
 
-        (new StructuredDataAnalyzer())->analyze($page);
-
-        $issues = $page->issues();
-        $this->assertCount(1, $issues);
-        $this->assertSame('schema_org_missing', $issues[0]->code());
+        $this->assertSame(['schema_org_missing'], $codes);
     }
 
     public function test_skips_non_html_responses(): void
     {
-        $page = $this->pageWithStructuredData(
+        $collector = $this->runOn($this->pageWithStructuredData(
             jsonLdTypes: [],
             hasMicrodata: false,
             contentType: 'application/pdf',
-        );
+        ));
 
-        (new StructuredDataAnalyzer())->analyze($page);
-
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_skips_pages_without_metadata(): void
     {
-        $page = $this->pageWithoutMetadata();
+        $collector = $this->runOn($this->basePage('text/html', 200));
 
-        (new StructuredDataAnalyzer())->analyze($page);
-
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_skips_failed_responses(): void
     {
-        $page = $this->pageWithStructuredData(
+        $collector = $this->runOn($this->pageWithStructuredData(
             jsonLdTypes: [],
             hasMicrodata: false,
             statusCode: 500,
-        );
+        ));
 
-        (new StructuredDataAnalyzer())->analyze($page);
+        $this->assertSame([], $collector->codes());
+    }
 
-        $this->assertSame([], $page->issues());
+    private function runOn(Page $page): InMemoryIssueCollector
+    {
+        $signals = new LegacyPageToPageSignals($page);
+        $collector = new InMemoryIssueCollector();
+
+        (new StructuredDataAnalyzer())->analyze($signals, $collector);
+
+        return $collector;
     }
 
     /** @param string[] $jsonLdTypes */
@@ -111,11 +108,6 @@ final class StructuredDataAnalyzerTest extends TestCase
         ));
 
         return $page;
-    }
-
-    private function pageWithoutMetadata(): Page
-    {
-        return $this->basePage('text/html', 200);
     }
 
     private function basePage(string $contentType, int $statusCode): Page
