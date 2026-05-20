@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditSnapshot;
-use SeoSpider\Audit\Domain\Model\Audit\AuditSnapshotRepository;
+use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshot;
+use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshotRepository;
 
 final class InMemoryAuditSnapshotRepository implements AuditSnapshotRepository
 {

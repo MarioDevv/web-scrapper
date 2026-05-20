@@ -7,8 +7,8 @@ namespace SeoSpider\Audit\Application\BuildAuditSnapshot;
 use DateTimeImmutable;
 use SeoSpider\Audit\Application\AuditOverview\AuditOverviewBuilder;
 use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
-use SeoSpider\Audit\Domain\Model\Audit\AuditSnapshot;
-use SeoSpider\Audit\Domain\Model\Audit\AuditSnapshotRepository;
+use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshot;
+use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshotRepository;
 
 /**
  * Freezes the audit overview at the moment the crawl finishes so the

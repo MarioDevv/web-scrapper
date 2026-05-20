@@ -8,7 +8,7 @@ use SeoSpider\Audit\Application\Analysis\LegacySiteContext;
 use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
-use SeoSpider\Audit\Domain\Model\Page\SiteIssueRepository;
+use SeoSpider\Auditing\Domain\Model\Reporting\SiteIssueRepository;
 use SeoSpider\Auditing\Domain\Model\Analysis\SiteAnalyzer;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;

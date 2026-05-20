@@ -12,7 +12,7 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 use SeoSpider\Auditing\Domain\Model\Issue\SiteIssue;
-use SeoSpider\Audit\Infrastructure\Persistence\SqliteSiteIssueRepository;
+use SeoSpider\Auditing\Infrastructure\Persistence\SqliteSiteIssueRepository;
 use SeoSpider\Tests\Audit\Infrastructure\Persistence\Support\SqliteSchemaFactory;
 
 final class SqliteSiteIssueRepositoryVersionTest extends TestCase

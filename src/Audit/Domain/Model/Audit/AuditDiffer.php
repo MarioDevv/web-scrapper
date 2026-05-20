@@ -6,6 +6,10 @@ namespace SeoSpider\Audit\Domain\Model\Audit;
 
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Auditing\Domain\Model\Reporting\AuditDiff;
+use SeoSpider\Auditing\Domain\Model\Reporting\IssueChange;
+use SeoSpider\Auditing\Domain\Model\Reporting\PageChange;
+use SeoSpider\Auditing\Domain\Model\Reporting\PageMatchKind;
 
 /**
  * Compares two crawled-page graphs and emits a structured diff. Pure

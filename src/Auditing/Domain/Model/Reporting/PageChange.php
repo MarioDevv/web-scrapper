@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Audit;
+namespace SeoSpider\Auditing\Domain\Model\Reporting;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 
 final readonly class PageChange

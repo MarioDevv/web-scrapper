@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Audit;
+namespace SeoSpider\Auditing\Domain\Model\Reporting;
 
 /**
  * How a target-audit page was matched to a base-audit page when

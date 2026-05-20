@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\Persistence;
+namespace SeoSpider\Auditing\Infrastructure\Persistence;
 
 use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
@@ -11,7 +11,7 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 use SeoSpider\Auditing\Domain\Model\Issue\SiteIssue;
-use SeoSpider\Audit\Domain\Model\Page\SiteIssueRepository;
+use SeoSpider\Auditing\Domain\Model\Reporting\SiteIssueRepository;
 
 final readonly class SqliteSiteIssueRepository implements SiteIssueRepository
 {

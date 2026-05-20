@@ -7,7 +7,7 @@ namespace SeoSpider\Audit\Application\CompareAudits;
 use RuntimeException;
 use SeoSpider\Audit\Domain\Model\Audit\AuditDiffer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Audit\Domain\Model\Audit\PageChange;
+use SeoSpider\Auditing\Domain\Model\Reporting\PageChange;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;

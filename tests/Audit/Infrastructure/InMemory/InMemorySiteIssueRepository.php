@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Issue\SiteIssue;
-use SeoSpider\Audit\Domain\Model\Page\SiteIssueRepository;
+use SeoSpider\Auditing\Domain\Model\Reporting\SiteIssueRepository;
 
 final class InMemorySiteIssueRepository implements SiteIssueRepository
 {
