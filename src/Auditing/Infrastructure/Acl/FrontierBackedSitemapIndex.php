@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Auditing\Infrastructure\Acl;
 
 use SeoSpider\Auditing\Domain\Model\Analysis\SitemapIndex;
-use SeoSpider\Crawling\Application\Frontier;
+use SeoSpider\Crawling\Domain\Model\Frontier;
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Domain\Model\Url;
 

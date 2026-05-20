@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Auditing\Infrastructure\Acl;
 
 use SeoSpider\Auditing\Domain\Model\Analysis\RobotsCheck;
-use SeoSpider\Crawling\Application\RobotsPolicy;
+use SeoSpider\Crawling\Domain\Model\RobotsPolicy;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class CrawlingRobotsCheck implements RobotsCheck

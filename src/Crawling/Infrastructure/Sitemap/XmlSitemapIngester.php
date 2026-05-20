@@ -6,10 +6,10 @@ namespace SeoSpider\Crawling\Infrastructure\Sitemap;
 
 
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
-use SeoSpider\Crawling\Application\Frontier;
+use SeoSpider\Crawling\Domain\Model\Frontier;
 use SeoSpider\Crawling\Application\HttpClient;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
-use SeoSpider\Crawling\Application\SitemapIngester;
+use SeoSpider\Crawling\Domain\Model\SitemapIngester;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class XmlSitemapIngester implements SitemapIngester

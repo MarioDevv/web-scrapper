@@ -13,7 +13,7 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Crawling\Domain\Model\Page\PageId;
-use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
+use SeoSpider\Crawling\Domain\Model\LegacyPageToCrawledPage;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;

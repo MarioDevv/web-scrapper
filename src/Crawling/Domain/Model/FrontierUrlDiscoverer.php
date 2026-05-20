@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Crawling\Application;
+namespace SeoSpider\Crawling\Domain\Model;
 
 use SeoSpider\Crawling\Domain\Model\CrawlPolicy;
 

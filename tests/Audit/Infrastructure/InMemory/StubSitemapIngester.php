@@ -6,8 +6,8 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
 
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
-use SeoSpider\Crawling\Application\Frontier;
-use SeoSpider\Crawling\Application\SitemapIngester;
+use SeoSpider\Crawling\Domain\Model\Frontier;
+use SeoSpider\Crawling\Domain\Model\SitemapIngester;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final class StubSitemapIngester implements SitemapIngester

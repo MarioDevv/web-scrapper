@@ -18,7 +18,7 @@ use SeoSpider\Auditing\Domain\Model\Audit\AuditStatus;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Crawling\Application\FrontierUrlDiscoverer;
+use SeoSpider\Crawling\Domain\Model\FrontierUrlDiscoverer;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
