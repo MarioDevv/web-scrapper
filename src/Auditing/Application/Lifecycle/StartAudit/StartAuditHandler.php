@@ -40,12 +40,10 @@ final readonly class StartAuditHandler
             ),
         );
 
-        $this->frontier->enqueueSeed($audit->id()->value(), $command->seedUrl);
-
-        $this->auditRepository->save($audit);
-
         $audit->registerUrlsDiscovered(1);
         $this->auditRepository->save($audit);
+
+        $this->frontier->enqueueSeed($audit->id()->value(), $command->seedUrl);
 
         $this->eventBus->publish(...$audit->pullDomainEvents());
     }
