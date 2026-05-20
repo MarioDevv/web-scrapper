@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Application\BuildAuditSnapshot;
+namespace SeoSpider\Tests\Auditing\Application\Reporting\BuildAuditSnapshot;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Application\AuditOverview\AuditOverviewBuilder;
-use SeoSpider\Audit\Application\BuildAuditSnapshot\BuildAuditSnapshotOnAuditCompleted;
+use SeoSpider\Auditing\Application\Reporting\AuditOverview\AuditOverviewBuilder;
+use SeoSpider\Auditing\Application\Reporting\BuildAuditSnapshot\BuildAuditSnapshotOnAuditCompleted;
 use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatistics;

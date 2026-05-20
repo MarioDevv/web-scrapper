@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\AuditOverview;
+namespace SeoSpider\Auditing\Application\Reporting\AuditOverview;
 
 use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
