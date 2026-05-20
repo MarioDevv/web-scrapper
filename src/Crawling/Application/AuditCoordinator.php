@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace SeoSpider\Crawling\Application;
 
+use SeoSpider\Crawling\Domain\Model\Audit\AuditSnapshot;
+
 interface AuditCoordinator
 {
     public function snapshot(string $auditId): ?AuditSnapshot;

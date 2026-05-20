@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Crawling\Application\Engine;
 
 use SeoSpider\Crawling\Application\AuditCoordinator;
-use SeoSpider\Crawling\Application\AuditSnapshot;
+use SeoSpider\Crawling\Domain\Model\Audit\AuditSnapshot;
 use SeoSpider\Crawling\Application\CrawlPage\CrawlPageCommand;
 use SeoSpider\Crawling\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Crawling\Application\Frontier;

@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Auditing\Application\Reporting\BuildAuditSnapshot;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Auditing\Application\Reporting\AuditOverview\AuditOverviewBuilder;
+use SeoSpider\Auditing\Infrastructure\Persistence\AuditOverviewBuilder;
 use SeoSpider\Auditing\Application\Reporting\BuildAuditSnapshot\BuildAuditSnapshotOnAuditCompleted;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Auditing\Application\Reporting\BuildAuditSnapshot;
 
 use DateTimeImmutable;
-use SeoSpider\Auditing\Application\Reporting\AuditOverview\AuditOverviewBuilder;
+use SeoSpider\Auditing\Infrastructure\Persistence\AuditOverviewBuilder;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshot;
 use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshotRepository;

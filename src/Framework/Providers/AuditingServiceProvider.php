@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Auditing\Infrastructure\Delivery\Providers;
+namespace SeoSpider\Framework\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use PDO;
@@ -66,7 +66,7 @@ use SeoSpider\Auditing\Domain\Model\Reporting\SiteIssueRepository;
 use SeoSpider\Auditing\Infrastructure\Persistence\SqliteSiteIssueRepository;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummaryReader;
 use SeoSpider\Auditing\Infrastructure\Persistence\SqlitePageSummaryReader;
-use SeoSpider\Auditing\Application\Reporting\AuditOverview\AuditOverviewBuilder;
+use SeoSpider\Auditing\Infrastructure\Persistence\AuditOverviewBuilder;
 use SeoSpider\Auditing\Application\Reporting\BuildAuditSnapshot\BuildAuditSnapshotOnAuditCompleted;
 use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshotRepository;
 use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditSnapshotRepository;

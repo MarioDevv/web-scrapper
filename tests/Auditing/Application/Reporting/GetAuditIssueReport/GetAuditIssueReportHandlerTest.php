@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Auditing\Application\Reporting\GetAuditIssueReport;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Auditing\Application\AuditNotFound;
+use SeoSpider\Auditing\Domain\Exception\AuditNotFound;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\GetAuditIssueReportHandler;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\GetAuditIssueReportQuery;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace SeoSpider\Crawling\Application;
 
+use SeoSpider\Crawling\Domain\Model\CrawlPolicy;
+
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Domain\Model\Page\CrawledPage;
 

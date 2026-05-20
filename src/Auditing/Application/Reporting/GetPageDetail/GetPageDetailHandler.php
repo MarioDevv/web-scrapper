@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Auditing\Application\Reporting\GetPageDetail;
 
-use SeoSpider\Auditing\Application\Reporting\PageNotFound;
+use SeoSpider\Auditing\Domain\Exception\PageNotFound;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Reporting\PageDetailData;

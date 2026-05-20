@@ -7,9 +7,9 @@ namespace SeoSpider\Auditing\Infrastructure\Acl;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Crawling\Application\AuditCoordinator;
-use SeoSpider\Crawling\Application\AuditCrawlConfig;
-use SeoSpider\Crawling\Application\AuditCrawlStats;
-use SeoSpider\Crawling\Application\AuditSnapshot;
+use SeoSpider\Crawling\Domain\Model\Audit\AuditCrawlConfig;
+use SeoSpider\Crawling\Domain\Model\Audit\AuditCrawlStats;
+use SeoSpider\Crawling\Domain\Model\Audit\AuditSnapshot;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 
 final readonly class AuditingAuditCoordinator implements AuditCoordinator

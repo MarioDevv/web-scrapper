@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Domain\Model;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Crawling\Application\CrawlPolicy;
+use SeoSpider\Crawling\Domain\Model\CrawlPolicy;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
 use SeoSpider\Crawling\Application\FrontierUrlDiscoverer;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Crawling\Application;
+namespace SeoSpider\Crawling\Domain\Model\Audit;
 
 final readonly class AuditCrawlStats
 {

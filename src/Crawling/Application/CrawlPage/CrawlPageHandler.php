@@ -6,7 +6,7 @@ namespace SeoSpider\Crawling\Application\CrawlPage;
 
 use DateTimeImmutable;
 use SeoSpider\Crawling\Application\AuditCoordinator;
-use SeoSpider\Crawling\Application\CrawlPolicy;
+use SeoSpider\Crawling\Domain\Model\CrawlPolicy;
 use SeoSpider\Crawling\Application\HtmlParser;
 use SeoSpider\Crawling\Application\HttpClient;
 use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;

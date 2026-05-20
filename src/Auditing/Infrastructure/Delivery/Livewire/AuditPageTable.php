@@ -9,7 +9,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Reactive;
 use Livewire\Component;
 use PDO;
-use SeoSpider\Auditing\Application\Reporting\AuditOverview\AuditOverviewBuilder;
+use SeoSpider\Auditing\Infrastructure\Persistence\AuditOverviewBuilder;
 use SeoSpider\Auditing\Application\Reporting\CompareAudits\CompareAuditsHandler;
 use SeoSpider\Auditing\Application\Reporting\CompareAudits\CompareAuditsQuery;
 use SeoSpider\Auditing\Application\Reporting\CompareAudits\CompareAuditsResponse;

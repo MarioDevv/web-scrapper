@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Shared\Infrastructure\Delivery\Providers;
+namespace SeoSpider\Framework\Providers;
 
 use Native\Laravel\Facades\Window;
 use Native\Laravel\Facades\AutoUpdater;
