@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace SeoSpider\Auditing\Infrastructure\Delivery\Http;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;

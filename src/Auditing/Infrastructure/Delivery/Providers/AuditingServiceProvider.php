@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Providers;
+namespace SeoSpider\Auditing\Infrastructure\Delivery\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use PDO;
@@ -109,7 +109,7 @@ use SeoSpider\Shared\Domain\Bus\QueryBus;
 use SeoSpider\Shared\Infrastructure\Bus\SyncCommandBus;
 use SeoSpider\Shared\Infrastructure\Bus\SyncQueryBus;
 
-final class AuditServiceProvider extends ServiceProvider
+final class AuditingServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
@@ -363,5 +363,12 @@ final class AuditServiceProvider extends ServiceProvider
                 ($app->make(BuildAuditSnapshotOnAuditCompleted::class))($event);
             }
         });
+
+        // Livewire 3 auto-discovers components only under App\\Livewire\\.
+        // Now that components live in their bounded contexts, register
+        // them explicitly so blade tags <livewire:foo /> keep working.
+        \Livewire\Livewire::component('spider-dashboard', \SeoSpider\Auditing\Infrastructure\Delivery\Livewire\SpiderDashboard::class);
+        \Livewire\Livewire::component('audit-page-table', \SeoSpider\Auditing\Infrastructure\Delivery\Livewire\AuditPageTable::class);
+        \Livewire\Livewire::component('app-updater', \SeoSpider\Shared\Infrastructure\Delivery\Livewire\AppUpdater::class);
     }
 }

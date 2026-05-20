@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\AuditController;
-use App\Http\Controllers\PageController;
+use SeoSpider\Auditing\Infrastructure\Delivery\Http\AuditController;
+use SeoSpider\Auditing\Infrastructure\Delivery\Http\PageController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('audits')->group(function () {

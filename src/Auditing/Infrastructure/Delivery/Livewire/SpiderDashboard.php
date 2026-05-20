@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Livewire;
+namespace SeoSpider\Auditing\Infrastructure\Delivery\Livewire;
 
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -16,7 +16,7 @@ use SeoSpider\Auditing\Application\Lifecycle\PauseAudit\PauseAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\PauseAudit\PauseAuditHandler;
 use SeoSpider\Auditing\Application\Lifecycle\ResumeAudit\ResumeAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\ResumeAudit\ResumeAuditHandler;
-use App\Jobs\RunCrawlJob;
+use SeoSpider\Crawling\Infrastructure\Delivery\Jobs\RunCrawlJob;
 use SeoSpider\Shared\Domain\Bus\CommandBus;
 use SeoSpider\Shared\Domain\Bus\QueryBus;
 use Symfony\Component\Uid\Uuid;

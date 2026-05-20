@@ -1,6 +1,5 @@
 <?php
 
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\AuditServiceProvider::class,
+    SeoSpider\Auditing\Infrastructure\Delivery\Providers\AuditingServiceProvider::class,
 ];

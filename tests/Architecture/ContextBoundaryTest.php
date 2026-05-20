@@ -87,10 +87,14 @@ final class ContextBoundaryTest extends TestCase
         // Auditing/Infrastructure/Acl/* is the legitimate translation seam
         // where Auditing-side ports are implemented by wrapping Crawling
         // collaborators (Vernon, DDD Distilled p56 — Anticorruption Layer).
+        // Auditing/Infrastructure/Delivery/* may dispatch Crawling jobs or
+        // integration events as part of UI orchestration (e.g. Livewire
+        // starting a crawl run); this is the only place where the
+        // framework cross-wires the two contexts.
         $this->assertNoImports(
             'Auditing',
             ['SeoSpider\\Crawling\\'],
-            ['Auditing/Infrastructure/Acl/'],
+            ['Auditing/Infrastructure/Acl/', 'Auditing/Infrastructure/Delivery/'],
         );
     }
 

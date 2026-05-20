@@ -23,8 +23,7 @@
     },
     "autoload": {
         "psr-4": {
-            "SeoSpider\\": "src/",
-            "App\\": "src/Delivery/NativePHP/"
+            "SeoSpider\\": "src/"
         }
     },
     "autoload-dev": {

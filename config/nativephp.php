@@ -51,7 +51,7 @@ return [
      * takes care of bootstrapping your application and configuring
      * any global hotkeys, menus, windows, etc.
      */
-    'provider' => \App\Providers\NativeAppServiceProvider::class,
+    'provider' => \SeoSpider\Shared\Infrastructure\Delivery\Providers\NativeAppServiceProvider::class,
 
     /**
      * A list of environment keys that should be removed from the
