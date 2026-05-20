@@ -15,7 +15,7 @@ use SeoSpider\Crawling\Application\HttpClient;
 use SeoSpider\Crawling\Application\HtmlParser;
 use SeoSpider\Crawling\Application\PageFetcher;
 use SeoSpider\Crawling\Application\FrontierUrlDiscoverer;
-use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
+use SeoSpider\Shared\Integration\PageWasCrawled;
 use SeoSpider\Crawling\Application\RobotsPolicy;
 use SeoSpider\Crawling\Application\SitemapIngester;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
@@ -318,15 +318,15 @@ final class AuditServiceProvider extends ServiceProvider
         // Lazy: resolving the reactor drags PageRepository → PDO, which opens
         // the sqlite connection. We cannot do that here because NativePHP
         // rewrites the database path later, during native:migrate's handle().
-        // The closure defers the container lookup until a PageFetched is
+        // The closure defers the container lookup until a PageWasCrawled is
         // actually published, by which time the DB connection is valid.
         $app = $this->app;
 
         /** @var EventBus $bus */
         $bus = $app->make(EventBus::class);
 
-        $bus->subscribe(PageFetched::class, static function (\SeoSpider\Shared\Domain\DomainEvent $event) use ($app): void {
-            if ($event instanceof PageFetched) {
+        $bus->subscribe(PageWasCrawled::class, static function (\SeoSpider\Shared\Domain\DomainEvent $event) use ($app): void {
+            if ($event instanceof PageWasCrawled) {
                 ($app->make(AnalyzePageOnPageFetched::class))($event);
             }
         });

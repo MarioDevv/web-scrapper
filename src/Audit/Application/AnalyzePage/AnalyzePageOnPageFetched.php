@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\AnalyzePage;
 
-use DateTimeImmutable;
 use SeoSpider\Audit\Application\Analysis\BufferingIssueCollector;
 use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
-use SeoSpider\Crawling\Domain\Model\Page\Page;
-use SeoSpider\Crawling\Domain\Model\Page\PageCrawled;
-use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
-use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Shared\Domain\Bus\EventBus;
+use SeoSpider\Shared\Integration\PageWasCrawled;
 
 final readonly class AnalyzePageOnPageFetched
 {
@@ -30,9 +29,9 @@ final readonly class AnalyzePageOnPageFetched
     ) {
     }
 
-    public function __invoke(PageFetched $event): void
+    public function __invoke(PageWasCrawled $event): void
     {
-        $page = $this->pageRepository->findById($event->pageId);
+        $page = $this->pageRepository->findById(new PageId($event->pageId));
         if ($page === null) {
             return;
         }
@@ -40,18 +39,8 @@ final readonly class AnalyzePageOnPageFetched
         $collector = $this->runAnalyzers($page);
         $this->persistAuditedPage($page, $collector);
 
-        $pageCrawled = new PageCrawled(
-            $page->id(),
-            $page->auditId(),
-            $page->url(),
-            $page->response()->statusCode(),
-            count($collector->issues()),
-            new DateTimeImmutable(),
-        );
-
         $audit = $this->auditRepository->findById(new AuditId($event->auditId));
         if ($audit === null) {
-            $this->eventBus->publish($pageCrawled);
             return;
         }
 
@@ -61,7 +50,7 @@ final readonly class AnalyzePageOnPageFetched
         $audit->registerPageCrawled($collector->errorCount(), $collector->warningCount());
         $this->auditRepository->save($audit);
 
-        $this->eventBus->publish($pageCrawled, ...$audit->pullDomainEvents());
+        $this->eventBus->publish(...$audit->pullDomainEvents());
     }
 
     private function runAnalyzers(Page $page): BufferingIssueCollector

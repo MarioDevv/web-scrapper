@@ -16,16 +16,13 @@ use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Crawling\Domain\Model\Page\PageFailed;
-use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
 use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Application\UrlDiscoverer;
-use SeoSpider\Crawling\Application\CrawledPagePayloadFactory;
 use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
 use SeoSpider\Shared\Domain\Bus\EventBus;
-use SeoSpider\Shared\Integration\CrawledPageReady;
 use SeoSpider\Shared\Integration\PageWasCrawled;
 
 final readonly class CrawlPageHandler
@@ -63,13 +60,6 @@ final readonly class CrawlPageHandler
         $this->processFetchedPage($command, $result['response'], $result['chain']);
     }
 
-    /**
-     * Post-fetch pipeline. Fetches bytes are already in memory; this step
-     * enriches the page from HTML, enqueues discovered URLs, persists the
-     * page and announces PageFetched. The analyzer pipeline and the audit
-     * stats update live behind that event so adding analyzers doesn't
-     * touch this class and re-analysing doesn't need a fresh fetch.
-     */
     public function processFetchedPage(
         CrawlPageCommand $command,
         PageResponse $response,
@@ -108,16 +98,6 @@ final readonly class CrawlPageHandler
         $this->pageRepository->save($page);
 
         $this->eventBus->publish(
-            new PageFetched(
-                pageId: $page->id(),
-                auditId: $auditId->value(),
-                newUrlsDiscovered: $newUrls,
-                occurredAt: new DateTimeImmutable(),
-            ),
-            new CrawledPageReady(
-                (new CrawledPagePayloadFactory())->fromPage($page),
-                new DateTimeImmutable(),
-            ),
             new PageWasCrawled(
                 pageId: $page->id()->value(),
                 auditId: $auditId->value(),

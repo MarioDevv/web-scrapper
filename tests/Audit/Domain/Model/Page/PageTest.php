@@ -14,7 +14,6 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 use SeoSpider\Crawling\Domain\Model\Page\Page;
-use SeoSpider\Crawling\Domain\Model\Page\PageCrawled;
 use SeoSpider\Crawling\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Url;

@@ -18,9 +18,8 @@ use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Crawling\Domain\Model\Page\PageCrawled;
 use SeoSpider\Crawling\Domain\Model\Page\PageFailed;
-use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
+use SeoSpider\Shared\Integration\PageWasCrawled;
 use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Application\FrontierUrlDiscoverer;
@@ -64,7 +63,7 @@ final class CrawlPageHandlerTest extends TestCase
             eventBus: $this->eventBus,
         );
 
-        $this->eventBus->subscribe(PageFetched::class, new AnalyzePageOnPageFetched(
+        $this->eventBus->subscribe(PageWasCrawled::class, new AnalyzePageOnPageFetched(
             pageRepository: $this->pageRepository,
             auditRepository: $this->auditRepository,
             eventBus: $this->eventBus,
@@ -123,7 +122,7 @@ final class CrawlPageHandlerTest extends TestCase
         $this->assertSame(1, $audit->statistics()->pagesCrawled);
     }
 
-    public function test_publishes_page_crawled_event(): void
+    public function test_publishes_page_was_crawled_integration_event(): void
     {
         $auditId = $this->startAudit();
 
@@ -133,11 +132,11 @@ final class CrawlPageHandlerTest extends TestCase
             depth: 0,
         ));
 
-        $pageCrawledEvents = array_filter(
+        $integrationEvents = array_filter(
             $this->eventBus->published(),
-            static fn($e) => $e instanceof PageCrawled,
+            static fn($e) => $e instanceof PageWasCrawled,
         );
-        $this->assertCount(1, $pageCrawledEvents);
+        $this->assertCount(1, $integrationEvents);
     }
 
     public function test_discovers_internal_links_and_enqueues_them(): void

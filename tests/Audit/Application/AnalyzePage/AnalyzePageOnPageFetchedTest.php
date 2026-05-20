@@ -11,8 +11,7 @@ use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Page\Page;
-use SeoSpider\Crawling\Domain\Model\Page\PageCrawled;
-use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
+use SeoSpider\Shared\Integration\PageWasCrawled;
 use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\IssueCollector;
 use SeoSpider\Auditing\Domain\Model\Analysis\PageSignals;
@@ -60,9 +59,10 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
         ($this->buildReactor([
             $this->analyzerThatAppends(IssueSeverity::ERROR),
             $this->analyzerThatAppends(IssueSeverity::WARNING),
-        ]))(new PageFetched(
-            pageId: $page->id(),
+        ]))(new PageWasCrawled(
+            pageId: $page->id()->value(),
             auditId: $this->auditId->value(),
+            url: $page->url()->toString(),
             newUrlsDiscovered: 3,
             occurredAt: new DateTimeImmutable(),
         ));
@@ -87,9 +87,10 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
     {
         $page = $this->persistPage();
 
-        ($this->buildReactor([$this->analyzerThatAppends(IssueSeverity::ERROR)]))(new PageFetched(
-            pageId: $page->id(),
+        ($this->buildReactor([$this->analyzerThatAppends(IssueSeverity::ERROR)]))(new PageWasCrawled(
+            pageId: $page->id()->value(),
             auditId: $this->auditId->value(),
+            url: $page->url()->toString(),
             newUrlsDiscovered: 0,
             occurredAt: new DateTimeImmutable(),
         ));
@@ -106,31 +107,12 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
         $this->assertSame(1, $audited->errorCount());
     }
 
-    public function test_publishes_page_crawled_downstream(): void
-    {
-        $page = $this->persistPage();
-
-        ($this->buildReactor([]))(new PageFetched(
-            pageId: $page->id(),
-            auditId: $this->auditId->value(),
-            newUrlsDiscovered: 0,
-            occurredAt: new DateTimeImmutable(),
-        ));
-
-        $published = array_values(array_filter(
-            $this->events->published(),
-            static fn ($event) => $event instanceof PageCrawled,
-        ));
-
-        $this->assertCount(1, $published, 'reactor should publish the PageCrawled event emitted by markAsAnalyzed');
-        $this->assertSame($page->id()->value(), $published[0]->pageId->value());
-    }
-
     public function test_is_a_noop_when_the_page_has_been_deleted(): void
     {
-        ($this->buildReactor([]))(new PageFetched(
-            pageId: \SeoSpider\Crawling\Domain\Model\Page\PageId::generate(),
+        ($this->buildReactor([]))(new PageWasCrawled(
+            pageId: \SeoSpider\Crawling\Domain\Model\Page\PageId::generate()->value(),
             auditId: $this->auditId->value(),
+            url: "https://example.com/missing",
             newUrlsDiscovered: 0,
             occurredAt: new DateTimeImmutable(),
         ));
