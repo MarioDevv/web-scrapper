@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace SeoSpider\Auditing\Application\Reporting\CompareAudits;
 
 use RuntimeException;
-use SeoSpider\Audit\Domain\Model\Audit\AuditDiffer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Auditing\Domain\Model\Reporting\PageChange;
+use SeoSpider\Audit\Domain\Model\Page\Page as LegacyPage;
+use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Fingerprint as AuditingFingerprint;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Auditing\Domain\Model\Reporting\AuditDiffer;
+use SeoSpider\Auditing\Domain\Model\Reporting\PageChange;
+use SeoSpider\Auditing\Domain\Model\Reporting\PageRow;
 
 final readonly class CompareAuditsHandler
 {
@@ -32,8 +35,8 @@ final readonly class CompareAuditsHandler
         $diff = $this->differ->diff(
             baseId: $query->baseAuditId,
             targetId: $query->targetAuditId,
-            base: $this->pages->findByAudit($query->baseAuditId),
-            target: $this->pages->findByAudit($query->targetAuditId),
+            base: $this->rowsFor($query->baseAuditId),
+            target: $this->rowsFor($query->targetAuditId),
             baseCodesByUrl: $this->auditedPages->issueCodesByUrl($query->baseAuditId->value()),
             targetCodesByUrl: $this->auditedPages->issueCodesByUrl($query->targetAuditId->value()),
         );
@@ -76,6 +79,21 @@ final readonly class CompareAuditsHandler
             issuesAdded: $added,
             issuesRemoved: $removed,
             issuesPersistent: $persistent,
+        );
+    }
+
+    /** @return PageRow[] */
+    private function rowsFor(\SeoSpider\Audit\Domain\Model\Audit\AuditId $auditId): array
+    {
+        return array_map(
+            static function (LegacyPage $page): PageRow {
+                $fp = $page->fingerprint();
+                return new PageRow(
+                    url: $page->url()->toString(),
+                    fingerprint: $fp === null ? null : new AuditingFingerprint($fp->exactHash(), $fp->simHash()),
+                );
+            },
+            $this->pages->findByAudit($auditId),
         );
     }
 

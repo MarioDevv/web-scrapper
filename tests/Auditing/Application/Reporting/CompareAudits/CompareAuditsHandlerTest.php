@@ -10,7 +10,7 @@ use SeoSpider\Auditing\Application\Reporting\CompareAudits\CompareAuditsHandler;
 use SeoSpider\Auditing\Application\Reporting\CompareAudits\CompareAuditsQuery;
 use SeoSpider\Audit\Domain\Model\Audit\Audit;
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
-use SeoSpider\Audit\Domain\Model\Audit\AuditDiffer;
+use SeoSpider\Auditing\Domain\Model\Reporting\AuditDiffer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatistics;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;

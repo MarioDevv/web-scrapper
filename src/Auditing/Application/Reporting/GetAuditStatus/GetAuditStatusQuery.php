@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\GetAuditStatus;
+namespace SeoSpider\Auditing\Application\Reporting\GetAuditStatus;
 
 final readonly class GetAuditStatusQuery
 {

@@ -2,24 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Audit;
+namespace SeoSpider\Auditing\Domain\Model\Reporting;
 
-use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Auditing\Domain\Model\Reporting\AuditDiff;
-use SeoSpider\Auditing\Domain\Model\Reporting\IssueChange;
-use SeoSpider\Auditing\Domain\Model\Reporting\PageChange;
-use SeoSpider\Auditing\Domain\Model\Reporting\PageMatchKind;
+use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Fingerprint;
 
-/**
- * Compares two crawled-page graphs and emits a structured diff. Pure
- * domain function: no repository or persistence access.
- *
- * Pages are first matched by canonical URL. Pages without a URL match
- * are then matched by Fingerprint Hamming distance (≤ NEAR_DUPLICATE)
- * so a renamed/moved URL with similar content is reported as moved
- * rather than two unrelated added/removed entries.
- */
 final class AuditDiffer
 {
     // Stricter than Fingerprint::DEFAULT_NEAR_DUPLICATE_THRESHOLD (3): we have
@@ -28,10 +15,10 @@ final class AuditDiffer
     private const int NEAR_DUPLICATE_THRESHOLD = 5;
 
     /**
-     * @param Page[]                  $base
-     * @param Page[]                  $target
-     * @param array<string, string[]> $baseCodesByUrl   issue codes per base page URL
-     * @param array<string, string[]> $targetCodesByUrl issue codes per target page URL
+     * @param PageRow[]               $base
+     * @param PageRow[]               $target
+     * @param array<string, string[]> $baseCodesByUrl
+     * @param array<string, string[]> $targetCodesByUrl
      */
     public function diff(
         AuditId $baseId,
@@ -41,23 +28,21 @@ final class AuditDiffer
         array $baseCodesByUrl = [],
         array $targetCodesByUrl = [],
     ): AuditDiff {
-        /** @var array<string, Page> $baseByUrl */
         $baseByUrl = [];
-        foreach ($base as $page) {
-            $baseByUrl[$page->url()->toString()] = $page;
+        foreach ($base as $row) {
+            $baseByUrl[$row->url] = $row;
         }
 
-        /** @var array<string, Page> $targetByUrl */
         $targetByUrl = [];
-        foreach ($target as $page) {
-            $targetByUrl[$page->url()->toString()] = $page;
+        foreach ($target as $row) {
+            $targetByUrl[$row->url] = $row;
         }
 
         $unchanged = [];
         $remainingBase = $baseByUrl;
         $remainingTarget = $targetByUrl;
 
-        foreach ($targetByUrl as $url => $targetPage) {
+        foreach ($targetByUrl as $url => $row) {
             if (isset($baseByUrl[$url])) {
                 $unchanged[] = $this->buildPageChange(
                     url: $url,
@@ -71,15 +56,14 @@ final class AuditDiffer
         }
 
         $moved = [];
-        foreach ($remainingTarget as $url => $targetPage) {
-            $targetFp = $targetPage->fingerprint();
-            if ($targetFp === null) {
-                continue; // no fingerprint → falls through to pagesAdded below
+        foreach ($remainingTarget as $url => $row) {
+            if ($row->fingerprint === null) {
+                continue;
             }
 
-            $matchUrl = $this->findFingerprintMatch($targetFp, $remainingBase);
+            $matchUrl = $this->findFingerprintMatch($row->fingerprint, $remainingBase);
             if ($matchUrl === null) {
-                continue; // no close base candidate → falls through to pagesAdded below
+                continue;
             }
 
             $moved[] = $this->buildPageChange(
@@ -93,7 +77,7 @@ final class AuditDiffer
         }
 
         $added = [];
-        foreach ($remainingTarget as $url => $targetPage) {
+        foreach ($remainingTarget as $url => $row) {
             $added[] = new PageChange(
                 url: $url,
                 kind: PageMatchKind::ADDED,
@@ -105,7 +89,7 @@ final class AuditDiffer
         }
 
         $removed = [];
-        foreach ($remainingBase as $url => $basePage) {
+        foreach ($remainingBase as $url => $row) {
             $removed[] = new PageChange(
                 url: $url,
                 kind: PageMatchKind::REMOVED,
@@ -147,21 +131,18 @@ final class AuditDiffer
         );
     }
 
-    /**
-     * @param array<string, Page> $candidates
-     */
+    /** @param array<string, PageRow> $candidates */
     private function findFingerprintMatch(Fingerprint $needle, array $candidates): ?string
     {
         $bestUrl = null;
         $bestDistance = self::NEAR_DUPLICATE_THRESHOLD + 1;
 
-        foreach ($candidates as $url => $page) {
-            $candidateFp = $page->fingerprint();
-            if ($candidateFp === null) {
+        foreach ($candidates as $url => $row) {
+            if ($row->fingerprint === null) {
                 continue;
             }
 
-            $distance = $needle->hammingDistance($candidateFp);
+            $distance = $needle->hammingDistance($row->fingerprint);
             if ($distance <= self::NEAR_DUPLICATE_THRESHOLD && $distance < $bestDistance) {
                 $bestDistance = $distance;
                 $bestUrl = $url;
@@ -170,5 +151,4 @@ final class AuditDiffer
 
         return $bestUrl;
     }
-
 }

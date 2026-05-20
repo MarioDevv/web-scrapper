@@ -2,25 +2,24 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\GetAuditStatus;
+namespace SeoSpider\Auditing\Application\Reporting\GetAuditStatus;
 
 use SeoSpider\Audit\Application\AuditNotFound;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Crawling\Application\Frontier;
+use SeoSpider\Auditing\Domain\Model\Reporting\PendingUrlCounter;
 
 final readonly class GetAuditStatusHandler
 {
     public function __construct(
         private AuditRepository $auditRepository,
-        private Frontier $frontier,
+        private PendingUrlCounter $pendingUrls,
     ) {
     }
 
     public function __invoke(GetAuditStatusQuery $query): GetAuditStatusResponse
     {
-        $auditId = new AuditId($query->auditId);
-        $audit = $this->auditRepository->findById($auditId);
+        $audit = $this->auditRepository->findById(new AuditId($query->auditId));
 
         if ($audit === null) {
             throw AuditNotFound::withId($query->auditId);
@@ -39,7 +38,7 @@ final readonly class GetAuditStatusHandler
             errorsFound: $stats->errorsFound,
             warningsFound: $stats->warningsFound,
             maxPages: $audit->configuration()->maxPages,
-            pendingUrls: $this->frontier->pendingCount($auditId),
+            pendingUrls: $this->pendingUrls->forAudit($audit->id()->value()),
             startedAt: $stats->startedAt?->format('c'),
             completedAt: $stats->completedAt?->format('c'),
             duration: $stats->duration(),

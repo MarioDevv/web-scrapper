@@ -2,20 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Domain\Model\Audit;
+namespace SeoSpider\Tests\Auditing\Domain\Model\Reporting;
 
-use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Audit\AuditDiffer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Fingerprint;
+use SeoSpider\Auditing\Domain\Model\Reporting\AuditDiffer;
 use SeoSpider\Auditing\Domain\Model\Reporting\PageMatchKind;
-use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
-use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
-use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
-use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
-use SeoSpider\Crawling\Domain\Model\Url;
+use SeoSpider\Auditing\Domain\Model\Reporting\PageRow;
 
 final class AuditDifferTest extends TestCase
 {
@@ -24,8 +18,8 @@ final class AuditDifferTest extends TestCase
         $diff = (new AuditDiffer())->diff(
             AuditId::generate(),
             AuditId::generate(),
-            [$this->page('https://example.com/')],
-            [$this->page('https://example.com/')],
+            [$this->row('https://example.com/')],
+            [$this->row('https://example.com/')],
             ['https://example.com/' => ['title_missing']],
             ['https://example.com/' => ['title_missing']],
         );
@@ -47,8 +41,8 @@ final class AuditDifferTest extends TestCase
         $diff = (new AuditDiffer())->diff(
             AuditId::generate(),
             AuditId::generate(),
-            [$this->page('https://example.com/')],
-            [$this->page('https://example.com/')],
+            [$this->row('https://example.com/')],
+            [$this->row('https://example.com/')],
             ['https://example.com/' => ['title_missing', 'h1_multiple']],
             ['https://example.com/' => ['title_missing', 'thin_content']],
         );
@@ -66,7 +60,7 @@ final class AuditDifferTest extends TestCase
             AuditId::generate(),
             AuditId::generate(),
             base: [],
-            target: [$this->page('https://example.com/new')],
+            target: [$this->row('https://example.com/new')],
             baseCodesByUrl: [],
             targetCodesByUrl: ['https://example.com/new' => ['title_missing']],
         );
@@ -81,7 +75,7 @@ final class AuditDifferTest extends TestCase
         $diff = (new AuditDiffer())->diff(
             AuditId::generate(),
             AuditId::generate(),
-            base: [$this->page('https://example.com/gone')],
+            base: [$this->row('https://example.com/gone')],
             target: [],
             baseCodesByUrl: ['https://example.com/gone' => ['h1_multiple']],
             targetCodesByUrl: [],
@@ -94,13 +88,13 @@ final class AuditDifferTest extends TestCase
 
     public function test_renamed_page_with_similar_content_is_marked_moved(): void
     {
-        $shared = Fingerprint::fromContent('the quick brown fox jumps over the lazy dog');
+        $shared = $this->fingerprintFor('the quick brown fox jumps over the lazy dog');
 
         $diff = (new AuditDiffer())->diff(
             AuditId::generate(),
             AuditId::generate(),
-            base: [$this->page('https://example.com/old', $shared)],
-            target: [$this->page('https://example.com/new', $shared)],
+            base: [$this->row('https://example.com/old', $shared)],
+            target: [$this->row('https://example.com/new', $shared)],
             baseCodesByUrl: ['https://example.com/old' => ['title_missing']],
             targetCodesByUrl: ['https://example.com/new' => ['title_missing']],
         );
@@ -121,8 +115,8 @@ final class AuditDifferTest extends TestCase
         $diff = (new AuditDiffer())->diff(
             AuditId::generate(),
             AuditId::generate(),
-            base: [$this->page('https://example.com/')],
-            target: [$this->page('https://example.com/')],
+            base: [$this->row('https://example.com/')],
+            target: [$this->row('https://example.com/')],
             baseCodesByUrl: ['https://example.com/' => ['title_missing', 'title_missing', 'h1_multiple']],
             targetCodesByUrl: ['https://example.com/' => ['title_missing']],
         );
@@ -134,30 +128,14 @@ final class AuditDifferTest extends TestCase
         self::assertSame([], $change->addedIssueCodes);
     }
 
-    private function page(string $url, ?Fingerprint $fingerprint = null): Page
+    private function row(string $url, ?Fingerprint $fingerprint = null): PageRow
     {
-        return Page::reconstitute(
-            id: PageId::generate(),
-            auditId: AuditId::generate(),
-            url: Url::fromString($url),
-            response: new PageResponse(
-                statusCode: new HttpStatusCode(200),
-                headers: [],
-                body: null,
-                contentType: 'text/html',
-                bodySize: 0,
-                responseTime: 0.0,
-                finalUrl: null,
-            ),
-            redirectChain: RedirectChain::none(),
-            crawlDepth: 0,
-            metadata: null,
-            directives: null,
-            fingerprint: $fingerprint,
-            links: [],
-            hreflangs: [],
-            issues: [],
-            crawledAt: new DateTimeImmutable(),
-        );
+        return new PageRow(url: $url, fingerprint: $fingerprint);
+    }
+
+    private function fingerprintFor(string $content): Fingerprint
+    {
+        $crawling = \SeoSpider\Crawling\Domain\Model\Page\Fingerprint::fromContent($content);
+        return new Fingerprint($crawling->exactHash(), $crawling->simHash());
     }
 }

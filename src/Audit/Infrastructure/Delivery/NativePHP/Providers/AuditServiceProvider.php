@@ -55,6 +55,8 @@ use SeoSpider\Auditing\Domain\Model\Analysis\RobotsCheck;
 use SeoSpider\Auditing\Domain\Model\Analysis\SitemapIndex;
 use SeoSpider\Audit\Application\Analysis\CrawlingRobotsCheck;
 use SeoSpider\Audit\Application\Analysis\FrontierBackedSitemapIndex;
+use SeoSpider\Audit\Application\Analysis\FrontierBackedPendingUrlCounter;
+use SeoSpider\Auditing\Domain\Model\Reporting\PendingUrlCounter;
 use SeoSpider\Audit\Application\AnalyzeSite\AnalyzeSiteOnAuditCompleted;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportReader;
 use SeoSpider\Auditing\Infrastructure\Persistence\SqliteIssueReportReader;
@@ -75,7 +77,7 @@ use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Audit\Application\PauseAudit\PauseAuditHandler;
 use SeoSpider\Audit\Application\ResumeAudit\ResumeAuditHandler;
 use SeoSpider\Audit\Application\CancelAudit\CancelAuditHandler;
-use SeoSpider\Audit\Application\GetAuditStatus\GetAuditStatusHandler;
+use SeoSpider\Auditing\Application\Reporting\GetAuditStatus\GetAuditStatusHandler;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesHandler;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Audit\Application\Engine\CrawlerEngine;
@@ -83,7 +85,7 @@ use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
 use SeoSpider\Audit\Application\PauseAudit\PauseAuditCommand;
 use SeoSpider\Audit\Application\ResumeAudit\ResumeAuditCommand;
 use SeoSpider\Audit\Application\CancelAudit\CancelAuditCommand;
-use SeoSpider\Audit\Application\GetAuditStatus\GetAuditStatusQuery;
+use SeoSpider\Auditing\Application\Reporting\GetAuditStatus\GetAuditStatusQuery;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailQuery;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\GetAuditIssueReportQuery;
@@ -250,9 +252,12 @@ final class AuditServiceProvider extends ServiceProvider
             eventBus: $app->make(EventBus::class),
         ));
 
+        $this->app->singleton(PendingUrlCounter::class, fn($app) => new FrontierBackedPendingUrlCounter(
+            $app->make(Frontier::class),
+        ));
         $this->app->singleton(GetAuditStatusHandler::class, fn($app) => new GetAuditStatusHandler(
             auditRepository: $app->make(AuditRepository::class),
-            frontier: $app->make(Frontier::class),
+            pendingUrls: $app->make(PendingUrlCounter::class),
         ));
 
         $this->app->singleton(GetAuditPagesHandler::class, fn($app) => new GetAuditPagesHandler(
