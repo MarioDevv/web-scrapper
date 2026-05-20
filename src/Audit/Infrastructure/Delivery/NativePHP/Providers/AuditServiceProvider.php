@@ -73,6 +73,20 @@ use SeoSpider\Audit\Application\GetAuditStatus\GetAuditStatusHandler;
 use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesHandler;
 use SeoSpider\Audit\Application\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Audit\Application\Engine\CrawlerEngine;
+use SeoSpider\Audit\Application\PauseAudit\PauseAuditCommand;
+use SeoSpider\Audit\Application\ResumeAudit\ResumeAuditCommand;
+use SeoSpider\Audit\Application\CancelAudit\CancelAuditCommand;
+use SeoSpider\Audit\Application\GetAuditStatus\GetAuditStatusQuery;
+use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery;
+use SeoSpider\Audit\Application\GetPageDetail\GetPageDetailQuery;
+use SeoSpider\Audit\Application\GetAuditIssueReport\GetAuditIssueReportQuery;
+use SeoSpider\Audit\Application\GetAuditIssueReport\GetAuditIssueReportHandler;
+use SeoSpider\Audit\Application\CompareAudits\CompareAuditsQuery;
+use SeoSpider\Audit\Application\CompareAudits\CompareAuditsHandler;
+use SeoSpider\Shared\Domain\Bus\CommandBus;
+use SeoSpider\Shared\Domain\Bus\QueryBus;
+use SeoSpider\Shared\Infrastructure\Bus\SyncCommandBus;
+use SeoSpider\Shared\Infrastructure\Bus\SyncQueryBus;
 
 final class AuditServiceProvider extends ServiceProvider
 {
@@ -246,6 +260,20 @@ final class AuditServiceProvider extends ServiceProvider
             externalLinkVerifier: $app->make(ExternalLinkVerifier::class),
             pageFetcher: $app->make(PageFetcher::class),
         ));
+
+        $this->app->singleton(CommandBus::class, fn($app) => new SyncCommandBus($app, [
+            PauseAuditCommand::class => PauseAuditHandler::class,
+            ResumeAuditCommand::class => ResumeAuditHandler::class,
+            CancelAuditCommand::class => CancelAuditHandler::class,
+        ]));
+
+        $this->app->singleton(QueryBus::class, fn($app) => new SyncQueryBus($app, [
+            GetAuditStatusQuery::class => GetAuditStatusHandler::class,
+            GetAuditPagesQuery::class => GetAuditPagesHandler::class,
+            GetPageDetailQuery::class => GetPageDetailHandler::class,
+            GetAuditIssueReportQuery::class => GetAuditIssueReportHandler::class,
+            CompareAuditsQuery::class => CompareAuditsHandler::class,
+        ]));
     }
 
     public function boot(): void

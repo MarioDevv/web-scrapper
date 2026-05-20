@@ -17,6 +17,8 @@ use SeoSpider\Audit\Application\PauseAudit\PauseAuditHandler;
 use SeoSpider\Audit\Application\ResumeAudit\ResumeAuditCommand;
 use SeoSpider\Audit\Application\ResumeAudit\ResumeAuditHandler;
 use App\Jobs\RunCrawlJob;
+use SeoSpider\Shared\Domain\Bus\CommandBus;
+use SeoSpider\Shared\Domain\Bus\QueryBus;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -107,7 +109,7 @@ class SpiderDashboard extends Component
             return;
         }
 
-        app(CancelAuditHandler::class)(new CancelAuditCommand($this->auditId));
+        app(CommandBus::class)->dispatch(new CancelAuditCommand($this->auditId));
         $this->crawling = false;
         $this->paused = false;
         $this->refreshStatus();
@@ -119,7 +121,7 @@ class SpiderDashboard extends Component
             return;
         }
 
-        app(PauseAuditHandler::class)(new PauseAuditCommand($this->auditId));
+        app(CommandBus::class)->dispatch(new PauseAuditCommand($this->auditId));
         $this->paused = true;
         $this->crawling = false;
         $this->refreshStatus();
@@ -131,7 +133,7 @@ class SpiderDashboard extends Component
             return;
         }
 
-        app(ResumeAuditHandler::class)(new ResumeAuditCommand($this->auditId));
+        app(CommandBus::class)->dispatch(new ResumeAuditCommand($this->auditId));
         $this->paused = false;
         $this->crawling = true;
         RunCrawlJob::dispatch($this->auditId);
@@ -290,7 +292,7 @@ class SpiderDashboard extends Component
             return;
         }
 
-        $r = app(GetAuditStatusHandler::class)(new GetAuditStatusQuery($this->auditId));
+        $r = app(QueryBus::class)->ask(new GetAuditStatusQuery($this->auditId));
         $this->status = [
             'seedUrl' => $r->seedUrl,
             'status' => $r->status,

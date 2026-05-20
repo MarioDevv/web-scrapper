@@ -24,6 +24,7 @@ use SeoSpider\Audit\Application\GetPageDetail\GetPageDetailQuery;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Audit\AuditSnapshotRepository;
+use SeoSpider\Shared\Domain\Bus\QueryBus;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -105,7 +106,7 @@ class AuditPageTable extends Component
         $this->detailOpen = true;
         $this->detailTab = 'seo';
 
-        $r = app(GetPageDetailHandler::class)(new GetPageDetailQuery($pageId));
+        $r = app(QueryBus::class)->ask(new GetPageDetailQuery($pageId));
 
         $this->selectedPage = [
             'pageId' => $r->pageId,
@@ -190,7 +191,7 @@ class AuditPageTable extends Component
             return;
         }
 
-        $response = app(CompareAuditsHandler::class)(new CompareAuditsQuery(
+        $response = app(QueryBus::class)->ask(new CompareAuditsQuery(
             baseAuditId: $previous->id(),
             targetAuditId: $targetId,
         ));
@@ -296,7 +297,7 @@ class AuditPageTable extends Component
         $useDelta = $this->crawling && $this->pages !== [];
         $since = $useDelta ? $this->latestCrawledAt() : null;
 
-        $r = app(GetAuditPagesHandler::class)(new GetAuditPagesQuery(
+        $r = app(QueryBus::class)->ask(new GetAuditPagesQuery(
             auditId: $this->auditId,
             since: $since,
             tab: $this->mapActiveTabToQuery(),
@@ -540,7 +541,7 @@ class AuditPageTable extends Component
             ];
         }
 
-        $r = app(GetAuditIssueReportHandler::class)(new GetAuditIssueReportQuery($this->auditId));
+        $r = app(QueryBus::class)->ask(new GetAuditIssueReportQuery($this->auditId));
 
         return [
             'totalIssues' => $r->totalIssues,
