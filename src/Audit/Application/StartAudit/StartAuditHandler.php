@@ -45,7 +45,7 @@ final readonly class StartAuditHandler
         );
 
         $this->auditRepository->save($audit);
-        $_ = $this->frontier->enqueue($audit->id(), $seedUrl, depth: 0, source: DiscoverySource::SEED);
+        $_ = $this->frontier->enqueue($audit->id()->value(), $seedUrl, depth: 0, source: DiscoverySource::SEED);
 
         // Count the seed URL as discovered
         $audit->registerUrlsDiscovered(1);

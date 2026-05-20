@@ -3,11 +3,8 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Crawling\Application;
-use SeoSpider\Crawling\Application\Frontier;
-use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 
-use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Domain\Model\Page\CrawledPage;
 
 final readonly class FrontierUrlDiscoverer implements UrlDiscoverer
@@ -18,13 +15,13 @@ final readonly class FrontierUrlDiscoverer implements UrlDiscoverer
 
     public function discoverFrom(
         CrawledPage $page,
-        AuditId $auditId,
+        string $auditId,
         int $currentDepth,
-        AuditConfiguration $config,
+        CrawlPolicy $policy,
     ): int {
         $nextDepth = $currentDepth + 1;
 
-        if ($nextDepth > $config->maxDepth) {
+        if ($nextDepth > $policy->maxDepth) {
             return 0;
         }
 
@@ -32,7 +29,7 @@ final readonly class FrontierUrlDiscoverer implements UrlDiscoverer
 
         foreach ($page->internalLinks() as $link) {
             $isEnqueuableAnchor = $link->isAnchor() && $link->isFollowable();
-            $isEnqueuableResource = $config->crawlResources && $link->isResource();
+            $isEnqueuableResource = $policy->crawlResources && $link->isResource();
 
             if (!$isEnqueuableAnchor && !$isEnqueuableResource) {
                 continue;

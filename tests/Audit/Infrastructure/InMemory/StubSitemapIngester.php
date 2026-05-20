@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Application\SitemapIngester;
@@ -25,7 +25,7 @@ final class StubSitemapIngester implements SitemapIngester
         $this->urls = $urls;
     }
 
-    public function ingest(AuditId $auditId, Url $seedUrl, ?string $userAgent = null): int
+    public function ingest(string $auditId, Url $seedUrl, ?string $userAgent = null): int
     {
         if ($this->frontier === null || $this->urls === []) {
             return 0;

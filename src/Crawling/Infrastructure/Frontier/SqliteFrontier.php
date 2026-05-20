@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Crawling\Infrastructure\Frontier;
 
 use PDO;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Domain\Model\FrontierEntry;
@@ -20,7 +20,7 @@ final readonly class SqliteFrontier implements Frontier
     ) {
     }
 
-    public function enqueue(AuditId $auditId, Url $url, int $depth, DiscoverySource $source): bool
+    public function enqueue(string $auditId, Url $url, int $depth, DiscoverySource $source): bool
     {
         $stmt = $this->pdo->prepare('
             INSERT OR IGNORE INTO frontier (audit_id, url, depth, status, source)
@@ -28,7 +28,7 @@ final readonly class SqliteFrontier implements Frontier
         ');
 
         $stmt->execute([
-            'audit_id' => $auditId->value(),
+            'audit_id' => $auditId,
             'url' => $this->canonicalizer->canonicalize($url)->toString(),
             'depth' => $depth,
             'status' => 'pending',
@@ -38,14 +38,14 @@ final readonly class SqliteFrontier implements Frontier
         return $stmt->rowCount() > 0;
     }
 
-    public function dequeue(AuditId $auditId): ?FrontierEntry
+    public function dequeue(string $auditId): ?FrontierEntry
     {
         $batch = $this->dequeueBatch($auditId, 1);
 
         return $batch[0] ?? null;
     }
 
-    public function dequeueBatch(AuditId $auditId, int $count): array
+    public function dequeueBatch(string $auditId, int $count): array
     {
         if ($count < 1) {
             return [];
@@ -60,7 +60,7 @@ final readonly class SqliteFrontier implements Frontier
                 ORDER BY id ASC
                 LIMIT :limit
             ');
-            $select->bindValue(':audit_id', $auditId->value());
+            $select->bindValue(':audit_id', $auditId);
             $select->bindValue(':status', 'pending');
             $select->bindValue(':limit', $count, PDO::PARAM_INT);
             $select->execute();
@@ -95,7 +95,7 @@ final readonly class SqliteFrontier implements Frontier
         );
     }
 
-    public function markVisited(AuditId $auditId, Url $url): void
+    public function markVisited(string $auditId, Url $url): void
     {
         $canonical = $this->canonicalizer->canonicalize($url)->toString();
 
@@ -106,7 +106,7 @@ final readonly class SqliteFrontier implements Frontier
 
         $stmt->execute([
             'status' => 'visited',
-            'audit_id' => $auditId->value(),
+            'audit_id' => $auditId,
             'url' => $canonical,
         ]);
 
@@ -115,7 +115,7 @@ final readonly class SqliteFrontier implements Frontier
                 INSERT OR IGNORE INTO frontier (audit_id, url, depth, status, source)
                 VALUES (:audit_id, :url, 0, :status, :source)
             ')->execute([
-                'audit_id' => $auditId->value(),
+                'audit_id' => $auditId,
                 'url' => $canonical,
                 'status' => 'visited',
                 'source' => DiscoverySource::LINK->value,
@@ -123,53 +123,53 @@ final readonly class SqliteFrontier implements Frontier
         }
     }
 
-    public function isKnown(AuditId $auditId, Url $url): bool
+    public function isKnown(string $auditId, Url $url): bool
     {
         $stmt = $this->pdo->prepare('
             SELECT 1 FROM frontier WHERE audit_id = :audit_id AND url = :url LIMIT 1
         ');
 
         $stmt->execute([
-            'audit_id' => $auditId->value(),
+            'audit_id' => $auditId,
             'url' => $this->canonicalizer->canonicalize($url)->toString(),
         ]);
 
         return $stmt->fetch() !== false;
     }
 
-    public function isEmpty(AuditId $auditId): bool
+    public function isEmpty(string $auditId): bool
     {
         return $this->pendingCount($auditId) === 0;
     }
 
-    public function clear(AuditId $auditId): void
+    public function clear(string $auditId): void
     {
         $this->pdo->prepare('DELETE FROM frontier WHERE audit_id = :audit_id')
-            ->execute(['audit_id' => $auditId->value()]);
+            ->execute(['audit_id' => $auditId]);
     }
 
-    public function pendingCount(AuditId $auditId): int
+    public function pendingCount(string $auditId): int
     {
         $stmt = $this->pdo->prepare('
             SELECT COUNT(*) FROM frontier WHERE audit_id = :audit_id AND status = :status
         ');
 
         $stmt->execute([
-            'audit_id' => $auditId->value(),
+            'audit_id' => $auditId,
             'status' => 'pending',
         ]);
 
         return (int) $stmt->fetchColumn();
     }
 
-    public function urlsBySource(AuditId $auditId, DiscoverySource $source): array
+    public function urlsBySource(string $auditId, DiscoverySource $source): array
     {
         $stmt = $this->pdo->prepare('
             SELECT url FROM frontier WHERE audit_id = :audit_id AND source = :source
         ');
 
         $stmt->execute([
-            'audit_id' => $auditId->value(),
+            'audit_id' => $auditId,
             'source' => $source->value,
         ]);
 

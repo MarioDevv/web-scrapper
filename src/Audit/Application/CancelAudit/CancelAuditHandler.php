@@ -29,7 +29,7 @@ final readonly class CancelAuditHandler
         }
 
         $audit->cancel();
-        $this->frontier->clear($auditId);
+        $this->frontier->clear($auditId->value());
 
         $this->auditRepository->save($audit);
         $this->eventBus->publish(...$audit->pullDomainEvents());

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Domain\Model;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
+use SeoSpider\Crawling\Application\CrawlPolicy;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
 use SeoSpider\Crawling\Application\FrontierUrlDiscoverer;
@@ -40,7 +40,7 @@ final class FrontierUrlDiscovererTest extends TestCase
             $this->anchor('https://example.com/b', follow: true),
         ]);
 
-        $count = $this->discoverer->discoverFrom($page, $this->auditId, 0, $this->config());
+        $count = $this->discoverer->discoverFrom($page, $this->auditId->value(), 0, $this->config());
 
         $this->assertSame(2, $count);
     }
@@ -51,7 +51,7 @@ final class FrontierUrlDiscovererTest extends TestCase
             $this->anchor('https://example.com/a', follow: false),
         ]);
 
-        $this->assertSame(0, $this->discoverer->discoverFrom($page, $this->auditId, 0, $this->config()));
+        $this->assertSame(0, $this->discoverer->discoverFrom($page, $this->auditId->value(), 0, $this->config()));
     }
 
     public function test_skips_resources_unless_crawl_resources_is_enabled(): void
@@ -62,14 +62,14 @@ final class FrontierUrlDiscovererTest extends TestCase
 
         $this->assertSame(0, $this->discoverer->discoverFrom(
             $page,
-            $this->auditId,
+            $this->auditId->value(),
             0,
             $this->config(crawlResources: false),
         ));
 
         $this->assertSame(1, $this->discoverer->discoverFrom(
             $page,
-            $this->auditId,
+            $this->auditId->value(),
             0,
             $this->config(crawlResources: true),
         ));
@@ -82,7 +82,7 @@ final class FrontierUrlDiscovererTest extends TestCase
         ]);
 
         // currentDepth = maxDepth means nextDepth exceeds the limit.
-        $count = $this->discoverer->discoverFrom($page, $this->auditId, 3, $this->config(maxDepth: 3));
+        $count = $this->discoverer->discoverFrom($page, $this->auditId->value(), 3, $this->config(maxDepth: 3));
 
         $this->assertSame(0, $count);
     }
@@ -95,7 +95,7 @@ final class FrontierUrlDiscovererTest extends TestCase
         ]);
 
         // The second URL canonicalizes to the same frontier row as the first.
-        $this->assertSame(1, $this->discoverer->discoverFrom($page, $this->auditId, 0, $this->config()));
+        $this->assertSame(1, $this->discoverer->discoverFrom($page, $this->auditId->value(), 0, $this->config()));
     }
 
     /** @param Link[] $links */
@@ -144,12 +144,8 @@ final class FrontierUrlDiscovererTest extends TestCase
         );
     }
 
-    private function config(int $maxDepth = 10, bool $crawlResources = false): AuditConfiguration
+    private function config(int $maxDepth = 10, bool $crawlResources = false): CrawlPolicy
     {
-        return new AuditConfiguration(
-            seedUrl: 'https://example.com/',
-            maxDepth: $maxDepth,
-            crawlResources: $crawlResources,
-        );
+        return new CrawlPolicy(maxDepth: $maxDepth, crawlResources: $crawlResources);
     }
 }

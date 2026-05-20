@@ -7,6 +7,7 @@ namespace SeoSpider\Audit\Application\CrawlPage;
 use DateTimeImmutable;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Crawling\Application\CrawlPolicy;
 use SeoSpider\Crawling\Application\HtmlParser;
 use SeoSpider\Crawling\Application\HttpClient;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
@@ -92,11 +93,12 @@ final readonly class CrawlPageHandler
 
         if ($page->isHtml() && $response->body() !== null) {
             $this->enrichHtmlPage($page, $response->body(), $url);
+            $config = $audit->configuration();
             $newUrls = $this->urlDiscoverer->discoverFrom(
                 (new LegacyPageToCrawledPage())($page),
-                $auditId,
+                $auditId->value(),
                 $command->depth,
-                $audit->configuration(),
+                new CrawlPolicy(maxDepth: $config->maxDepth, crawlResources: $config->crawlResources),
             );
         } else {
             $newUrls = 0;

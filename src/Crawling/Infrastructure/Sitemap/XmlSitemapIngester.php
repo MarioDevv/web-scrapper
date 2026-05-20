@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Crawling\Infrastructure\Sitemap;
 
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Application\HttpClient;
@@ -25,7 +25,7 @@ final readonly class XmlSitemapIngester implements SitemapIngester
     ) {
     }
 
-    public function ingest(AuditId $auditId, Url $seedUrl, ?string $userAgent = null): int
+    public function ingest(string $auditId, Url $seedUrl, ?string $userAgent = null): int
     {
         $sitemapUrls = $this->discoverSitemapUrls($seedUrl, $userAgent);
         if ($sitemapUrls === []) {
@@ -105,7 +105,7 @@ final readonly class XmlSitemapIngester implements SitemapIngester
     }
 
     private function ingestSitemap(
-        AuditId $auditId,
+        string $auditId,
         Url $sitemapUrl,
         ?string $userAgent,
         int $depth,
@@ -166,7 +166,7 @@ final readonly class XmlSitemapIngester implements SitemapIngester
     }
 
     private function ingestSitemapIndex(
-        AuditId $auditId,
+        string $auditId,
         \SimpleXMLElement $index,
         ?string $userAgent,
         int $depth,
@@ -195,7 +195,7 @@ final readonly class XmlSitemapIngester implements SitemapIngester
         return $enqueued;
     }
 
-    private function enqueueUrlset(AuditId $auditId, \SimpleXMLElement $urlset): int
+    private function enqueueUrlset(string $auditId, \SimpleXMLElement $urlset): int
     {
         $enqueued = 0;
         $seen = 0;

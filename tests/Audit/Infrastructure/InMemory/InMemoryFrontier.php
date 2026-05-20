@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Domain\Model\FrontierEntry;
@@ -26,9 +26,9 @@ final class InMemoryFrontier implements Frontier
     {
     }
 
-    public function enqueue(AuditId $auditId, Url $url, int $depth, DiscoverySource $source): bool
+    public function enqueue(string $auditId, Url $url, int $depth, DiscoverySource $source): bool
     {
-        $key = $auditId->value();
+        $key = $auditId;
         $canonical = $this->canonicalizer->canonicalize($url);
         $urlString = $canonical->toString();
 
@@ -43,23 +43,23 @@ final class InMemoryFrontier implements Frontier
         return true;
     }
 
-    public function sourceOf(AuditId $auditId, Url $url): ?DiscoverySource
+    public function sourceOf(string $auditId, Url $url): ?DiscoverySource
     {
         $urlString = $this->canonicalizer->canonicalize($url)->toString();
 
-        return $this->sources[$auditId->value()][$urlString] ?? null;
+        return $this->sources[$auditId][$urlString] ?? null;
     }
 
-    public function dequeue(AuditId $auditId): ?FrontierEntry
+    public function dequeue(string $auditId): ?FrontierEntry
     {
         $batch = $this->dequeueBatch($auditId, 1);
 
         return $batch[0] ?? null;
     }
 
-    public function dequeueBatch(AuditId $auditId, int $count): array
+    public function dequeueBatch(string $auditId, int $count): array
     {
-        $key = $auditId->value();
+        $key = $auditId;
 
         if ($count < 1 || !isset($this->queues[$key]) || $this->queues[$key] === []) {
             return [];
@@ -68,36 +68,36 @@ final class InMemoryFrontier implements Frontier
         return array_splice($this->queues[$key], 0, $count);
     }
 
-    public function markVisited(AuditId $auditId, Url $url): void
+    public function markVisited(string $auditId, Url $url): void
     {
-        $this->known[$auditId->value()][$this->canonicalizer->canonicalize($url)->toString()] = true;
+        $this->known[$auditId][$this->canonicalizer->canonicalize($url)->toString()] = true;
     }
 
-    public function isKnown(AuditId $auditId, Url $url): bool
+    public function isKnown(string $auditId, Url $url): bool
     {
-        return isset($this->known[$auditId->value()][$this->canonicalizer->canonicalize($url)->toString()]);
+        return isset($this->known[$auditId][$this->canonicalizer->canonicalize($url)->toString()]);
     }
 
-    public function isEmpty(AuditId $auditId): bool
+    public function isEmpty(string $auditId): bool
     {
-        return !isset($this->queues[$auditId->value()])
-            || $this->queues[$auditId->value()] === [];
+        return !isset($this->queues[$auditId])
+            || $this->queues[$auditId] === [];
     }
 
-    public function clear(AuditId $auditId): void
+    public function clear(string $auditId): void
     {
-        $key = $auditId->value();
+        $key = $auditId;
         unset($this->queues[$key], $this->known[$key]);
     }
 
-    public function pendingCount(AuditId $auditId): int
+    public function pendingCount(string $auditId): int
     {
-        return count($this->queues[$auditId->value()] ?? []);
+        return count($this->queues[$auditId] ?? []);
     }
 
-    public function urlsBySource(AuditId $auditId, DiscoverySource $source): array
+    public function urlsBySource(string $auditId, DiscoverySource $source): array
     {
-        $byUrl = $this->sources[$auditId->value()] ?? [];
+        $byUrl = $this->sources[$auditId] ?? [];
 
         $matching = [];
         foreach ($byUrl as $urlString => $entrySource) {

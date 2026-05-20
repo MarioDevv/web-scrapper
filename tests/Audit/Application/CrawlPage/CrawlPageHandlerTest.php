@@ -87,7 +87,7 @@ final class CrawlPageHandlerTest extends TestCase
             maxDepth: $maxDepth,
         ));
 
-        $this->frontier->dequeue(new AuditId($auditId));
+        $this->frontier->dequeue($auditId);
         $this->eventBus->reset();
 
         return $auditId;
@@ -165,7 +165,7 @@ final class CrawlPageHandlerTest extends TestCase
         ));
 
         $id = new AuditId($auditId);
-        $this->assertSame(2, $this->frontier->pendingCount($id));
+        $this->assertSame(2, $this->frontier->pendingCount($id->value()));
         $this->assertSame(3, $this->auditRepository->findById($id)->statistics()->pagesDiscovered);
     }
 
@@ -189,7 +189,7 @@ final class CrawlPageHandlerTest extends TestCase
             depth: 0,
         ));
 
-        $this->assertSame(0, $this->frontier->pendingCount(new AuditId($auditId)));
+        $this->assertSame(0, $this->frontier->pendingCount($auditId));
     }
 
     public function test_does_not_enqueue_beyond_max_depth(): void
@@ -212,7 +212,7 @@ final class CrawlPageHandlerTest extends TestCase
             depth: 2,
         ));
 
-        $this->assertSame(0, $this->frontier->pendingCount(new AuditId($auditId)));
+        $this->assertSame(0, $this->frontier->pendingCount($auditId));
     }
 
     public function test_runs_analyzers_and_detects_missing_title(): void

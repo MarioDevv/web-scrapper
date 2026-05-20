@@ -16,7 +16,7 @@ final class InMemoryFrontierTest extends TestCase
     public function test_dedupes_urls_that_normalize_to_the_same_key(): void
     {
         $frontier = new InMemoryFrontier(new UrlCanonicalizer());
-        $auditId = AuditId::generate();
+        $auditId = AuditId::generate()->value();
 
         $first = $frontier->enqueue($auditId, Url::fromString('https://example.com/page'), 1, DiscoverySource::LINK);
         $secondWithFragment = $frontier->enqueue($auditId, Url::fromString('https://example.com/page#top'), 1, DiscoverySource::LINK);
@@ -35,7 +35,7 @@ final class InMemoryFrontierTest extends TestCase
     public function test_stores_normalized_url_in_the_entry(): void
     {
         $frontier = new InMemoryFrontier(new UrlCanonicalizer());
-        $auditId = AuditId::generate();
+        $auditId = AuditId::generate()->value();
 
         $frontier->enqueue($auditId, Url::fromString('HTTPS://Example.COM:443/path?fbclid=abc#frag'), 0, DiscoverySource::LINK);
 
@@ -47,7 +47,7 @@ final class InMemoryFrontierTest extends TestCase
     public function test_records_the_source_of_each_enqueued_url(): void
     {
         $frontier = new InMemoryFrontier(new UrlCanonicalizer());
-        $auditId = AuditId::generate();
+        $auditId = AuditId::generate()->value();
 
         $frontier->enqueue($auditId, Url::fromString('https://example.com/seed'), 0, DiscoverySource::SEED);
         $frontier->enqueue($auditId, Url::fromString('https://example.com/from-sitemap'), 0, DiscoverySource::SITEMAP);
@@ -61,7 +61,7 @@ final class InMemoryFrontierTest extends TestCase
     public function test_first_source_wins_when_the_same_url_is_enqueued_again(): void
     {
         $frontier = new InMemoryFrontier(new UrlCanonicalizer());
-        $auditId = AuditId::generate();
+        $auditId = AuditId::generate()->value();
 
         $frontier->enqueue($auditId, Url::fromString('https://example.com/p'), 0, DiscoverySource::SITEMAP);
         $frontier->enqueue($auditId, Url::fromString('https://example.com/p'), 1, DiscoverySource::LINK);

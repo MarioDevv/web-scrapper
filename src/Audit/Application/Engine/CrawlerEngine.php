@@ -47,7 +47,7 @@ final readonly class CrawlerEngine
 
         if ($audit->configuration()->ingestSitemaps) {
             $added = $this->sitemapIngester->ingest(
-                $id,
+                $id->value(),
                 $seedUrl,
                 $audit->configuration()->customUserAgent,
             );
@@ -66,7 +66,7 @@ final readonly class CrawlerEngine
                 break;
             }
 
-            $batch = $this->frontier->dequeueBatch($id, $concurrency);
+            $batch = $this->frontier->dequeueBatch($id->value(), $concurrency);
             if ($batch === []) {
                 $this->externalLinkVerifier->verify($id, $audit->configuration()->customUserAgent);
                 $audit->complete();
@@ -112,7 +112,7 @@ final readonly class CrawlerEngine
             if ($this->robotsPolicy->isAllowed($entry->url)) {
                 $allowed[] = $entry;
             } else {
-                $this->frontier->markVisited($auditId, $entry->url);
+                $this->frontier->markVisited($auditId->value(), $entry->url);
             }
         }
 
@@ -126,7 +126,7 @@ final readonly class CrawlerEngine
     private function processSerial(string $auditId, array $batch, AuditId $id, ?callable $onProgress): void
     {
         foreach ($batch as $entry) {
-            $this->frontier->markVisited($id, $entry->url);
+            $this->frontier->markVisited($id->value(), $entry->url);
 
             ($this->crawlPageHandler)(new CrawlPageCommand(
                 auditId: $auditId,
@@ -152,7 +152,7 @@ final readonly class CrawlerEngine
         // Mark as visited up-front — the serial handler does this before its
         // own fetch, so we keep the invariant for parallel fetches too.
         foreach ($batch as $entry) {
-            $this->frontier->markVisited($id, $entry->url);
+            $this->frontier->markVisited($id->value(), $entry->url);
         }
 
         $urls = array_map(static fn(FrontierEntry $entry) => $entry->url, $batch);
@@ -226,7 +226,7 @@ final readonly class CrawlerEngine
             pagesCrawled: $stats->pagesCrawled,
             pagesFailed: $stats->pagesFailed,
             pagesDiscovered: $stats->pagesDiscovered,
-            pendingUrls: $this->frontier->pendingCount($id),
+            pendingUrls: $this->frontier->pendingCount($id->value()),
             maxPages: $audit->configuration()->maxPages,
             status: $audit->status()->value,
         );

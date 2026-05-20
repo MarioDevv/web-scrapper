@@ -38,13 +38,13 @@ final class XmlSitemapIngesterTest extends TestCase
             'https://example.com/b',
         ]));
 
-        $added = $this->ingester->ingest($this->auditId, Url::fromString('https://example.com/'));
+        $added = $this->ingester->ingest($this->auditId->value(), Url::fromString('https://example.com/'));
 
         $this->assertSame(2, $added);
-        $this->assertTrue($this->frontier->isKnown($this->auditId, Url::fromString('https://example.com/a')));
-        $this->assertTrue($this->frontier->isKnown($this->auditId, Url::fromString('https://example.com/b')));
+        $this->assertTrue($this->frontier->isKnown($this->auditId->value(), Url::fromString('https://example.com/a')));
+        $this->assertTrue($this->frontier->isKnown($this->auditId->value(), Url::fromString('https://example.com/b')));
         $this->assertSame(DiscoverySource::SITEMAP, $this->frontier->sourceOf(
-            $this->auditId,
+            $this->auditId->value(),
             Url::fromString('https://example.com/a'),
         ));
     }
@@ -54,7 +54,7 @@ final class XmlSitemapIngesterTest extends TestCase
         $this->respondWith('https://example.com/robots.txt', "User-agent: *\nDisallow: /admin\n");
         $this->respondWith('https://example.com/sitemap.xml', $this->urlset(['https://example.com/page']));
 
-        $added = $this->ingester->ingest($this->auditId, Url::fromString('https://example.com/'));
+        $added = $this->ingester->ingest($this->auditId->value(), Url::fromString('https://example.com/'));
 
         $this->assertSame(1, $added);
     }
@@ -74,7 +74,7 @@ final class XmlSitemapIngesterTest extends TestCase
             'https://example.com/c',
         ]));
 
-        $added = $this->ingester->ingest($this->auditId, Url::fromString('https://example.com/'));
+        $added = $this->ingester->ingest($this->auditId->value(), Url::fromString('https://example.com/'));
 
         $this->assertSame(3, $added);
     }
@@ -87,7 +87,7 @@ final class XmlSitemapIngesterTest extends TestCase
             'https://example.com/p',
         ]));
 
-        $added = $this->ingester->ingest($this->auditId, Url::fromString('https://example.com/'));
+        $added = $this->ingester->ingest($this->auditId->value(), Url::fromString('https://example.com/'));
 
         $this->assertSame(1, $added, 'both entries should collapse into a single frontier row');
     }
@@ -97,7 +97,7 @@ final class XmlSitemapIngesterTest extends TestCase
         $this->http->failWith('https://example.com/robots.txt', 'connection refused');
         $this->http->failWith('https://example.com/sitemap.xml', 'connection refused');
 
-        $this->assertSame(0, $this->ingester->ingest($this->auditId, Url::fromString('https://example.com/')));
+        $this->assertSame(0, $this->ingester->ingest($this->auditId->value(), Url::fromString('https://example.com/')));
     }
 
     public function test_ignores_entries_with_malformed_loc_values(): void
@@ -112,7 +112,7 @@ final class XmlSitemapIngesterTest extends TestCase
             </urlset>
             XML);
 
-        $this->assertSame(1, $this->ingester->ingest($this->auditId, Url::fromString('https://example.com/')));
+        $this->assertSame(1, $this->ingester->ingest($this->auditId->value(), Url::fromString('https://example.com/')));
     }
 
     public function test_returns_zero_when_the_sitemap_response_is_not_valid_xml(): void
@@ -120,7 +120,7 @@ final class XmlSitemapIngesterTest extends TestCase
         $this->respondWith('https://example.com/robots.txt', "Sitemap: https://example.com/s.xml\n");
         $this->respondWith('https://example.com/s.xml', '<html>not a sitemap</html>');
 
-        $this->assertSame(0, $this->ingester->ingest($this->auditId, Url::fromString('https://example.com/')));
+        $this->assertSame(0, $this->ingester->ingest($this->auditId->value(), Url::fromString('https://example.com/')));
     }
 
     private function respondWith(string $url, string $body): void
