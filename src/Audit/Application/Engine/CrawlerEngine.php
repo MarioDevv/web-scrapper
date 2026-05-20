@@ -6,8 +6,8 @@ namespace SeoSpider\Audit\Application\Engine;
 
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageCommand;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
 use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Domain\Model\FrontierEntry;
@@ -199,7 +199,7 @@ final readonly class CrawlerEngine
         }
     }
 
-    private function effectiveDelay(\SeoSpider\Audit\Domain\Model\Audit\Audit $audit): float
+    private function effectiveDelay(\SeoSpider\Auditing\Domain\Model\Audit\Audit $audit): float
     {
         $configDelay = $audit->configuration()->requestDelay;
 
@@ -214,7 +214,7 @@ final readonly class CrawlerEngine
     }
 
     private function buildProgress(
-        \SeoSpider\Audit\Domain\Model\Audit\Audit $audit,
+        \SeoSpider\Auditing\Domain\Model\Audit\Audit $audit,
         AuditId $id,
         string $currentUrl,
     ): CrawlProgress {

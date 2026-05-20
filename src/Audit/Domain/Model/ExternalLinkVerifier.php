@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model;
 
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 
 /**
  * Post-crawl phase: walks every external anchor link that the crawl recorded,

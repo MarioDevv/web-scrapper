@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Domain\Model;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Crawling\Application\CrawlPolicy;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
 use SeoSpider\Crawling\Application\FrontierUrlDiscoverer;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;

@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Crawling\Application;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;

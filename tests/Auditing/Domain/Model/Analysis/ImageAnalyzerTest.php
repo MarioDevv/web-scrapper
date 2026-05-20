@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Auditing\Domain\Model\Analysis\ImageAnalyzer;

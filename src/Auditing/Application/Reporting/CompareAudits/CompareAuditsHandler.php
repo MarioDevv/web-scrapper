@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Auditing\Application\Reporting\CompareAudits;
 
 use RuntimeException;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Page\Page as LegacyPage;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Fingerprint as AuditingFingerprint;
@@ -83,7 +83,7 @@ final readonly class CompareAuditsHandler
     }
 
     /** @return PageRow[] */
-    private function rowsFor(\SeoSpider\Audit\Domain\Model\Audit\AuditId $auditId): array
+    private function rowsFor(\SeoSpider\Auditing\Domain\Model\Audit\AuditId $auditId): array
     {
         return array_map(
             static function (LegacyPage $page): PageRow {

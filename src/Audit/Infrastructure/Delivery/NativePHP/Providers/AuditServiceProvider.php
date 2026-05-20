@@ -6,7 +6,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use PDO;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
@@ -70,7 +70,7 @@ use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshotRepository;
 use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditSnapshotRepository;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditedPageRepository;
-use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;

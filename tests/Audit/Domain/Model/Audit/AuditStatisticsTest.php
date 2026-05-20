@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Domain\Model\Audit;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Audit\AuditStatistics;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditStatistics;
 
 final class AuditStatisticsTest extends TestCase
 {

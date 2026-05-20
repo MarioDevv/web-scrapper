@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport;
 
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 
 /**
  * Read port for the site-wide issue report. Implementations are free

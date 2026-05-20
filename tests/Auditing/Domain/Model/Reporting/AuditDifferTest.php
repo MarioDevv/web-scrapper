@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Auditing\Domain\Model\Reporting;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Fingerprint;
 use SeoSpider\Auditing\Domain\Model\Reporting\AuditDiffer;
 use SeoSpider\Auditing\Domain\Model\Reporting\PageMatchKind;

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\StartAudit;
 
-use SeoSpider\Audit\Domain\Model\Audit\Audit;
-use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\Audit;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditConfiguration;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Domain\Model\Url;

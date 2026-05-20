@@ -8,9 +8,9 @@ use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Auditing\Application\Reporting\AuditOverview\AuditOverviewBuilder;
 use SeoSpider\Auditing\Application\Reporting\BuildAuditSnapshot\BuildAuditSnapshotOnAuditCompleted;
-use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditStatistics;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditStatistics;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditSnapshotRepository;
 
 final class BuildAuditSnapshotOnAuditCompletedTest extends TestCase

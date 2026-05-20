@@ -8,7 +8,7 @@ use PDO;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailQuery;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageRepository;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;

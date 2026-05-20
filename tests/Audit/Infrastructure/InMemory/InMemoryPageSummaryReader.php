@@ -7,7 +7,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummary;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummaryReader;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Application\CrawlPage;
 
 use DateTimeImmutable;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Crawling\Application\CrawlPolicy;
 use SeoSpider\Crawling\Application\HtmlParser;
 use SeoSpider\Crawling\Application\HttpClient;

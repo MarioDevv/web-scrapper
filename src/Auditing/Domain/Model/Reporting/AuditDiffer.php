@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Auditing\Domain\Model\Reporting;
 
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Fingerprint;
 
 final class AuditDiffer

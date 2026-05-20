@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Domain\Model\Page;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;

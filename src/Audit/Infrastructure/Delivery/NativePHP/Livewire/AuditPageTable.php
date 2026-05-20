@@ -21,8 +21,8 @@ use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\GetAuditIssueRe
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\GetAuditIssueReportQuery;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailQuery;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshotRepository;
 use SeoSpider\Shared\Domain\Bus\QueryBus;
 use Symfony\Component\HttpFoundation\StreamedResponse;

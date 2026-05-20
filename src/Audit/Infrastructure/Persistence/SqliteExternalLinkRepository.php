@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Infrastructure\Persistence;
 
 use PDO;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Url;

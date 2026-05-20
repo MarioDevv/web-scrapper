@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Auditing\Domain\Model\Reporting;
 
 use DateTimeImmutable;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 
 /**
  * Frozen overview of a finished audit, persisted once when the crawl

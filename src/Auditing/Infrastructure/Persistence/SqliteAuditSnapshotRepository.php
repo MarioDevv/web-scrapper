@@ -6,7 +6,7 @@ namespace SeoSpider\Auditing\Infrastructure\Persistence;
 
 use DateTimeImmutable;
 use PDO;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshot;
 use SeoSpider\Auditing\Domain\Model\Reporting\AuditSnapshotRepository;
 

@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Shared\Domain;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 
 final class IdentityTest extends TestCase

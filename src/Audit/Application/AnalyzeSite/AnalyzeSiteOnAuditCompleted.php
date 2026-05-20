@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Application\AnalyzeSite;
 
 use SeoSpider\Audit\Application\Analysis\LegacySiteContext;
-use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Auditing\Domain\Model\Reporting\SiteIssueRepository;
 use SeoSpider\Auditing\Domain\Model\Analysis\SiteAnalyzer;

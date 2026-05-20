@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Domain\Model\Page;
 
 use DateTimeImmutable;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Shared\Domain\DomainEvent;

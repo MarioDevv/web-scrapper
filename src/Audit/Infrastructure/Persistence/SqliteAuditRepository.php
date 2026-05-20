@@ -6,12 +6,12 @@ namespace SeoSpider\Audit\Infrastructure\Persistence;
 
 use DateTimeImmutable;
 use PDO;
-use SeoSpider\Audit\Domain\Model\Audit\Audit;
-use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Audit\Domain\Model\Audit\AuditStatistics;
-use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
+use SeoSpider\Auditing\Domain\Model\Audit\Audit;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditConfiguration;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditStatistics;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditStatus;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class SqliteAuditRepository implements AuditRepository

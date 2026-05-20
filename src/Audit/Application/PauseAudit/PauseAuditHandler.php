@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Application\PauseAudit;
 
 use SeoSpider\Auditing\Application\AuditNotFound;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 
 final readonly class PauseAuditHandler

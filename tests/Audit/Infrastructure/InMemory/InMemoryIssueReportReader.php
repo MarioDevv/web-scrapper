@@ -7,7 +7,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportData;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportReader;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportRow;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 
 /**
  * Test double that projects an in-memory page repository into the same

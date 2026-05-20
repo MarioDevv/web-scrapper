@@ -6,7 +6,7 @@ namespace SeoSpider\Audit\Application\AnalyzePage;
 
 use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
 use SeoSpider\Audit\Application\Analysis\PageBackedIssueCollector;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;

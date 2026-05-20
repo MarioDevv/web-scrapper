@@ -8,7 +8,7 @@ use PDO;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportData;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportReader;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportRow;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 
 final readonly class SqliteIssueReportReader implements IssueReportReader
 {

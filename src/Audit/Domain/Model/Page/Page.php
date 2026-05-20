@@ -13,7 +13,7 @@ use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 
 use DateTimeImmutable;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Shared\Domain\AggregateRoot;
 

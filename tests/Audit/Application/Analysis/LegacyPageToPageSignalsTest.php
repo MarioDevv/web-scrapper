@@ -7,7 +7,7 @@ namespace SeoSpider\Tests\Audit\Application\Analysis;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Page\Page as LegacyPage;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;

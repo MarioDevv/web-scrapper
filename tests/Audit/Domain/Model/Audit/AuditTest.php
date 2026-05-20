@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Domain\Model\Audit;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Audit\Audit;
-use SeoSpider\Audit\Domain\Model\Audit\AuditCancelled;
-use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
-use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
-use SeoSpider\Audit\Domain\Model\Audit\AuditFailed;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditPaused;
-use SeoSpider\Audit\Domain\Model\Audit\AuditResumed;
-use SeoSpider\Audit\Domain\Model\Audit\AuditStarted;
-use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
-use SeoSpider\Audit\Domain\Model\Audit\InvalidAuditStateTransition;
+use SeoSpider\Auditing\Domain\Model\Audit\Audit;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditCancelled;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditConfiguration;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditFailed;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditPaused;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditResumed;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditStarted;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditStatus;
+use SeoSpider\Auditing\Domain\Model\Audit\InvalidAuditStateTransition;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final class AuditTest extends TestCase

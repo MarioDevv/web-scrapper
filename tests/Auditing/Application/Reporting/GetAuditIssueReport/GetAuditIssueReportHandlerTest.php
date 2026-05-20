@@ -10,7 +10,7 @@ use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\GetAuditIssueRe
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\GetAuditIssueReportQuery;
 use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;

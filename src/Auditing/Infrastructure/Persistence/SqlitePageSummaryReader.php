@@ -8,7 +8,7 @@ use PDO;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummary;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummaryReader;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 
 final readonly class SqlitePageSummaryReader implements PageSummaryReader
 {

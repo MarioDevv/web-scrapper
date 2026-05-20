@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace SeoSpider\Auditing\Application\Reporting\GetAuditPages;
 
 use SeoSpider\Auditing\Application\AuditNotFound;
-use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 
 final readonly class GetAuditPagesHandler
 {

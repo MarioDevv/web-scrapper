@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Audit;
+namespace SeoSpider\Auditing\Domain\Model\Audit;
 
 use DateTimeImmutable;
 use SeoSpider\Shared\Domain\DomainEvent;
 
-final readonly class AuditCancelled implements DomainEvent
+final readonly class AuditStarted implements DomainEvent
 {
     public function __construct(
         public AuditId $auditId,
+        public string $seedUrl,
         public DateTimeImmutable $occurredAt,
     ) {
     }
