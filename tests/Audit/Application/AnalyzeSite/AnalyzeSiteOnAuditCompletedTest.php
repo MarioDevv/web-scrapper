@@ -48,8 +48,9 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
             new InMemoryFrontier(new UrlCanonicalizer()),
             new InMemoryEventBus(),
         );
-        $response = $start(new StartAuditCommand(seedUrl: 'https://example.com'));
-        $this->auditId = new AuditId($response->auditId);
+        $auditId = AuditId::generate()->value();
+        $start(new StartAuditCommand(auditId: $auditId, seedUrl: 'https://example.com'));
+        $this->auditId = new AuditId($auditId);
     }
 
     public function test_runs_site_analyzers_and_persists_new_issues(): void

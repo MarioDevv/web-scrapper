@@ -35,24 +35,16 @@ final class StartAuditHandlerTest extends TestCase
         );
     }
 
-    public function test_starts_audit_and_returns_response(): void
-    {
-        $response = ($this->handler)(new StartAuditCommand(
-            seedUrl: 'https://example.com',
-        ));
-
-        $this->assertNotEmpty($response->auditId);
-        $this->assertSame('https://example.com', $response->seedUrl);
-        $this->assertSame('running', $response->status);
-    }
-
     public function test_persists_audit(): void
     {
-        $response = ($this->handler)(new StartAuditCommand(
+        $auditId = AuditId::generate()->value();
+
+        ($this->handler)(new StartAuditCommand(
+            auditId: $auditId,
             seedUrl: 'https://example.com',
         ));
 
-        $audit = $this->auditRepository->findById(new AuditId($response->auditId));
+        $audit = $this->auditRepository->findById(new AuditId($auditId));
 
         $this->assertNotNull($audit);
         $this->assertSame(AuditStatus::RUNNING, $audit->status());
@@ -61,29 +53,37 @@ final class StartAuditHandlerTest extends TestCase
 
     public function test_enqueues_seed_url_in_frontier(): void
     {
-        $response = ($this->handler)(new StartAuditCommand(
+        $auditId = AuditId::generate()->value();
+
+        ($this->handler)(new StartAuditCommand(
+            auditId: $auditId,
             seedUrl: 'https://example.com',
         ));
 
-        $auditId = new AuditId($response->auditId);
+        $id = new AuditId($auditId);
+        $this->assertSame(1, $this->frontier->pendingCount($id));
 
-        $this->assertSame(1, $this->frontier->pendingCount($auditId));
-
-        $entry = $this->frontier->dequeue($auditId);
+        $entry = $this->frontier->dequeue($id);
         $this->assertSame('https://example.com/', $entry->url->toString());
         $this->assertSame(0, $entry->depth);
     }
 
     public function test_publishes_audit_started_event(): void
     {
-        ($this->handler)(new StartAuditCommand(seedUrl: 'https://example.com'));
+        ($this->handler)(new StartAuditCommand(
+            auditId: AuditId::generate()->value(),
+            seedUrl: 'https://example.com',
+        ));
 
         $this->assertCount(1, $this->eventBus->published());
     }
 
     public function test_respects_custom_configuration(): void
     {
-        $response = ($this->handler)(new StartAuditCommand(
+        $auditId = AuditId::generate()->value();
+
+        ($this->handler)(new StartAuditCommand(
+            auditId: $auditId,
             seedUrl: 'https://example.com',
             maxPages: 100,
             maxDepth: 5,
@@ -93,7 +93,7 @@ final class StartAuditHandlerTest extends TestCase
             customUserAgent: 'SeoSpiderBot/1.0',
         ));
 
-        $audit = $this->auditRepository->findById(new AuditId($response->auditId));
+        $audit = $this->auditRepository->findById(new AuditId($auditId));
         $config = $audit->configuration();
 
         $this->assertSame(100, $config->maxPages);
@@ -108,6 +108,9 @@ final class StartAuditHandlerTest extends TestCase
     {
         $this->expectException(InvalidUrl::class);
 
-        ($this->handler)(new StartAuditCommand(seedUrl: 'not a url'));
+        ($this->handler)(new StartAuditCommand(
+            auditId: AuditId::generate()->value(),
+            seedUrl: 'not a url',
+        ));
     }
 }

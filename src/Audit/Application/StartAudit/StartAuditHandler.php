@@ -6,6 +6,7 @@ namespace SeoSpider\Audit\Application\StartAudit;
 
 use SeoSpider\Audit\Domain\Model\Audit\Audit;
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
+use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 use SeoSpider\Crawling\Application\Frontier;
@@ -21,12 +22,12 @@ final readonly class StartAuditHandler
     ) {
     }
 
-    public function __invoke(StartAuditCommand $command): StartAuditResponse
+    public function __invoke(StartAuditCommand $command): void
     {
         $seedUrl = Url::fromString($command->seedUrl);
 
         $audit = Audit::start(
-            $this->auditRepository->nextId(),
+            new AuditId($command->auditId),
             new AuditConfiguration(
                 seedUrl: $seedUrl,
                 maxPages: $command->maxPages,
@@ -51,11 +52,5 @@ final readonly class StartAuditHandler
         $this->auditRepository->save($audit);
 
         $this->eventBus->publish(...$audit->pullDomainEvents());
-
-        return new StartAuditResponse(
-            auditId: $audit->id()->value(),
-            seedUrl: $seedUrl->toString(),
-            status: $audit->status()->value,
-        );
     }
 }

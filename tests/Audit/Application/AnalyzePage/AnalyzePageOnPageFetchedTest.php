@@ -42,8 +42,9 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
         $this->events = new InMemoryEventBus();
 
         $start = new StartAuditHandler($this->audits, new InMemoryFrontier(new UrlCanonicalizer()), $this->events);
-        $response = $start(new StartAuditCommand(seedUrl: 'https://example.com'));
-        $this->auditId = new AuditId($response->auditId);
+        $auditId = AuditId::generate()->value();
+        $start(new StartAuditCommand(auditId: $auditId, seedUrl: 'https://example.com'));
+        $this->auditId = new AuditId($auditId);
         $this->events->reset();
     }
 

@@ -84,8 +84,9 @@ class SpiderDashboard extends Component
             'maxDepth' => 'integer|min:1|max:50',
         ]);
 
-        $handler = app(StartAuditHandler::class);
-        $response = $handler(new StartAuditCommand(
+        $auditId = Uuid::v7()->toRfc4122();
+        app(CommandBus::class)->dispatch(new StartAuditCommand(
+            auditId: $auditId,
             seedUrl: $this->url,
             maxPages: $this->maxPages,
             maxDepth: $this->maxDepth,
@@ -94,7 +95,7 @@ class SpiderDashboard extends Component
             followExternalLinks: $this->followExternalLinks,
         ));
 
-        $this->auditId = $response->auditId;
+        $this->auditId = $auditId;
         $this->crawling = true;
         $this->status = null;
 

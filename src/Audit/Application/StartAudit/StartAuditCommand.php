@@ -11,6 +11,7 @@ final readonly class StartAuditCommand
      * @param string[] $includePatterns
      */
     public function __construct(
+        public string $auditId,
         public string $seedUrl,
         public int $maxPages = 500,
         public int $maxDepth = 10,

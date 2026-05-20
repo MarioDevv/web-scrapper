@@ -108,7 +108,10 @@ final class CrawlerEngineTest extends TestCase
             $this->eventBus,
         );
 
-        $response = $startHandler(new StartAuditCommand(
+        $auditId = AuditId::generate()->value();
+
+        $startHandler(new StartAuditCommand(
+            auditId: $auditId,
             seedUrl: 'https://example.com',
             maxPages: $maxPages,
             maxDepth: $maxDepth,
@@ -119,7 +122,7 @@ final class CrawlerEngineTest extends TestCase
 
         $this->eventBus->reset();
 
-        return $response->auditId;
+        return $auditId;
     }
 
     public function test_crawls_seed_url_and_completes(): void

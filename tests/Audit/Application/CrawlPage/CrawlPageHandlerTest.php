@@ -77,16 +77,19 @@ final class CrawlPageHandlerTest extends TestCase
             $this->eventBus,
         );
 
-        $response = $startHandler(new StartAuditCommand(
+        $auditId = AuditId::generate()->value();
+
+        $startHandler(new StartAuditCommand(
+            auditId: $auditId,
             seedUrl: 'https://example.com',
             maxPages: $maxPages,
             maxDepth: $maxDepth,
         ));
 
-        $this->frontier->dequeue(new AuditId($response->auditId));
+        $this->frontier->dequeue(new AuditId($auditId));
         $this->eventBus->reset();
 
-        return $response->auditId;
+        return $auditId;
     }
 
     public function test_crawls_page_and_persists_it(): void

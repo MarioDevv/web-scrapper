@@ -40,8 +40,9 @@ final class GetAuditIssueReportHandlerTest extends TestCase
         $this->pages = new InMemoryPageRepository();
         $events = new InMemoryEventBus();
         $start = new StartAuditHandler($this->audits, new InMemoryFrontier(new UrlCanonicalizer()), $events);
-        $response = $start(new StartAuditCommand(seedUrl: 'https://example.com'));
-        $this->auditId = new AuditId($response->auditId);
+        $auditId = AuditId::generate()->value();
+        $start(new StartAuditCommand(auditId: $auditId, seedUrl: 'https://example.com'));
+        $this->auditId = new AuditId($auditId);
     }
 
     public function test_raises_audit_not_found_for_unknown_id(): void
