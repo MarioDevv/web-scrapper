@@ -49,8 +49,12 @@ use SeoSpider\Auditing\Domain\Model\Analysis\SocialMetadataAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\StructuredDataAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\HreflangReturnAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\CanonicalTargetAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\RobotsIndexableAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\SitemapCoverageAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\RobotsIndexableAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\SitemapCoverageAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\RobotsCheck;
+use SeoSpider\Auditing\Domain\Model\Analysis\SitemapIndex;
+use SeoSpider\Audit\Application\Analysis\CrawlingRobotsCheck;
+use SeoSpider\Audit\Application\Analysis\FrontierBackedSitemapIndex;
 use SeoSpider\Audit\Application\AnalyzeSite\AnalyzeSiteOnAuditCompleted;
 use SeoSpider\Audit\Application\GetAuditIssueReport\IssueReportReader;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteIssueReportReader;
@@ -168,21 +172,24 @@ final class AuditServiceProvider extends ServiceProvider
 
         $this->app->singleton(HreflangReturnAnalyzer::class, fn() => new HreflangReturnAnalyzer());
         $this->app->singleton(CanonicalTargetAnalyzer::class, fn() => new CanonicalTargetAnalyzer());
+        $this->app->singleton(RobotsCheck::class, fn($app) => new CrawlingRobotsCheck(
+            $app->make(RobotsPolicy::class),
+        ));
+        $this->app->singleton(SitemapIndex::class, fn($app) => new FrontierBackedSitemapIndex(
+            $app->make(Frontier::class),
+        ));
         $this->app->singleton(RobotsIndexableAnalyzer::class, fn($app) => new RobotsIndexableAnalyzer(
-            robotsPolicy: $app->make(RobotsPolicy::class),
+            $app->make(RobotsCheck::class),
         ));
         $this->app->singleton(SitemapCoverageAnalyzer::class, fn($app) => new SitemapCoverageAnalyzer(
-            frontier: $app->make(Frontier::class),
+            $app->make(SitemapIndex::class),
         ));
-
-        $this->app->tag([
-            RobotsIndexableAnalyzer::class,
-            SitemapCoverageAnalyzer::class,
-        ], 'site-analyzers');
 
         $this->app->tag([
             HreflangReturnAnalyzer::class,
             CanonicalTargetAnalyzer::class,
+            RobotsIndexableAnalyzer::class,
+            SitemapCoverageAnalyzer::class,
         ], 'auditing-site-analyzers');
 
         $this->app->singleton(AnalyzeSiteOnAuditCompleted::class, fn($app) => new AnalyzeSiteOnAuditCompleted(

@@ -2,43 +2,38 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Crawling\Application\RobotsPolicy;
 
-final class RobotsIndexableAnalyzer implements SiteAnalyzer
+final readonly class RobotsIndexableAnalyzer implements SiteAnalyzer
 {
-    public function __construct(private readonly RobotsPolicy $robotsPolicy)
+    public function __construct(private RobotsCheck $robots)
     {
     }
 
-    public function analyze(SiteAuditContext $context): void
+    public function analyze(SiteContext $context): void
     {
-        // The reactor primes the policy for the seed before invoking the
-        // analyzer; loading again here is cheap (cached) and makes the
-        // analyzer safe to invoke in isolation from tests.
-        $this->robotsPolicy->load($context->seedUrl);
+        $this->robots->load($context->seedUrl());
 
-        foreach ($context->pages as $page) {
+        foreach ($context->pages() as $page) {
             if (!$page->isIndexable()) {
                 continue;
             }
-
-            if ($this->robotsPolicy->isAllowed($page->url())) {
+            if ($this->robots->isAllowed($page->url())) {
                 continue;
             }
 
-            $page->addIssue(new Issue(
+            $context->addPageIssue($page->url(), new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::DIRECTIVES,
                 severity: IssueSeverity::WARNING,
                 code: 'robots_blocks_indexable',
                 message: 'Page is indexable (no noindex) but robots.txt disallows crawling it. Conflicting signals.',
-                context: $page->url()->toString(),
+                context: $page->url(),
             ));
         }
     }
