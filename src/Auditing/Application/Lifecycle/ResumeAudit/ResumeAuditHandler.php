@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\PauseAudit;
+namespace SeoSpider\Auditing\Application\Lifecycle\ResumeAudit;
 
 use SeoSpider\Auditing\Application\AuditNotFound;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 
-final readonly class PauseAuditHandler
+final readonly class ResumeAuditHandler
 {
     public function __construct(
         private AuditRepository $auditRepository,
@@ -17,7 +17,7 @@ final readonly class PauseAuditHandler
     ) {
     }
 
-    public function __invoke(PauseAuditCommand $command): void
+    public function __invoke(ResumeAuditCommand $command): void
     {
         $audit = $this->auditRepository->findById(new AuditId($command->auditId));
 
@@ -25,7 +25,7 @@ final readonly class PauseAuditHandler
             throw AuditNotFound::withId($command->auditId);
         }
 
-        $audit->pause();
+        $audit->resume();
 
         $this->auditRepository->save($audit);
         $this->eventBus->publish(...$audit->pullDomainEvents());

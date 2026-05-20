@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\ResumeAudit;
+namespace SeoSpider\Auditing\Application\Lifecycle\PauseAudit;
 
-final readonly class ResumeAuditCommand
+final readonly class PauseAuditCommand
 {
     public function __construct(public string $auditId)
     {
