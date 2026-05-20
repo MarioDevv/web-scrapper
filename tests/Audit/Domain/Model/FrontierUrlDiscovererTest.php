@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
-use SeoSpider\Crawling\Domain\Model\FrontierUrlDiscoverer;
+use SeoSpider\Crawling\Application\FrontierUrlDiscoverer;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\CrawledPage;
 use SeoSpider\Crawling\Domain\Model\Page\Link;

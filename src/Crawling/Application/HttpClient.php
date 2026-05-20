@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Crawling\Domain\Model;
+namespace SeoSpider\Crawling\Application;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 

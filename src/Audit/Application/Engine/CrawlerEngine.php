@@ -9,11 +9,11 @@ use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
-use SeoSpider\Crawling\Domain\Model\Frontier;
+use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Domain\Model\FrontierEntry;
-use SeoSpider\Crawling\Domain\Model\PageFetcher;
-use SeoSpider\Crawling\Domain\Model\RobotsPolicy;
-use SeoSpider\Crawling\Domain\Model\Sitemap\SitemapIngester;
+use SeoSpider\Crawling\Application\PageFetcher;
+use SeoSpider\Crawling\Application\RobotsPolicy;
+use SeoSpider\Crawling\Application\SitemapIngester;
 
 final readonly class CrawlerEngine
 {

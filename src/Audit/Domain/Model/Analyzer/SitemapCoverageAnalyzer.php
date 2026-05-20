@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Domain\Model\Analyzer;
 
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
-use SeoSpider\Crawling\Domain\Model\Frontier;
+use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;

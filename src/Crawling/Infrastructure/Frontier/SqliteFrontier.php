@@ -7,7 +7,7 @@ namespace SeoSpider\Crawling\Infrastructure\Frontier;
 use PDO;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
-use SeoSpider\Crawling\Domain\Model\Frontier;
+use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Domain\Model\FrontierEntry;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;

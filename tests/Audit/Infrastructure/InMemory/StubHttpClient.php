@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
-use SeoSpider\Crawling\Domain\Model\HttpClient;
+use SeoSpider\Crawling\Application\HttpClient;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;

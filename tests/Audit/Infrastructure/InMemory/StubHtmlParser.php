@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
-use SeoSpider\Crawling\Domain\Model\HtmlParser;
+use SeoSpider\Crawling\Application\HtmlParser;
 use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
 use SeoSpider\Crawling\Domain\Model\Page\Link;

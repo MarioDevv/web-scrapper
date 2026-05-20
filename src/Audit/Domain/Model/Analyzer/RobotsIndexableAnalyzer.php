@@ -8,7 +8,7 @@ use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Crawling\Domain\Model\RobotsPolicy;
+use SeoSpider\Crawling\Application\RobotsPolicy;
 
 final class RobotsIndexableAnalyzer implements SiteAnalyzer
 {

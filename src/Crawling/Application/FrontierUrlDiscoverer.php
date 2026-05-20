@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Crawling\Domain\Model;
-use SeoSpider\Crawling\Domain\Model\Frontier;
+namespace SeoSpider\Crawling\Application;
+use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
 
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;

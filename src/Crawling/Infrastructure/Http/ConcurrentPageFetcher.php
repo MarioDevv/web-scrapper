@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Crawling\Infrastructure\Http;
-use SeoSpider\Crawling\Domain\Model\HttpClient;
+use SeoSpider\Crawling\Application\HttpClient;
 
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\FetchOutcome;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectHop;
-use SeoSpider\Crawling\Domain\Model\PageFetcher;
+use SeoSpider\Crawling\Application\PageFetcher;
 use SeoSpider\Crawling\Domain\Model\Url;
 use Symfony\Component\HttpClient\CurlHttpClient;
 use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;

@@ -7,7 +7,7 @@ namespace SeoSpider\Audit\Infrastructure\ExternalLinks;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
-use SeoSpider\Crawling\Domain\Model\HttpClient;
+use SeoSpider\Crawling\Application\HttpClient;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;

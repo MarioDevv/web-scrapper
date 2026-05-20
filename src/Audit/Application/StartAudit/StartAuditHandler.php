@@ -8,7 +8,7 @@ use SeoSpider\Audit\Domain\Model\Audit\Audit;
 use SeoSpider\Audit\Domain\Model\Audit\AuditConfiguration;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Crawling\Domain\Model\DiscoverySource;
-use SeoSpider\Crawling\Domain\Model\Frontier;
+use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 
