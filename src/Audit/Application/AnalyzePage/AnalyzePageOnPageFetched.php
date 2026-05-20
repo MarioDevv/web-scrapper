@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\AnalyzePage;
 
-use SeoSpider\Audit\Application\Analysis\BufferingIssueCollector;
-use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
+use SeoSpider\Auditing\Application\Analysis\BufferingIssueCollector;
+use SeoSpider\Auditing\Infrastructure\Acl\LegacyPageToPageSignals;
 use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;

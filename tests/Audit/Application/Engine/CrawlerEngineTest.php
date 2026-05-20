@@ -29,7 +29,7 @@ use SeoSpider\Crawling\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubPageFetcher;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubSitemapIngester;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryExternalLinkRepository;
-use SeoSpider\Audit\Application\Analysis\FrontierBackedAuditFrontier;
+use SeoSpider\Auditing\Infrastructure\Acl\FrontierBackedAuditFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubHttpClient;

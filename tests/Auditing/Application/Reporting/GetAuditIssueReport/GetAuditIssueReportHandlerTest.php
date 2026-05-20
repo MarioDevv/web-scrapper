@@ -23,7 +23,7 @@ use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Auditing\Domain\Model\Issue\SiteIssue;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
-use SeoSpider\Audit\Application\Analysis\FrontierBackedAuditFrontier;
+use SeoSpider\Auditing\Infrastructure\Acl\FrontierBackedAuditFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryIssueReportReader;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;

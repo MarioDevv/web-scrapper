@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\AnalyzeSite;
 
-use SeoSpider\Audit\Application\Analysis\LegacySiteContext;
+use SeoSpider\Auditing\Infrastructure\Acl\LegacySiteContext;
 use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Auditing\Domain\Model\Analysis\SiteAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;

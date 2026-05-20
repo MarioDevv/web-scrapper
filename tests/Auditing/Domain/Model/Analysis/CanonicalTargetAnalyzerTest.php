@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Application\Analysis\LegacySiteContext;
+use SeoSpider\Auditing\Infrastructure\Acl\LegacySiteContext;
 use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Auditing\Domain\Model\Analysis\CanonicalTargetAnalyzer;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;

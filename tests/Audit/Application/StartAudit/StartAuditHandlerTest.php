@@ -13,7 +13,7 @@ use SeoSpider\Crawling\Domain\Model\Page\InvalidUrl;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
-use SeoSpider\Audit\Application\Analysis\FrontierBackedAuditFrontier;
+use SeoSpider\Auditing\Infrastructure\Acl\FrontierBackedAuditFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 
 final class StartAuditHandlerTest extends TestCase

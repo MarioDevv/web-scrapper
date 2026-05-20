@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
+use SeoSpider\Auditing\Infrastructure\Acl\LegacyPageToPageSignals;
 use SeoSpider\Auditing\Domain\Model\Analysis\SecurityHeaderAnalyzer;
 use SeoSpider\Tests\Audit\Domain\Model\Analyzer\AnalyzerTestHelpers;
 

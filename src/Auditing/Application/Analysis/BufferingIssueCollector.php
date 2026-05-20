@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\Analysis;
+namespace SeoSpider\Auditing\Application\Analysis;
 
 use SeoSpider\Auditing\Domain\Model\Analysis\IssueCollector;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;

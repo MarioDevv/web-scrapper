@@ -26,7 +26,7 @@ use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
-use SeoSpider\Audit\Application\Analysis\CrawlingPageRowReader;
+use SeoSpider\Auditing\Infrastructure\Acl\CrawlingPageRowReader;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository;
 

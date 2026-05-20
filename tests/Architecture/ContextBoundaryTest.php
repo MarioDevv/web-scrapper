@@ -33,12 +33,26 @@ final class ContextBoundaryTest extends TestCase
         return $files;
     }
 
-    /** @param string[] $forbiddenPrefixes */
-    private function assertNoImports(string $dir, array $forbiddenPrefixes): void
+    /**
+     * @param string[] $forbiddenPrefixes
+     * @param string[] $allowedSubpaths Relative-to-src paths where the rule
+     *                                  is relaxed (e.g. ACL adapters that
+     *                                  legitimately bridge two contexts).
+     */
+    private function assertNoImports(string $dir, array $forbiddenPrefixes, array $allowedSubpaths = []): void
     {
         $violations = [];
+        $allowedAbsolute = array_map(
+            static fn (string $sub): string => self::SRC . '/' . $sub,
+            $allowedSubpaths,
+        );
 
         foreach ($this->phpFilesUnder($dir) as $path => $code) {
+            foreach ($allowedAbsolute as $allowed) {
+                if (str_starts_with($path, $allowed)) {
+                    continue 2;
+                }
+            }
             if (preg_match_all('/^use\s+([^;]+);/m', $code, $m) === false) {
                 continue;
             }
@@ -70,7 +84,14 @@ final class ContextBoundaryTest extends TestCase
 
     public function test_auditing_never_imports_crawling(): void
     {
-        $this->assertNoImports('Auditing', ['SeoSpider\\Crawling\\']);
+        // Auditing/Infrastructure/Acl/* is the legitimate translation seam
+        // where Auditing-side ports are implemented by wrapping Crawling
+        // collaborators (Vernon, DDD Distilled p56 — Anticorruption Layer).
+        $this->assertNoImports(
+            'Auditing',
+            ['SeoSpider\\Crawling\\'],
+            ['Auditing/Infrastructure/Acl/'],
+        );
     }
 
     public function test_crawling_domain_is_hexagonal(): void

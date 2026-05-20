@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Auditing\Application\Reporting\GetPageDetail;
 
 use PDO;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Application\Analysis\CrawlingPageDetailReader;
+use SeoSpider\Auditing\Infrastructure\Acl\CrawlingPageDetailReader;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailQuery;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;

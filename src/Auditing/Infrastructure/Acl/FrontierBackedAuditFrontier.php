@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\Analysis;
+namespace SeoSpider\Auditing\Infrastructure\Acl;
 
 use SeoSpider\Auditing\Domain\Model\Audit\AuditFrontier;
 use SeoSpider\Crawling\Application\Frontier;
