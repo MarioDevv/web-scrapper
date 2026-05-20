@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Analyzer\TransportSecurityAnalyzer;
+use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Auditing\Domain\Model\Analysis\TransportSecurityAnalyzer;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
@@ -21,68 +22,55 @@ final class TransportSecurityAnalyzerTest extends TestCase
 {
     public function test_flags_pages_served_over_http(): void
     {
-        $page = $this->pageAt('http://example.com/');
+        $codes = $this->runOn($this->buildPage('http://example.com/'))->codes();
 
-        (new TransportSecurityAnalyzer())->analyze($page);
-
-        $codes = $this->codes($page);
         $this->assertContains('http_insecure', $codes);
         $this->assertNotContains('mixed_content', $codes);
     }
 
     public function test_does_not_flag_pages_served_over_https(): void
     {
-        $page = $this->pageAt('https://example.com/');
+        $collector = $this->runOn($this->buildPage('https://example.com/'));
 
-        (new TransportSecurityAnalyzer())->analyze($page);
-
-        $this->assertSame([], $this->codes($page));
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_uses_final_url_when_redirect_landed_on_https(): void
     {
-        $page = $this->pageAt(
+        $collector = $this->runOn($this->buildPage(
             url: 'http://example.com/',
             finalUrl: 'https://example.com/',
-        );
+        ));
 
-        (new TransportSecurityAnalyzer())->analyze($page);
-
-        $this->assertSame([], $this->codes($page));
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_flags_mixed_content_resources_on_https_pages(): void
     {
-        $page = $this->pageAt('https://example.com/', links: [
+        $collector = $this->runOn($this->buildPage('https://example.com/', links: [
             $this->resource('http://cdn.example.net/app.js', LinkType::SCRIPT),
             $this->resource('http://cdn.example.net/app.css', LinkType::STYLESHEET),
             $this->resource('http://cdn.example.net/hero.png', LinkType::IMAGE),
-        ]);
+        ]));
 
-        (new TransportSecurityAnalyzer())->analyze($page);
+        $this->assertSame(['mixed_content'], $collector->codes());
 
-        $codes = $this->codes($page);
-        $this->assertSame(['mixed_content'], $codes);
-
-        $issue = $page->issues()[0];
-        $this->assertStringContainsString('3 resource(s)', $issue->message());
+        $this->assertStringContainsString('3 resource(s)', $collector->issues()[0]->message());
     }
 
     public function test_ignores_https_resources_on_https_pages(): void
     {
-        $page = $this->pageAt('https://example.com/', links: [
+        $collector = $this->runOn($this->buildPage('https://example.com/', links: [
             $this->resource('https://cdn.example.net/app.js', LinkType::SCRIPT),
             $this->resource('https://cdn.example.net/hero.png', LinkType::IMAGE),
-        ]);
+        ]));
 
-        (new TransportSecurityAnalyzer())->analyze($page);
-
-        $this->assertSame([], $this->codes($page));
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_ignores_anchor_links_when_checking_mixed_content(): void
     {
-        $page = $this->pageAt('https://example.com/', links: [
+        $collector = $this->runOn($this->buildPage('https://example.com/', links: [
             new Link(
                 targetUrl: Url::fromString('http://other-site.test/page'),
                 type: LinkType::ANCHOR,
@@ -90,26 +78,32 @@ final class TransportSecurityAnalyzerTest extends TestCase
                 relation: LinkRelation::FOLLOW,
                 isInternal: false,
             ),
-        ]);
+        ]));
 
-        (new TransportSecurityAnalyzer())->analyze($page);
-
-        $this->assertSame([], $this->codes($page));
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_does_not_check_mixed_content_on_http_pages(): void
     {
-        $page = $this->pageAt('http://example.com/', links: [
+        $collector = $this->runOn($this->buildPage('http://example.com/', links: [
             $this->resource('http://cdn.example.net/app.js', LinkType::SCRIPT),
-        ]);
+        ]));
 
-        (new TransportSecurityAnalyzer())->analyze($page);
+        $this->assertSame(['http_insecure'], $collector->codes());
+    }
 
-        $this->assertSame(['http_insecure'], $this->codes($page));
+    private function runOn(Page $page): InMemoryIssueCollector
+    {
+        $signals = new LegacyPageToPageSignals($page);
+        $collector = new InMemoryIssueCollector();
+
+        (new TransportSecurityAnalyzer())->analyze($signals, $collector);
+
+        return $collector;
     }
 
     /** @param Link[] $links */
-    private function pageAt(string $url, ?string $finalUrl = null, array $links = []): Page
+    private function buildPage(string $url, ?string $finalUrl = null, array $links = []): Page
     {
         $requestUrl = Url::fromString($url);
         $response = new PageResponse(
@@ -147,11 +141,5 @@ final class TransportSecurityAnalyzerTest extends TestCase
             relation: LinkRelation::FOLLOW,
             isInternal: false,
         );
-    }
-
-    /** @return string[] */
-    private function codes(Page $page): array
-    {
-        return array_map(static fn($issue) => $issue->code(), $page->issues());
     }
 }

@@ -38,12 +38,12 @@ use SeoSpider\Auditing\Domain\Model\Analysis\DirectiveAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\HeadingAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\ContentAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\ImageAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\PerformanceAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\SecurityHeaderAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\PerformanceAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\SecurityHeaderAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\HreflangAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\DuplicateAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\TransportSecurityAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\SocialMetadataAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\TransportSecurityAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\SocialMetadataAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\StructuredDataAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\HreflangReturnAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\CanonicalTargetAnalyzer;
@@ -149,10 +149,6 @@ final class AuditServiceProvider extends ServiceProvider
         $this->app->tag([
             BrokenLinkAnalyzer::class,
             ImageAnalyzer::class,
-            PerformanceAnalyzer::class,
-            SecurityHeaderAnalyzer::class,
-            TransportSecurityAnalyzer::class,
-            SocialMetadataAnalyzer::class,
             HreflangAnalyzer::class,
             DuplicateAnalyzer::class,
         ], 'analyzers');
@@ -163,6 +159,10 @@ final class AuditServiceProvider extends ServiceProvider
             MetaDataAnalyzer::class,
             DirectiveAnalyzer::class,
             StructuredDataAnalyzer::class,
+            PerformanceAnalyzer::class,
+            SecurityHeaderAnalyzer::class,
+            TransportSecurityAnalyzer::class,
+            SocialMetadataAnalyzer::class,
         ], 'auditing-analyzers');
 
         $this->app->singleton(HreflangReturnAnalyzer::class, fn() => new HreflangReturnAnalyzer());

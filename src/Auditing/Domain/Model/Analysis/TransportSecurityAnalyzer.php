@@ -2,56 +2,54 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Link;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Crawling\Domain\Model\Page\Link;
-use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 
 final class TransportSecurityAnalyzer implements Analyzer
 {
     private const array MIXED_CONTENT_TYPES = [
-        LinkType::SCRIPT,
-        LinkType::STYLESHEET,
-        LinkType::IFRAME,
-        LinkType::IMAGE,
-        LinkType::VIDEO,
-        LinkType::AUDIO,
-        LinkType::FONT,
+        'script',
+        'stylesheet',
+        'iframe',
+        'image',
+        'video',
+        'audio',
+        'font',
     ];
 
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        $effectiveUrl = $page->response()->finalUrl() ?? $page->url();
-        $pageScheme = strtolower($effectiveUrl->scheme());
+        $effectiveUrl = $signals->response()->finalUrl() ?? $signals->url();
+        $pageScheme = strtolower((string) (parse_url($effectiveUrl, PHP_URL_SCHEME) ?: ''));
 
         if ($pageScheme === 'http') {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::SECURITY,
                 severity: IssueSeverity::ERROR,
                 code: 'http_insecure',
                 message: 'Page is served over plain HTTP. Browsers flag it as "Not secure" and Google treats HTTPS as a ranking signal.',
-                context: $effectiveUrl->toString(),
+                context: $effectiveUrl,
             ));
-
             return;
         }
 
-        if ($pageScheme !== 'https' || !$page->isHtml()) {
+        if ($pageScheme !== 'https' || !$signals->isHtml()) {
             return;
         }
 
         $insecureResources = [];
-        foreach ($page->links() as $link) {
+        foreach ($signals->links() as $link) {
             if (!in_array($link->type(), self::MIXED_CONTENT_TYPES, true)) {
                 continue;
             }
-
-            if (strtolower($link->targetUrl()->scheme()) === 'http') {
+            $linkScheme = strtolower((string) (parse_url($link->targetUrl(), PHP_URL_SCHEME) ?: ''));
+            if ($linkScheme === 'http') {
                 $insecureResources[] = $link;
             }
         }
@@ -61,13 +59,13 @@ final class TransportSecurityAnalyzer implements Analyzer
         }
 
         $sample = array_map(
-            static fn(Link $link) => sprintf('%s (%s)', $link->targetUrl()->toString(), $link->type()->value),
+            static fn(Link $link) => sprintf('%s (%s)', $link->targetUrl(), $link->type()),
             array_slice($insecureResources, 0, 5),
         );
 
         $count = count($insecureResources);
 
-        $page->addIssue(new Issue(
+        $issues->add(new Issue(
             id: IssueId::generate(),
             category: IssueCategory::SECURITY,
             severity: IssueSeverity::WARNING,

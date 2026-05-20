@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
@@ -33,16 +33,16 @@ final class SecurityHeaderAnalyzer implements Analyzer
         'strict-origin-when-cross-origin',
     ];
 
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml() || !$page->response()->statusCode()->isSuccessful()) {
+        if (!$signals->isHtml() || !$signals->response()->statusCode()->isSuccessful()) {
             return;
         }
 
         foreach (self::REQUIRED_HEADERS as $code => $config) {
-            $value = $page->response()->header($config['header']);
+            $value = $signals->response()->header($config['header']);
             if ($value === null || trim($value) === '') {
-                $page->addIssue(new Issue(
+                $issues->add(new Issue(
                     id: IssueId::generate(),
                     category: IssueCategory::SECURITY,
                     severity: IssueSeverity::NOTICE,
@@ -52,7 +52,7 @@ final class SecurityHeaderAnalyzer implements Analyzer
             }
         }
 
-        $this->checkReferrerPolicy($page);
+        $this->checkReferrerPolicy($signals, $issues);
     }
 
     public function category(): IssueCategory
@@ -60,12 +60,12 @@ final class SecurityHeaderAnalyzer implements Analyzer
         return IssueCategory::SECURITY;
     }
 
-    private function checkReferrerPolicy(AnalyzablePage $page): void
+    private function checkReferrerPolicy(PageSignals $signals, IssueCollector $issues): void
     {
-        $value = $page->response()->header('Referrer-Policy');
+        $value = $signals->response()->header('Referrer-Policy');
 
         if ($value === null || trim($value) === '') {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::SECURITY,
                 severity: IssueSeverity::NOTICE,
@@ -77,7 +77,7 @@ final class SecurityHeaderAnalyzer implements Analyzer
 
         $policy = strtolower(trim($value));
         if (!in_array($policy, self::SECURE_REFERRER_POLICIES, true)) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::SECURITY,
                 severity: IssueSeverity::NOTICE,

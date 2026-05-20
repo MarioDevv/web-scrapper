@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
@@ -11,13 +11,13 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 
 final class SocialMetadataAnalyzer implements Analyzer
 {
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml() || !$page->response()->statusCode()->isSuccessful()) {
+        if (!$signals->isHtml() || !$signals->response()->statusCode()->isSuccessful()) {
             return;
         }
 
-        $metadata = $page->metadata();
+        $metadata = $signals->metadata();
         if ($metadata === null) {
             return;
         }
@@ -34,7 +34,7 @@ final class SocialMetadataAnalyzer implements Analyzer
         }
 
         if ($ogMissing !== []) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::NOTICE,
@@ -58,7 +58,7 @@ final class SocialMetadataAnalyzer implements Analyzer
         }
 
         if ($twitterMissing !== []) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::NOTICE,

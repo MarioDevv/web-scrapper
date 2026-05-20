@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Analyzer\SecurityHeaderAnalyzer;
+use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
+use SeoSpider\Auditing\Domain\Model\Analysis\SecurityHeaderAnalyzer;
+use SeoSpider\Tests\Audit\Domain\Model\Analyzer\AnalyzerTestHelpers;
 
 final class SecurityHeaderAnalyzerTest extends TestCase
 {
@@ -13,11 +15,10 @@ final class SecurityHeaderAnalyzerTest extends TestCase
 
     public function test_flags_all_missing_headers_when_response_carries_none(): void
     {
-        $page = $this->pageAt('https://example.com/', headers: ['content-type' => 'text/html']);
+        $codes = $this->runOn(
+            $this->pageAt('https://example.com/', headers: ['content-type' => 'text/html']),
+        )->codes();
 
-        (new SecurityHeaderAnalyzer())->analyze($page);
-
-        $codes = $this->codes($page);
         $this->assertContains('csp_missing', $codes);
         $this->assertContains('x_frame_missing', $codes);
         $this->assertContains('x_content_type_missing', $codes);
@@ -26,65 +27,60 @@ final class SecurityHeaderAnalyzerTest extends TestCase
 
     public function test_does_not_flag_when_all_security_headers_set(): void
     {
-        $page = $this->pageAt('https://example.com/', headers: [
+        $collector = $this->runOn($this->pageAt('https://example.com/', headers: [
             'content-type' => 'text/html',
             'Content-Security-Policy' => "default-src 'self'",
             'X-Frame-Options' => 'SAMEORIGIN',
             'X-Content-Type-Options' => 'nosniff',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
-        ]);
+        ]));
 
-        (new SecurityHeaderAnalyzer())->analyze($page);
-
-        $this->assertSame([], $this->codes($page));
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_flags_insecure_referrer_policy(): void
     {
-        $page = $this->pageAt('https://example.com/', headers: [
+        $codes = $this->runOn($this->pageAt('https://example.com/', headers: [
             'content-type' => 'text/html',
             'Content-Security-Policy' => "default-src 'self'",
             'X-Frame-Options' => 'SAMEORIGIN',
             'X-Content-Type-Options' => 'nosniff',
             'Referrer-Policy' => 'unsafe-url',
-        ]);
+        ]))->codes();
 
-        (new SecurityHeaderAnalyzer())->analyze($page);
-
-        $codes = $this->codes($page);
         $this->assertContains('referrer_policy_insecure', $codes);
         $this->assertNotContains('referrer_policy_missing', $codes);
     }
 
     public function test_skips_non_html_responses(): void
     {
-        $page = $this->pageAt(
+        $collector = $this->runOn($this->pageAt(
             'https://example.com/file.pdf',
             contentType: 'application/pdf',
             headers: ['content-type' => 'application/pdf'],
-        );
+        ));
 
-        (new SecurityHeaderAnalyzer())->analyze($page);
-
-        $this->assertSame([], $this->codes($page));
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_skips_failed_responses(): void
     {
-        $page = $this->pageAt(
+        $collector = $this->runOn($this->pageAt(
             'https://example.com/missing',
             statusCode: 404,
             headers: ['content-type' => 'text/html'],
-        );
+        ));
 
-        (new SecurityHeaderAnalyzer())->analyze($page);
-
-        $this->assertSame([], $this->codes($page));
+        $this->assertSame([], $collector->codes());
     }
 
-    /** @return string[] */
-    private function codes(\SeoSpider\Audit\Domain\Model\Page\Page $page): array
+    private function runOn(\SeoSpider\Audit\Domain\Model\Page\Page $page): InMemoryIssueCollector
     {
-        return array_map(static fn($i) => $i->code(), $page->issues());
+        $signals = new LegacyPageToPageSignals($page);
+        $collector = new InMemoryIssueCollector();
+
+        (new SecurityHeaderAnalyzer())->analyze($signals, $collector);
+
+        return $collector;
     }
 }

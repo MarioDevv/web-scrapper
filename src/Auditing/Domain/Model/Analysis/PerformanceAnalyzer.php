@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
@@ -15,10 +15,10 @@ final class PerformanceAnalyzer implements Analyzer
     private const float VERY_SLOW_THRESHOLD_MS = 3000.0;
     private const int LARGE_PAGE_BYTES = 512 * 1024;
 
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        $this->checkResponseTime($page);
-        $this->checkPageSize($page);
+        $this->checkResponseTime($signals, $issues);
+        $this->checkPageSize($signals, $issues);
     }
 
     public function category(): IssueCategory
@@ -26,12 +26,12 @@ final class PerformanceAnalyzer implements Analyzer
         return IssueCategory::PERFORMANCE;
     }
 
-    private function checkResponseTime(AnalyzablePage $page): void
+    private function checkResponseTime(PageSignals $signals, IssueCollector $issues): void
     {
-        $time = $page->response()->responseTime();
+        $time = $signals->response()->responseTime();
 
         if ($time >= self::VERY_SLOW_THRESHOLD_MS) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::PERFORMANCE,
                 severity: IssueSeverity::ERROR,
@@ -39,7 +39,7 @@ final class PerformanceAnalyzer implements Analyzer
                 message: sprintf('Very slow response time: %.0fms (recommended max: %.0fms).', $time, self::SLOW_THRESHOLD_MS),
             ));
         } elseif ($time >= self::SLOW_THRESHOLD_MS) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::PERFORMANCE,
                 severity: IssueSeverity::WARNING,
@@ -49,16 +49,16 @@ final class PerformanceAnalyzer implements Analyzer
         }
     }
 
-    private function checkPageSize(AnalyzablePage $page): void
+    private function checkPageSize(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml()) {
+        if (!$signals->isHtml()) {
             return;
         }
 
-        $size = $page->response()->bodySize();
+        $size = $signals->response()->bodySize();
 
         if ($size > self::LARGE_PAGE_BYTES) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::PERFORMANCE,
                 severity: IssueSeverity::WARNING,

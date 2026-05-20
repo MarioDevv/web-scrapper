@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Analyzer\SocialMetadataAnalyzer;
+use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Auditing\Domain\Model\Analysis\SocialMetadataAnalyzer;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
@@ -19,28 +20,24 @@ final class SocialMetadataAnalyzerTest extends TestCase
 {
     public function test_does_not_flag_when_all_three_og_tags_present(): void
     {
-        $page = $this->pageWithMetadata(
+        $collector = $this->runOn($this->pageWithMetadata(
             ogTitle: 'Title',
             ogDescription: 'A description.',
             ogImage: 'https://example.com/social-card.png',
-        );
+        ));
 
-        (new SocialMetadataAnalyzer())->analyze($page);
-
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_flags_when_og_title_missing(): void
     {
-        $page = $this->pageWithMetadata(
+        $collector = $this->runOn($this->pageWithMetadata(
             ogTitle: null,
             ogDescription: 'A description.',
             ogImage: 'https://example.com/social-card.png',
-        );
+        ));
 
-        (new SocialMetadataAnalyzer())->analyze($page);
-
-        $issues = $page->issues();
+        $issues = $collector->issues();
         $this->assertCount(1, $issues);
         $this->assertSame('open_graph_incomplete', $issues[0]->code());
         $this->assertStringContainsString('og:title', $issues[0]->message());
@@ -49,15 +46,13 @@ final class SocialMetadataAnalyzerTest extends TestCase
 
     public function test_lists_all_missing_tags_in_message(): void
     {
-        $page = $this->pageWithMetadata(
+        $collector = $this->runOn($this->pageWithMetadata(
             ogTitle: null,
             ogDescription: null,
             ogImage: null,
-        );
+        ));
 
-        (new SocialMetadataAnalyzer())->analyze($page);
-
-        $issues = $page->issues();
+        $issues = $collector->issues();
         $this->assertCount(1, $issues);
         $message = $issues[0]->message();
         $this->assertStringContainsString('og:title', $message);
@@ -67,75 +62,64 @@ final class SocialMetadataAnalyzerTest extends TestCase
 
     public function test_treats_blank_strings_as_missing(): void
     {
-        $page = $this->pageWithMetadata(
+        $collector = $this->runOn($this->pageWithMetadata(
             ogTitle: '   ',
             ogDescription: 'A description.',
             ogImage: 'https://example.com/social-card.png',
-        );
+        ));
 
-        (new SocialMetadataAnalyzer())->analyze($page);
-
-        $issues = $page->issues();
+        $issues = $collector->issues();
         $this->assertCount(1, $issues);
         $this->assertStringContainsString('og:title', $issues[0]->message());
     }
 
     public function test_skips_non_html_responses(): void
     {
-        $page = $this->pageWithMetadata(
+        $collector = $this->runOn($this->pageWithMetadata(
             ogTitle: null,
             ogDescription: null,
             ogImage: null,
             contentType: 'application/pdf',
-        );
+        ));
 
-        (new SocialMetadataAnalyzer())->analyze($page);
-
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_skips_pages_with_no_metadata(): void
     {
-        $page = $this->pageWithoutMetadata();
+        $collector = $this->runOn($this->basePage('text/html', 200));
 
-        (new SocialMetadataAnalyzer())->analyze($page);
-
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_skips_failed_responses(): void
     {
-        $page = $this->pageWithMetadata(
+        $collector = $this->runOn($this->pageWithMetadata(
             ogTitle: null,
             ogDescription: null,
             ogImage: null,
             statusCode: 500,
-        );
+        ));
 
-        (new SocialMetadataAnalyzer())->analyze($page);
-
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $collector->codes());
     }
 
     public function test_flags_when_twitter_card_missing(): void
     {
-        $page = $this->pageWithMetadata(
+        $collector = $this->runOn($this->pageWithMetadata(
             ogTitle: 'Title',
             ogDescription: 'Description',
             ogImage: 'https://example.com/og.png',
             twitterCard: null,
-        );
+        ));
 
-        (new SocialMetadataAnalyzer())->analyze($page);
-
-        $codes = array_map(static fn($issue) => $issue->code(), $page->issues());
-        $this->assertSame(['twitter_card_incomplete'], $codes);
-        $this->assertStringContainsString('twitter:card', $page->issues()[0]->message());
+        $this->assertSame(['twitter_card_incomplete'], $collector->codes());
+        $this->assertStringContainsString('twitter:card', $collector->issues()[0]->message());
     }
 
     public function test_lists_all_missing_twitter_tags(): void
     {
-        $page = $this->pageWithMetadata(
+        $collector = $this->runOn($this->pageWithMetadata(
             ogTitle: 'Title',
             ogDescription: 'Description',
             ogImage: 'https://example.com/og.png',
@@ -143,11 +127,9 @@ final class SocialMetadataAnalyzerTest extends TestCase
             twitterTitle: null,
             twitterDescription: null,
             twitterImage: null,
-        );
+        ));
 
-        (new SocialMetadataAnalyzer())->analyze($page);
-
-        $issues = $page->issues();
+        $issues = $collector->issues();
         $this->assertCount(1, $issues);
         $message = $issues[0]->message();
         $this->assertStringContainsString('twitter:card', $message);
@@ -158,7 +140,7 @@ final class SocialMetadataAnalyzerTest extends TestCase
 
     public function test_emits_both_og_and_twitter_issues_when_both_incomplete(): void
     {
-        $page = $this->pageWithMetadata(
+        $collector = $this->runOn($this->pageWithMetadata(
             ogTitle: null,
             ogDescription: null,
             ogImage: null,
@@ -166,14 +148,22 @@ final class SocialMetadataAnalyzerTest extends TestCase
             twitterTitle: null,
             twitterDescription: null,
             twitterImage: null,
-        );
+        ));
 
-        (new SocialMetadataAnalyzer())->analyze($page);
-
-        $codes = array_map(static fn($issue) => $issue->code(), $page->issues());
+        $codes = $collector->codes();
         $this->assertContains('open_graph_incomplete', $codes);
         $this->assertContains('twitter_card_incomplete', $codes);
         $this->assertCount(2, $codes);
+    }
+
+    private function runOn(Page $page): InMemoryIssueCollector
+    {
+        $signals = new LegacyPageToPageSignals($page);
+        $collector = new InMemoryIssueCollector();
+
+        (new SocialMetadataAnalyzer())->analyze($signals, $collector);
+
+        return $collector;
     }
 
     private function pageWithMetadata(
@@ -208,11 +198,6 @@ final class SocialMetadataAnalyzerTest extends TestCase
         ));
 
         return $page;
-    }
-
-    private function pageWithoutMetadata(): Page
-    {
-        return $this->basePage('text/html', 200);
     }
 
     private function basePage(string $contentType, int $statusCode): Page
