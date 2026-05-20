@@ -10,9 +10,9 @@ use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
-use SeoSpider\Audit\Domain\Model\Page\PageFetched;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageCrawled;
+use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
 use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\IssueCollector;
 use SeoSpider\Auditing\Domain\Model\Analysis\PageSignals;
@@ -62,7 +62,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
             $this->analyzerThatAppends(IssueSeverity::WARNING),
         ]))(new PageFetched(
             pageId: $page->id(),
-            auditId: $this->auditId,
+            auditId: $this->auditId->value(),
             newUrlsDiscovered: 3,
             occurredAt: new DateTimeImmutable(),
         ));
@@ -89,7 +89,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
 
         ($this->buildReactor([$this->analyzerThatAppends(IssueSeverity::ERROR)]))(new PageFetched(
             pageId: $page->id(),
-            auditId: $this->auditId,
+            auditId: $this->auditId->value(),
             newUrlsDiscovered: 0,
             occurredAt: new DateTimeImmutable(),
         ));
@@ -112,7 +112,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
 
         ($this->buildReactor([]))(new PageFetched(
             pageId: $page->id(),
-            auditId: $this->auditId,
+            auditId: $this->auditId->value(),
             newUrlsDiscovered: 0,
             occurredAt: new DateTimeImmutable(),
         ));
@@ -129,8 +129,8 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
     public function test_is_a_noop_when_the_page_has_been_deleted(): void
     {
         ($this->buildReactor([]))(new PageFetched(
-            pageId: \SeoSpider\Audit\Domain\Model\Page\PageId::generate(),
-            auditId: $this->auditId,
+            pageId: \SeoSpider\Crawling\Domain\Model\Page\PageId::generate(),
+            auditId: $this->auditId->value(),
             newUrlsDiscovered: 0,
             occurredAt: new DateTimeImmutable(),
         ));
@@ -157,7 +157,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
     {
         $page = Page::fromCrawl(
             id: $this->pages->nextId(),
-            auditId: $this->auditId,
+            auditId: $this->auditId->value(),
             url: Url::fromString('https://example.com/page'),
             response: new PageResponse(
                 statusCode: new HttpStatusCode(200),

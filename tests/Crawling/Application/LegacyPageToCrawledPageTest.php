@@ -11,8 +11,8 @@ use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Application\LegacyPageToCrawledPage;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\Directive;
@@ -78,7 +78,7 @@ final class LegacyPageToCrawledPageTest extends TestCase
 
         $page = Page::reconstitute(
             id: PageId::generate(),
-            auditId: AuditId::generate(),
+            auditId: AuditId::generate()->value(),
             url: $url,
             response: $response,
             redirectChain: RedirectChain::none(),

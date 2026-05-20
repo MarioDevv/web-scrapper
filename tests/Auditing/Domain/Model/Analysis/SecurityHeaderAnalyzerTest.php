@@ -74,7 +74,7 @@ final class SecurityHeaderAnalyzerTest extends TestCase
         $this->assertSame([], $collector->codes());
     }
 
-    private function runOn(\SeoSpider\Audit\Domain\Model\Page\Page $page): InMemoryIssueCollector
+    private function runOn(\SeoSpider\Crawling\Domain\Model\Page\Page $page): InMemoryIssueCollector
     {
         $signals = new LegacyPageToPageSignals($page);
         $collector = new InMemoryIssueCollector();

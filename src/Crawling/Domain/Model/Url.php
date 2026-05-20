@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Crawling\Domain\Model;
 
-use SeoSpider\Audit\Domain\Model\Page\InvalidUrl;
+use SeoSpider\Crawling\Domain\Model\Page\InvalidUrl;
 use Stringable;
 use Uri\Rfc3986\Uri as PhpUri;
 use Uri\UriComparisonMode;

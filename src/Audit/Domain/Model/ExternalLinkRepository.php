@@ -6,7 +6,7 @@ namespace SeoSpider\Audit\Domain\Model;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
 
 interface ExternalLinkRepository
 {

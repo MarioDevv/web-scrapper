@@ -14,10 +14,10 @@ use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageFailed;
-use SeoSpider\Audit\Domain\Model\Page\PageFetched;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageFailed;
+use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
+use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
@@ -84,7 +84,7 @@ final readonly class CrawlPageHandler
 
         $page = Page::fromCrawl(
             id: $this->pageRepository->nextId(),
-            auditId: $auditId,
+            auditId: $auditId->value(),
             url: $url,
             response: $response,
             redirectChain: $chain,
@@ -109,7 +109,7 @@ final readonly class CrawlPageHandler
         $this->eventBus->publish(
             new PageFetched(
                 pageId: $page->id(),
-                auditId: $auditId,
+                auditId: $auditId->value(),
                 newUrlsDiscovered: $newUrls,
                 occurredAt: new DateTimeImmutable(),
             ),
@@ -176,7 +176,7 @@ final readonly class CrawlPageHandler
         $this->eventBus->publish(
             new PageFailed(
                 pageId: $this->pageRepository->nextId(),
-                auditId: $auditId,
+                auditId: $auditId->value(),
                 url: $url,
                 reason: $reason,
                 occurredAt: new DateTimeImmutable(),

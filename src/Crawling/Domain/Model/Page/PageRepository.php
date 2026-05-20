@@ -2,11 +2,9 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Page;
-use SeoSpider\Auditing\Domain\Model\Issue\Issue;
+namespace SeoSpider\Crawling\Domain\Model\Page;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 interface PageRepository
@@ -15,10 +13,10 @@ interface PageRepository
 
     public function findById(PageId $id): ?Page;
 
-    public function findByAuditAndUrl(AuditId $auditId, Url $url): ?Page;
+    public function findByAuditAndUrl(string $auditId, Url $url): ?Page;
 
     /** @return Page[] */
-    public function findByAudit(AuditId $auditId): array;
+    public function findByAudit(string $auditId): array;
 
     /**
      * Returns pages crawled strictly after the given ISO-8601 instant.
@@ -28,12 +26,12 @@ interface PageRepository
      *
      * @return Page[]
      */
-    public function findByAuditSince(AuditId $auditId, ?string $sinceIso): array;
+    public function findByAuditSince(string $auditId, ?string $sinceIso): array;
 
-    public function countByAudit(AuditId $auditId): int;
+    public function countByAudit(string $auditId): int;
 
     public function nextId(): PageId;
 
     /** @return array<string, Fingerprint> */
-    public function fingerprintsByAudit(AuditId $auditId): array;
+    public function fingerprintsByAudit(string $auditId): array;
 }

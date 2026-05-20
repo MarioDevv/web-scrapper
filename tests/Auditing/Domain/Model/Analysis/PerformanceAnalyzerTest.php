@@ -52,7 +52,7 @@ final class PerformanceAnalyzerTest extends TestCase
         $this->assertNotContains('page_too_large', $collector->codes());
     }
 
-    private function runOn(\SeoSpider\Audit\Domain\Model\Page\Page $page): InMemoryIssueCollector
+    private function runOn(\SeoSpider\Crawling\Domain\Model\Page\Page $page): InMemoryIssueCollector
     {
         $signals = new LegacyPageToPageSignals($page);
         $collector = new InMemoryIssueCollector();

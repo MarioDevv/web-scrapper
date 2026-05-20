@@ -8,8 +8,8 @@ use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
@@ -22,7 +22,7 @@ final class CrawledPagePayloadFactoryTest extends TestCase
         $auditId = AuditId::generate();
         $page = Page::reconstitute(
             id: PageId::generate(),
-            auditId: $auditId,
+            auditId: $auditId->value(),
             url: Url::fromString('https://example.com/about'),
             response: new PageResponse(
                 statusCode: new HttpStatusCode(200),

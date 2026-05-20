@@ -9,7 +9,7 @@ use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditStatus;
-use SeoSpider\Audit\Domain\Model\Page\InvalidUrl;
+use SeoSpider\Crawling\Domain\Model\Page\InvalidUrl;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;

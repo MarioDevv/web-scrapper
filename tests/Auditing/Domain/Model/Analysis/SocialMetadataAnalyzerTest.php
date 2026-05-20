@@ -7,8 +7,8 @@ namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
 use SeoSpider\Auditing\Domain\Model\Analysis\SocialMetadataAnalyzer;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
@@ -216,7 +216,7 @@ final class SocialMetadataAnalyzerTest extends TestCase
 
         return Page::fromCrawl(
             id: PageId::generate(),
-            auditId: AuditId::generate(),
+            auditId: AuditId::generate()->value(),
             url: $url,
             response: $response,
             redirectChain: RedirectChain::none(),

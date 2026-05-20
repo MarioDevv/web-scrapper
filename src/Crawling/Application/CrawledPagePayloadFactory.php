@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Crawling\Application;
 
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Shared\Integration\CrawledPagePayload;
 
 final readonly class CrawledPagePayloadFactory
@@ -14,7 +14,7 @@ final readonly class CrawledPagePayloadFactory
         $response = $page->response();
 
         return new CrawledPagePayload(
-            auditId: $page->auditId()->value(),
+            auditId: $page->auditId(),
             url: $page->url()->toString(),
             crawlDepth: $page->crawlDepth(),
             isHtml: $page->isHtml(),

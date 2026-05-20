@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\Analysis;
 
-use SeoSpider\Audit\Domain\Model\Page\Page as LegacyPage;
+use SeoSpider\Crawling\Domain\Model\Page\Page as LegacyPage;
 use SeoSpider\Auditing\Domain\Model\Analysis\PageSignals;
 use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Directive;
 use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Fingerprint;
@@ -29,7 +29,7 @@ final readonly class LegacyPageToPageSignals implements PageSignals
 
     public function auditId(): string
     {
-        return $this->page->auditId()->value();
+        return $this->page->auditId();
     }
 
     public function url(): string

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummary;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummaryReader;
@@ -42,12 +42,12 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
 
     public function totalForAudit(AuditId $auditId): int
     {
-        return count($this->pages->findByAudit($auditId));
+        return count($this->pages->findByAudit($auditId->value()));
     }
 
     public function tabCounts(AuditId $auditId): array
     {
-        $pages = $this->pages->findByAudit($auditId);
+        $pages = $this->pages->findByAudit($auditId->value());
 
         $internal = 0;
         $html = 0;
@@ -95,8 +95,8 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
     {
         $auditId = new AuditId($query->auditId);
         $pages = $query->since !== null
-            ? $this->pages->findByAuditSince($auditId, $query->since)
-            : $this->pages->findByAudit($auditId);
+            ? $this->pages->findByAuditSince($auditId->value(), $query->since)
+            : $this->pages->findByAudit($auditId->value());
 
         $tab = $query->tab;
         $search = $query->search !== null ? mb_strtolower($query->search) : null;

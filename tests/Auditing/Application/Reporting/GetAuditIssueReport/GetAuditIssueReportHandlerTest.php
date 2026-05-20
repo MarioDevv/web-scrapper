@@ -16,7 +16,7 @@ use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
@@ -319,7 +319,7 @@ final class GetAuditIssueReportHandlerTest extends TestCase
     {
         $page = Page::fromCrawl(
             id: $this->pages->nextId(),
-            auditId: $this->auditId,
+            auditId: $this->auditId->value(),
             url: Url::fromString($url),
             response: new PageResponse(
                 statusCode: new HttpStatusCode(200),

@@ -13,9 +13,9 @@ use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageCrawled;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Url;
 
@@ -25,7 +25,7 @@ final class PageTest extends TestCase
     {
         return Page::fromCrawl(
             id: PageId::generate(),
-            auditId: AuditId::generate(),
+            auditId: AuditId::generate()->value(),
             url: Url::fromString('https://example.com/test'),
             response: new PageResponse(
                 statusCode: new HttpStatusCode($statusCode),
@@ -48,7 +48,7 @@ final class PageTest extends TestCase
 
         $page = Page::fromCrawl(
             id: PageId::generate(),
-            auditId: $auditId,
+            auditId: $auditId->value(),
             url: $url,
             response: new PageResponse(
                 statusCode: new HttpStatusCode(200),
@@ -63,7 +63,7 @@ final class PageTest extends TestCase
             crawlDepth: 2,
         );
 
-        $this->assertSame($auditId, $page->auditId());
+        $this->assertSame($auditId->value(), $page->auditId());
         $this->assertSame($url, $page->url());
         $this->assertSame(2, $page->crawlDepth());
         $this->assertTrue($page->redirectChain()->isEmpty());

@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Application\AnalyzeSite;
 
 use SeoSpider\Audit\Application\Analysis\LegacySiteContext;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Auditing\Domain\Model\Analysis\SiteAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
@@ -36,7 +37,7 @@ final readonly class AnalyzeSiteOnAuditCompleted
             return;
         }
 
-        $pages = $this->pageRepository->findByAudit($event->auditId);
+        $pages = $this->pageRepository->findByAudit($event->auditId->value());
         if ($pages === []) {
             return;
         }

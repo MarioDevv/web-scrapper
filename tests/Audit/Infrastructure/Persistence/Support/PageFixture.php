@@ -8,8 +8,8 @@ use DateTimeImmutable;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
@@ -23,7 +23,7 @@ final class PageFixture
     ): Page {
         return Page::reconstitute(
             id: PageId::generate(),
-            auditId: $auditId,
+            auditId: $auditId->value(),
             url: Url::fromString($url),
             response: new PageResponse(
                 statusCode: new HttpStatusCode(200),

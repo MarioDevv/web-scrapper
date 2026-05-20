@@ -24,7 +24,7 @@ use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
-use SeoSpider\Audit\Domain\Model\Page\PageFetched;
+use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
 use SeoSpider\Audit\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubPageFetcher;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubSitemapIngester;
@@ -264,7 +264,7 @@ final class CrawlerEngineTest extends TestCase
         $this->assertSame(2, $audit->statistics()->pagesCrawled);
 
         $blockedPage = $this->pageRepository->findByAuditAndUrl(
-            new AuditId($auditId),
+            $auditId,
             Url::fromString('https://example.com/blocked'),
         );
         $this->assertNull($blockedPage);

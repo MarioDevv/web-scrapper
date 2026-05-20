@@ -13,8 +13,8 @@ use SeoSpider\Crawling\Domain\Model\Page\HreflangSource;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
@@ -72,7 +72,7 @@ trait AnalyzerTestHelpers
 
         $page = Page::fromCrawl(
             id: PageId::generate(),
-            auditId: $this->buildAuditId(),
+            auditId: $this->buildAuditId()->value(),
             url: $requestUrl,
             response: $response,
             redirectChain: $redirectChain ?? RedirectChain::none(),

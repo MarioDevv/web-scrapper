@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Application\Analysis\LegacySiteContext;
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Auditing\Domain\Model\Analysis\SitemapCoverageAnalyzer;
 use SeoSpider\Tests\Audit\Domain\Model\Analyzer\AnalyzerTestHelpers;
 

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\Analysis;
 
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Fingerprint as AuditingFingerprint;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Reporting\PageRow;
@@ -27,7 +27,7 @@ final readonly class CrawlingPageRowReader implements PageRowReader
                     fingerprint: $fp === null ? null : new AuditingFingerprint($fp->exactHash(), $fp->simHash()),
                 );
             },
-            $this->pages->findByAudit($auditId),
+            $this->pages->findByAudit($auditId->value()),
         );
     }
 }

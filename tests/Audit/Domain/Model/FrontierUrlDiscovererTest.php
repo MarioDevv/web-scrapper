@@ -14,7 +14,7 @@ use SeoSpider\Crawling\Domain\Model\Page\CrawledPage;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
@@ -102,8 +102,8 @@ final class FrontierUrlDiscovererTest extends TestCase
     private function pageWithLinks(array $links): CrawledPage
     {
         $page = Page::fromCrawl(
-            id: \SeoSpider\Audit\Domain\Model\Page\PageId::generate(),
-            auditId: $this->auditId,
+            id: \SeoSpider\Crawling\Domain\Model\Page\PageId::generate(),
+            auditId: $this->auditId->value(),
             url: Url::fromString('https://example.com/'),
             response: new PageResponse(
                 statusCode: new HttpStatusCode(200),

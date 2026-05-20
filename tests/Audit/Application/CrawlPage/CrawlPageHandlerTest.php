@@ -18,9 +18,9 @@ use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
-use SeoSpider\Audit\Domain\Model\Page\PageFailed;
-use SeoSpider\Audit\Domain\Model\Page\PageFetched;
+use SeoSpider\Crawling\Domain\Model\Page\PageCrawled;
+use SeoSpider\Crawling\Domain\Model\Page\PageFailed;
+use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
 use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Application\FrontierUrlDiscoverer;
@@ -106,7 +106,7 @@ final class CrawlPageHandlerTest extends TestCase
             depth: 0,
         ));
 
-        $this->assertSame(1, $this->pageRepository->countByAudit(new AuditId($auditId)));
+        $this->assertSame(1, $this->pageRepository->countByAudit($auditId));
     }
 
     public function test_updates_audit_statistics(): void
@@ -267,7 +267,7 @@ final class CrawlPageHandlerTest extends TestCase
 
         $audit = $this->auditRepository->findById(new AuditId($auditId));
         $this->assertSame(1, $audit->statistics()->pagesFailed);
-        $this->assertSame(0, $this->pageRepository->countByAudit(new AuditId($auditId)));
+        $this->assertSame(0, $this->pageRepository->countByAudit($auditId));
 
         $failedEvents = array_filter(
             $this->eventBus->published(),
@@ -294,7 +294,7 @@ final class CrawlPageHandlerTest extends TestCase
             depth: 1,
         ));
 
-        $this->assertSame(1, $this->pageRepository->countByAudit(new AuditId($auditId)));
+        $this->assertSame(1, $this->pageRepository->countByAudit($auditId));
         $this->assertEmpty($this->eventBus->published());
     }
 
@@ -324,7 +324,7 @@ final class CrawlPageHandlerTest extends TestCase
             depth: 0,
         ));
 
-        $pages = $this->pageRepository->findByAudit(new AuditId($auditId));
+        $pages = $this->pageRepository->findByAudit($auditId);
         $this->assertNotNull(array_first($pages)->fingerprint());
     }
 

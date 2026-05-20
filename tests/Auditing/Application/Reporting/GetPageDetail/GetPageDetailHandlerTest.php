@@ -10,7 +10,7 @@ use SeoSpider\Audit\Application\Analysis\CrawlingPageDetailReader;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailQuery;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageRepository;
+use SeoSpider\Crawling\Infrastructure\Persistence\SqlitePageRepository;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;

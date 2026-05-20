@@ -9,9 +9,9 @@ use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
 use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
 use SeoSpider\Crawling\Application\HttpClient;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class HttpExternalLinkVerifier implements ExternalLinkVerifier
@@ -63,7 +63,7 @@ final readonly class HttpExternalLinkVerifier implements ExternalLinkVerifier
         $grouped = [];
 
         /** @var Page[] $pages */
-        $pages = $this->pageRepository->findByAudit($auditId);
+        $pages = $this->pageRepository->findByAudit($auditId->value());
 
         foreach ($pages as $page) {
             foreach ($page->links() as $link) {

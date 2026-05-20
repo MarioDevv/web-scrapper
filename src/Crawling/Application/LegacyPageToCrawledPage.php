@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Crawling\Application;
 
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Crawling\Domain\Model\Page\CrawledPage;
 
 final readonly class LegacyPageToCrawledPage

@@ -2,20 +2,21 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Page;
+namespace SeoSpider\Crawling\Domain\Model\Page;
 
 use DateTimeImmutable;
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Shared\Domain\DomainEvent;
 
-final readonly class PageFailed implements DomainEvent
+final readonly class PageCrawled implements DomainEvent
 {
     public function __construct(
         public PageId $pageId,
-        public AuditId $auditId,
+        public string $auditId,
         public Url $url,
-        public string $reason,
+        public HttpStatusCode $statusCode,
+        public int $issueCount,
         public DateTimeImmutable $occurredAt,
     ) {
     }

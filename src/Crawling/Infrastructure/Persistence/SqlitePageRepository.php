@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\Persistence;
+namespace SeoSpider\Crawling\Infrastructure\Persistence;
 
 use DateTimeImmutable;
 use PDO;
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;
@@ -16,10 +15,10 @@ use SeoSpider\Crawling\Domain\Model\Page\HreflangSource;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectHop;
@@ -57,11 +56,11 @@ final readonly class SqlitePageRepository implements PageRepository
         return $this->hydrate($row);
     }
 
-    public function findByAuditAndUrl(AuditId $auditId, Url $url): ?Page
+    public function findByAuditAndUrl(string $auditId, Url $url): ?Page
     {
         $stmt = $this->pdo->prepare('SELECT * FROM pages WHERE audit_id = :audit_id AND url = :url');
         $stmt->execute([
-            'audit_id' => $auditId->value(),
+            'audit_id' => $auditId,
             'url' => $url->toString(),
         ]);
 
@@ -74,15 +73,15 @@ final readonly class SqlitePageRepository implements PageRepository
     }
 
     /** @return Page[] */
-    public function findByAudit(AuditId $auditId): array
+    public function findByAudit(string $auditId): array
     {
         $stmt = $this->pdo->prepare('SELECT * FROM pages WHERE audit_id = :audit_id ORDER BY crawled_at ASC');
-        $stmt->execute(['audit_id' => $auditId->value()]);
+        $stmt->execute(['audit_id' => $auditId]);
 
         return array_map(fn (array $row) => $this->hydrate($row), $stmt->fetchAll());
     }
 
-    public function findByAuditSince(AuditId $auditId, ?string $sinceIso): array
+    public function findByAuditSince(string $auditId, ?string $sinceIso): array
     {
         if ($sinceIso === null || $sinceIso === '') {
             return $this->findByAudit($auditId);
@@ -92,17 +91,17 @@ final readonly class SqlitePageRepository implements PageRepository
             'SELECT * FROM pages WHERE audit_id = :audit_id AND crawled_at > :since ORDER BY crawled_at ASC',
         );
         $stmt->execute([
-            'audit_id' => $auditId->value(),
+            'audit_id' => $auditId,
             'since' => $sinceIso,
         ]);
 
         return array_map(fn (array $row) => $this->hydrate($row), $stmt->fetchAll());
     }
 
-    public function countByAudit(AuditId $auditId): int
+    public function countByAudit(string $auditId): int
     {
         $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM pages WHERE audit_id = :audit_id');
-        $stmt->execute(['audit_id' => $auditId->value()]);
+        $stmt->execute(['audit_id' => $auditId]);
 
         return (int) $stmt->fetchColumn();
     }
@@ -113,12 +112,12 @@ final readonly class SqlitePageRepository implements PageRepository
     }
 
     /** @return array<string, Fingerprint> */
-    public function fingerprintsByAudit(AuditId $auditId): array
+    public function fingerprintsByAudit(string $auditId): array
     {
         $stmt = $this->pdo->prepare(
             'SELECT url, exact_hash, sim_hash FROM pages WHERE audit_id = :audit_id AND exact_hash IS NOT NULL',
         );
-        $stmt->execute(['audit_id' => $auditId->value()]);
+        $stmt->execute(['audit_id' => $auditId]);
 
         $fingerprints = [];
         foreach ($stmt->fetchAll() as $row) {
@@ -175,7 +174,7 @@ final readonly class SqlitePageRepository implements PageRepository
 
         $stmt->execute([
             'id' => $page->id()->value(),
-            'audit_id' => $page->auditId()->value(),
+            'audit_id' => $page->auditId(),
             'url' => $page->url()->toString(),
             'status_code' => $page->response()->statusCode()->code(),
             'content_type' => $page->response()->contentType(),
@@ -227,7 +226,7 @@ final readonly class SqlitePageRepository implements PageRepository
     {
         return Page::reconstitute(
             id: new PageId($row['id']),
-            auditId: new AuditId($row['audit_id']),
+            auditId: $row['audit_id'],
             url: Url::fromString($row['url']),
             response: new PageResponse(
                 statusCode: new HttpStatusCode((int) $row['status_code']),

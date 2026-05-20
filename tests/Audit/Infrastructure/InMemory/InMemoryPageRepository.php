@@ -7,9 +7,9 @@ namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Crawling\Domain\Model\Url;
 
 final class InMemoryPageRepository implements PageRepository
@@ -27,10 +27,10 @@ final class InMemoryPageRepository implements PageRepository
         return $this->pages[$id->value()] ?? null;
     }
 
-    public function findByAuditAndUrl(AuditId $auditId, Url $url): ?Page
+    public function findByAuditAndUrl(string $auditId, Url $url): ?Page
     {
         foreach ($this->pages as $page) {
-            if ($page->auditId()->equals($auditId) && $page->url()->equals($url)) {
+            if ($page->auditId() === $auditId && $page->url()->equals($url)) {
                 return $page;
             }
         }
@@ -39,16 +39,16 @@ final class InMemoryPageRepository implements PageRepository
     }
 
     /** @return Page[] */
-    public function findByAudit(AuditId $auditId): array
+    public function findByAudit(string $auditId): array
     {
         return array_values(array_filter(
             $this->pages,
-            static fn(Page $page) => $page->auditId()->equals($auditId),
+            static fn(Page $page) => $page->auditId() === $auditId,
         ));
     }
 
     /** @return Page[] */
-    public function findByAuditSince(AuditId $auditId, ?string $sinceIso): array
+    public function findByAuditSince(string $auditId, ?string $sinceIso): array
     {
         if ($sinceIso === null || $sinceIso === '') {
             return $this->findByAudit($auditId);
@@ -60,7 +60,7 @@ final class InMemoryPageRepository implements PageRepository
         ));
     }
 
-    public function countByAudit(AuditId $auditId): int
+    public function countByAudit(string $auditId): int
     {
         return count($this->findByAudit($auditId));
     }
@@ -71,7 +71,7 @@ final class InMemoryPageRepository implements PageRepository
     }
 
     /** @return array<string, Fingerprint> */
-    public function fingerprintsByAudit(AuditId $auditId): array
+    public function fingerprintsByAudit(string $auditId): array
     {
         $fingerprints = [];
 

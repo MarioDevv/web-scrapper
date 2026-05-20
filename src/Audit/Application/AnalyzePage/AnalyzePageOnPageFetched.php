@@ -7,11 +7,12 @@ namespace SeoSpider\Audit\Application\AnalyzePage;
 use DateTimeImmutable;
 use SeoSpider\Audit\Application\Analysis\BufferingIssueCollector;
 use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
-use SeoSpider\Audit\Domain\Model\Page\PageFetched;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageCrawled;
+use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
+use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
@@ -48,7 +49,7 @@ final readonly class AnalyzePageOnPageFetched
             new DateTimeImmutable(),
         );
 
-        $audit = $this->auditRepository->findById($event->auditId);
+        $audit = $this->auditRepository->findById(new AuditId($event->auditId));
         if ($audit === null) {
             $this->eventBus->publish($pageCrawled);
             return;
@@ -81,7 +82,7 @@ final readonly class AnalyzePageOnPageFetched
     private function persistAuditedPage(Page $page, BufferingIssueCollector $collector): void
     {
         $audited = AuditedPage::forUrl(
-            $page->auditId()->value(),
+            $page->auditId(),
             $page->url()->toString(),
         );
         foreach ($collector->issues() as $issue) {

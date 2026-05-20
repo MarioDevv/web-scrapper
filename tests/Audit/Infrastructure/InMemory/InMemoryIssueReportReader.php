@@ -21,7 +21,7 @@ final readonly class InMemoryIssueReportReader implements IssueReportReader
 
     public function read(AuditId $auditId): IssueReportData
     {
-        $pages = $this->pages->findByAudit($auditId);
+        $pages = $this->pages->findByAudit($auditId->value());
 
         $rows = [];
         foreach ($pages as $page) {

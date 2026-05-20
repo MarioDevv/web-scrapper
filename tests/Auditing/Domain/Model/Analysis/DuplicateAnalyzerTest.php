@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Auditing\Domain\Model\Analysis\DuplicateAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Fingerprint as AuditingFingerprint;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
@@ -63,7 +63,7 @@ final class DuplicateAnalyzerTest extends TestCase
     {
         $signals = new LegacyPageToPageSignals($page);
         $index = new InMemoryFingerprintIndex();
-        $auditId = $page->auditId()->value();
+        $auditId = $page->auditId();
 
         $self = $page->fingerprint();
         if ($self !== null) {

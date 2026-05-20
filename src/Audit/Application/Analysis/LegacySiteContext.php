@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\Analysis;
 
-use SeoSpider\Audit\Domain\Model\Page\Page as LegacyPage;
+use SeoSpider\Crawling\Domain\Model\Page\Page as LegacyPage;
 use SeoSpider\Auditing\Domain\Model\Analysis\PageSignals;
 use SeoSpider\Auditing\Domain\Model\Analysis\SiteContext;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;

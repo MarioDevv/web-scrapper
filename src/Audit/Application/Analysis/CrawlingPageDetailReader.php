@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\Analysis;
 
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\PageId;
+use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Auditing\Domain\Model\Reporting\PageDetailData;
 use SeoSpider\Auditing\Domain\Model\Reporting\PageDetailReader;
 use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
@@ -39,7 +39,7 @@ final readonly class CrawlingPageDetailReader implements PageDetailReader
 
         return new PageDetailData(
             pageId: $page->id()->value(),
-            auditId: $page->auditId()->value(),
+            auditId: $page->auditId(),
             url: $page->url()->toString(),
             statusCode: $page->response()->statusCode()->code(),
             contentType: $page->response()->contentType() ?? '',

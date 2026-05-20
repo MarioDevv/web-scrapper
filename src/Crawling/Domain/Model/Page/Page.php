@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Page;
+namespace SeoSpider\Crawling\Domain\Model\Page;
 
 use DateTimeImmutable;
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Page\Directive;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
@@ -19,7 +18,7 @@ use SeoSpider\Shared\Domain\AggregateRoot;
 final class Page extends AggregateRoot
 {
     private PageId $id;
-    private AuditId $auditId;
+    private string $auditId;
     private Url $url;
     private PageResponse $response;
     private ?PageMetadata $metadata = null;
@@ -42,7 +41,7 @@ final class Page extends AggregateRoot
 
     public static function fromCrawl(
         PageId $id,
-        AuditId $auditId,
+        string $auditId,
         Url $url,
         PageResponse $response,
         ?RedirectChain $redirectChain,
@@ -66,7 +65,7 @@ final class Page extends AggregateRoot
      */
     public static function reconstitute(
         PageId $id,
-        AuditId $auditId,
+        string $auditId,
         Url $url,
         PageResponse $response,
         RedirectChain $redirectChain,
@@ -127,7 +126,7 @@ final class Page extends AggregateRoot
         return $this->id;
     }
 
-    public function auditId(): AuditId
+    public function auditId(): string
     {
         return $this->auditId;
     }

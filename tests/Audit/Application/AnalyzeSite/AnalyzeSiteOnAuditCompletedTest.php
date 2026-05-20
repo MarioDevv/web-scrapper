@@ -12,7 +12,7 @@ use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditStatistics;
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\Page\Page;
 use SeoSpider\Auditing\Domain\Model\Analysis\SiteAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\SiteContext;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
@@ -188,7 +188,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
         $requestUrl = Url::fromString($url);
         $page = Page::fromCrawl(
             id: $this->pages->nextId(),
-            auditId: $this->auditId,
+            auditId: $this->auditId->value(),
             url: $requestUrl,
             response: new PageResponse(
                 statusCode: new HttpStatusCode(200),
