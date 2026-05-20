@@ -6,6 +6,7 @@ namespace SeoSpider\Tests\Auditing\Application\Reporting\GetPageDetail;
 
 use PDO;
 use PHPUnit\Framework\TestCase;
+use SeoSpider\Audit\Application\Analysis\CrawlingPageDetailReader;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailQuery;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
@@ -58,7 +59,7 @@ final class GetPageDetailHandlerTest extends TestCase
         ));
         $auditedRepo->save($audited);
 
-        $handler = new GetPageDetailHandler($pageRepo, $auditedRepo);
+        $handler = new GetPageDetailHandler(new CrawlingPageDetailReader($pageRepo), $auditedRepo);
         $response = $handler(new GetPageDetailQuery($page->id()->value()));
 
         $this->assertSame('https://example.com/p', $response->url);
@@ -87,7 +88,7 @@ final class GetPageDetailHandlerTest extends TestCase
         $pageRepo = new SqlitePageRepository($this->pdo);
         $pageRepo->save($page);
 
-        $handler = new GetPageDetailHandler($pageRepo, new SqliteAuditedPageRepository($this->pdo));
+        $handler = new GetPageDetailHandler(new CrawlingPageDetailReader($pageRepo), new SqliteAuditedPageRepository($this->pdo));
         $response = $handler(new GetPageDetailQuery($page->id()->value()));
 
         $this->assertSame([], $response->issues);

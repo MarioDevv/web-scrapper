@@ -7,94 +7,59 @@ namespace SeoSpider\Auditing\Application\Reporting\GetPageDetail;
 use SeoSpider\Auditing\Application\Reporting\PageNotFound;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Auditing\Domain\Model\Reporting\PageDetailData;
+use SeoSpider\Auditing\Domain\Model\Reporting\PageDetailReader;
 
 final readonly class GetPageDetailHandler
 {
     public function __construct(
-        private PageRepository $pageRepository,
+        private PageDetailReader $pageDetailReader,
         private AuditedPageRepository $auditedPageRepository,
     ) {
     }
 
     public function __invoke(GetPageDetailQuery $query): GetPageDetailResponse
     {
-        $page = $this->pageRepository->findById(new PageId($query->pageId));
-
-        if ($page === null) {
+        $data = $this->pageDetailReader->findById($query->pageId);
+        if ($data === null) {
             throw PageNotFound::withId($query->pageId);
         }
 
-        $audited = $this->auditedPageRepository->findByAuditAndUrl(
-            $page->auditId()->value(),
-            $page->url()->toString(),
-        );
+        $audited = $this->auditedPageRepository->findByAuditAndUrl($data->auditId, $data->url);
 
-        return $this->toResponse($page, $audited?->issues() ?? []);
+        return $this->toResponse($data, $audited?->issues() ?? []);
     }
 
     /** @param Issue[] $issues */
-    private function toResponse(Page $page, array $issues): GetPageDetailResponse
+    private function toResponse(PageDetailData $data, array $issues): GetPageDetailResponse
     {
-        $metadata = $page->metadata();
-        $directives = $page->directives();
-
         return new GetPageDetailResponse(
-            pageId: $page->id()->value(),
-            auditId: $page->auditId()->value(),
-            url: $page->url()->toString(),
-            statusCode: $page->response()->statusCode()->code(),
-            contentType: $page->response()->contentType() ?? '',
-            bodySize: $page->response()->bodySize(),
-            responseTime: $page->response()->responseTime(),
-            crawlDepth: $page->crawlDepth(),
-            isIndexable: $page->isIndexable(),
-            title: $metadata?->title(),
-            titleLength: $metadata !== null ? $metadata->titleLength() : null,
-            metaDescription: $metadata?->metaDescription(),
-            metaDescriptionLength: $metadata !== null ? $metadata->metaDescriptionLength() : null,
-            h1s: $metadata?->h1s() ?? [],
-            wordCount: $metadata?->wordCount() ?? 0,
-            canonical: $directives?->canonical()?->toString(),
-            canonicalStatus: match (true) {
-                $directives === null || !$directives->hasCanonical() => 'missing',
-                $directives->isSelfCanonical($page->url()) => 'self',
-                default => 'other',
-            },
-            noindex: $directives?->noindex() ?? false,
-            nofollow: $directives?->nofollow() ?? false,
-            redirectChain: array_map(
-                static fn($hop) => [
-                    'from' => $hop->from()->toString(),
-                    'to' => $hop->to()->toString(),
-                    'statusCode' => $hop->statusCode()->code(),
-                ],
-                $page->redirectChain()->hops(),
-            ),
-            hreflangs: array_map(
-                static fn($h) => [
-                    'language' => $h->language(),
-                    'region' => $h->region(),
-                    'href' => $h->href()->toString(),
-                ],
-                $page->hreflangs(),
-            ),
-            internalLinkCount: count(array_filter($page->internalLinks(), static fn($l) => $l->isAnchor())),
-            externalLinkCount: count(array_filter($page->externalLinks(), static fn($l) => $l->isAnchor())),
-            links: array_map(
-                static fn($l) => [
-                    'url' => $l->targetUrl()->toString(),
-                    'type' => $l->type()->value,
-                    'anchor' => $l->anchorText(),
-                    'relation' => $l->relation()->value,
-                    'internal' => $l->isInternal(),
-                ],
-                $page->links(),
-            ),
+            pageId: $data->pageId,
+            auditId: $data->auditId,
+            url: $data->url,
+            statusCode: $data->statusCode,
+            contentType: $data->contentType,
+            bodySize: $data->bodySize,
+            responseTime: $data->responseTime,
+            crawlDepth: $data->crawlDepth,
+            isIndexable: $data->isIndexable,
+            title: $data->title,
+            titleLength: $data->titleLength,
+            metaDescription: $data->metaDescription,
+            metaDescriptionLength: $data->metaDescriptionLength,
+            h1s: $data->h1s,
+            wordCount: $data->wordCount,
+            canonical: $data->canonical,
+            canonicalStatus: $data->canonicalStatus,
+            noindex: $data->noindex,
+            nofollow: $data->nofollow,
+            redirectChain: $data->redirectChain,
+            hreflangs: $data->hreflangs,
+            internalLinkCount: $data->internalLinkCount,
+            externalLinkCount: $data->externalLinkCount,
+            links: $data->links,
             issues: array_map($this->toIssueSummary(...), $issues),
-            crawledAt: $page->crawledAt()->format('c'),
+            crawledAt: $data->crawledAt,
         );
     }
 

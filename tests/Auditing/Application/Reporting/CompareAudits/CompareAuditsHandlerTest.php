@@ -26,6 +26,7 @@ use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
+use SeoSpider\Audit\Application\Analysis\CrawlingPageRowReader;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository;
 
@@ -43,7 +44,7 @@ final class CompareAuditsHandlerTest extends TestCase
         $this->auditedPages = new InMemoryAuditedPageRepository();
         $this->handler = new CompareAuditsHandler(
             $this->audits,
-            $this->pages,
+            new CrawlingPageRowReader($this->pages),
             new AuditDiffer(),
             $this->auditedPages,
         );

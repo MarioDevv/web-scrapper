@@ -82,6 +82,10 @@ use SeoSpider\Auditing\Application\Lifecycle\CancelAudit\CancelAuditHandler;
 use SeoSpider\Auditing\Application\Reporting\GetAuditStatus\GetAuditStatusHandler;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesHandler;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailHandler;
+use SeoSpider\Auditing\Domain\Model\Reporting\PageDetailReader;
+use SeoSpider\Auditing\Domain\Model\Reporting\PageRowReader;
+use SeoSpider\Audit\Application\Analysis\CrawlingPageDetailReader;
+use SeoSpider\Audit\Application\Analysis\CrawlingPageRowReader;
 use SeoSpider\Audit\Application\Engine\CrawlerEngine;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\PauseAudit\PauseAuditCommand;
@@ -270,8 +274,14 @@ final class AuditServiceProvider extends ServiceProvider
             reader: $app->make(PageSummaryReader::class),
         ));
 
+        $this->app->singleton(PageDetailReader::class, fn($app) => new CrawlingPageDetailReader(
+            $app->make(PageRepository::class),
+        ));
+        $this->app->singleton(PageRowReader::class, fn($app) => new CrawlingPageRowReader(
+            $app->make(PageRepository::class),
+        ));
         $this->app->singleton(GetPageDetailHandler::class, fn($app) => new GetPageDetailHandler(
-            pageRepository: $app->make(PageRepository::class),
+            pageDetailReader: $app->make(PageDetailReader::class),
             auditedPageRepository: $app->make(AuditedPageRepository::class),
         ));
 
