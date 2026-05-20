@@ -2,24 +2,25 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Link;
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\RedirectHop;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 
 final class BrokenLinkAnalyzer implements Analyzer
 {
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        $this->checkStatusCode($page);
-        $this->checkRedirectChain($page);
-        $this->checkRedirectLoop($page);
-        $this->checkMixedProtocols($page);
-        $this->checkRedirectNotPermanent($page);
-        $this->checkInternalNofollow($page);
+        $this->checkStatusCode($signals, $issues);
+        $this->checkRedirectChain($signals, $issues);
+        $this->checkRedirectLoop($signals, $issues);
+        $this->checkMixedProtocols($signals, $issues);
+        $this->checkRedirectNotPermanent($signals, $issues);
+        $this->checkInternalNofollow($signals, $issues);
     }
 
     public function category(): IssueCategory
@@ -27,12 +28,12 @@ final class BrokenLinkAnalyzer implements Analyzer
         return IssueCategory::LINKS;
     }
 
-    private function checkStatusCode(AnalyzablePage $page): void
+    private function checkStatusCode(PageSignals $signals, IssueCollector $issues): void
     {
-        $status = $page->response()->statusCode();
+        $status = $signals->response()->statusCode();
 
         if ($status->isClientError()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::LINKS,
                 severity: IssueSeverity::ERROR,
@@ -42,7 +43,7 @@ final class BrokenLinkAnalyzer implements Analyzer
         }
 
         if ($status->isServerError()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::LINKS,
                 severity: IssueSeverity::ERROR,
@@ -52,34 +53,34 @@ final class BrokenLinkAnalyzer implements Analyzer
         }
     }
 
-    private function checkRedirectChain(AnalyzablePage $page): void
+    private function checkRedirectChain(PageSignals $signals, IssueCollector $issues): void
     {
-        $chain = $page->redirectChain();
+        $chain = $signals->redirectChain();
 
         if ($chain->length() <= 1) {
             return;
         }
 
-        $page->addIssue(new Issue(
+        $issues->add(new Issue(
             id: IssueId::generate(),
             category: IssueCategory::LINKS,
             severity: IssueSeverity::WARNING,
             code: 'redirect_chain',
             message: sprintf('Redirect chain with %d hops detected.', $chain->length()),
             context: implode(' → ', array_map(
-                static fn($hop) => $hop->from()->toString(),
+                static fn (RedirectHop $hop): string => $hop->from(),
                 $chain->hops(),
-            )) . ' → ' . $chain->finalUrl()?->toString(),
+            )) . ' → ' . $chain->finalUrl(),
         ));
     }
 
-    private function checkRedirectLoop(AnalyzablePage $page): void
+    private function checkRedirectLoop(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->redirectChain()->hasLoop()) {
+        if (!$signals->redirectChain()->hasLoop()) {
             return;
         }
 
-        $page->addIssue(new Issue(
+        $issues->add(new Issue(
             id: IssueId::generate(),
             category: IssueCategory::LINKS,
             severity: IssueSeverity::ERROR,
@@ -88,13 +89,13 @@ final class BrokenLinkAnalyzer implements Analyzer
         ));
     }
 
-    private function checkMixedProtocols(AnalyzablePage $page): void
+    private function checkMixedProtocols(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->redirectChain()->hasMixedProtocols()) {
+        if (!$signals->redirectChain()->hasMixedProtocols()) {
             return;
         }
 
-        $page->addIssue(new Issue(
+        $issues->add(new Issue(
             id: IssueId::generate(),
             category: IssueCategory::LINKS,
             severity: IssueSeverity::WARNING,
@@ -103,20 +104,20 @@ final class BrokenLinkAnalyzer implements Analyzer
         ));
     }
 
-    private function checkRedirectNotPermanent(AnalyzablePage $page): void
+    private function checkRedirectNotPermanent(PageSignals $signals, IssueCollector $issues): void
     {
-        $chain = $page->redirectChain();
+        $chain = $signals->redirectChain();
 
         if ($chain->isEmpty() || $chain->isAllPermanent()) {
             return;
         }
 
         $codes = array_map(
-            static fn($hop) => (string) $hop->statusCode()->code(),
+            static fn (RedirectHop $hop): string => (string) $hop->statusCode()->code(),
             $chain->hops(),
         );
 
-        $page->addIssue(new Issue(
+        $issues->add(new Issue(
             id: IssueId::generate(),
             category: IssueCategory::LINKS,
             severity: IssueSeverity::NOTICE,
@@ -126,16 +127,16 @@ final class BrokenLinkAnalyzer implements Analyzer
         ));
     }
 
-    private function checkInternalNofollow(AnalyzablePage $page): void
+    private function checkInternalNofollow(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml()) {
+        if (!$signals->isHtml()) {
             return;
         }
 
-        $nofollowInternal = array_filter(
-            $page->internalLinks(),
-            static fn($link) => $link->isAnchor() && $link->relation() === LinkRelation::NOFOLLOW,
-        );
+        $nofollowInternal = array_values(array_filter(
+            $signals->internalLinks(),
+            static fn (Link $link): bool => $link->isAnchor() && $link->relation() === 'nofollow',
+        ));
 
         $count = count($nofollowInternal);
 
@@ -144,11 +145,11 @@ final class BrokenLinkAnalyzer implements Analyzer
         }
 
         $urls = array_map(
-            static fn($link) => $link->targetUrl()->toString(),
+            static fn (Link $link): string => $link->targetUrl(),
             array_slice($nofollowInternal, 0, 5),
         );
 
-        $page->addIssue(new Issue(
+        $issues->add(new Issue(
             id: IssueId::generate(),
             category: IssueCategory::LINKS,
             severity: IssueSeverity::NOTICE,

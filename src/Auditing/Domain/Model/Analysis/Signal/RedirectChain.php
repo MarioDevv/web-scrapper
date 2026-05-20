@@ -49,18 +49,23 @@ final readonly class RedirectChain
             }
             $seen[$hop->from()] = true;
         }
+        $last = $this->hops === [] ? null : $this->hops[array_key_last($this->hops)];
+        if ($last !== null && isset($seen[$last->to()])) {
+            return true;
+        }
         return false;
     }
 
     public function hasMixedProtocols(): bool
     {
-        $protocols = [];
         foreach ($this->hops as $hop) {
-            $protocols[parse_url($hop->from(), PHP_URL_SCHEME) ?: ''] = true;
-            $protocols[parse_url($hop->to(), PHP_URL_SCHEME) ?: ''] = true;
+            $fromScheme = parse_url($hop->from(), PHP_URL_SCHEME) ?: '';
+            $toScheme = parse_url($hop->to(), PHP_URL_SCHEME) ?: '';
+            if ($fromScheme !== $toScheme) {
+                return true;
+            }
         }
-        unset($protocols['']);
-        return count($protocols) > 1;
+        return false;
     }
 
     public function isAllPermanent(): bool

@@ -2,51 +2,47 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 
-final class DuplicateAnalyzer implements Analyzer
+final readonly class DuplicateAnalyzer implements Analyzer
 {
-    public function __construct(private readonly PageRepository $pageRepository)
+    public function __construct(private FingerprintIndex $fingerprints)
     {
     }
 
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml() || $page->fingerprint() === null) {
+        if (!$signals->isHtml() || $signals->fingerprint() === null) {
             return;
         }
 
-        if (!$page->response()->statusCode()->isSuccessful()) {
+        if (!$signals->response()->statusCode()->isSuccessful()) {
             return;
         }
 
-        $fingerprints = $this->pageRepository->fingerprintsByAudit($page->auditId());
-        $pageUrl = $page->url()->toString();
-        $pageFingerprint = $page->fingerprint();
-
+        $pageFingerprint = $signals->fingerprint();
+        $pageUrl = $signals->url();
         $exactDuplicates = [];
         $nearDuplicates = [];
 
-        foreach ($fingerprints as $url => $otherFingerprint) {
+        foreach ($this->fingerprints->forAudit($signals->auditId()) as $url => $other) {
             if ($url === $pageUrl) {
                 continue;
             }
-
-            if ($pageFingerprint->isExactDuplicateOf($otherFingerprint)) {
+            if ($pageFingerprint->isExactDuplicateOf($other)) {
                 $exactDuplicates[] = $url;
-            } elseif ($pageFingerprint->isNearDuplicateOf($otherFingerprint)) {
+            } elseif ($pageFingerprint->isNearDuplicateOf($other)) {
                 $nearDuplicates[] = $url;
             }
         }
 
-        if (count($exactDuplicates) > 0) {
-            $page->addIssue(new Issue(
+        if ($exactDuplicates !== []) {
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::WARNING,
@@ -57,8 +53,8 @@ final class DuplicateAnalyzer implements Analyzer
             ));
         }
 
-        if (count($nearDuplicates) > 0) {
-            $page->addIssue(new Issue(
+        if ($nearDuplicates !== []) {
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::NOTICE,

@@ -32,7 +32,7 @@ use SeoSpider\Crawling\Infrastructure\Sitemap\XmlSitemapIngester;
 use SeoSpider\Crawling\Infrastructure\Http\SymfonyHttpClient;
 use SeoSpider\Crawling\Infrastructure\Parser\DomCrawlerHtmlParser;
 use SeoSpider\Shared\Infrastructure\Bus\SyncEventBus;
-use SeoSpider\Audit\Domain\Model\Analyzer\BrokenLinkAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\BrokenLinkAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\MetaDataAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\DirectiveAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\HeadingAnalyzer;
@@ -41,7 +41,9 @@ use SeoSpider\Auditing\Domain\Model\Analysis\ImageAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\PerformanceAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\SecurityHeaderAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\HreflangAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\DuplicateAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\DuplicateAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\FingerprintIndex;
+use SeoSpider\Auditing\Infrastructure\Persistence\SqliteFingerprintIndex;
 use SeoSpider\Auditing\Domain\Model\Analysis\TransportSecurityAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\SocialMetadataAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\StructuredDataAnalyzer;
@@ -146,10 +148,7 @@ final class AuditServiceProvider extends ServiceProvider
         ));
         $this->app->singleton(EventBus::class, fn() => new SyncEventBus());
 
-        $this->app->tag([
-            BrokenLinkAnalyzer::class,
-            DuplicateAnalyzer::class,
-        ], 'analyzers');
+        $this->app->singleton(FingerprintIndex::class, fn($app) => new SqliteFingerprintIndex($app->make(PDO::class)));
 
         $this->app->tag([
             ContentAnalyzer::class,
@@ -163,6 +162,8 @@ final class AuditServiceProvider extends ServiceProvider
             SocialMetadataAnalyzer::class,
             ImageAnalyzer::class,
             HreflangAnalyzer::class,
+            BrokenLinkAnalyzer::class,
+            DuplicateAnalyzer::class,
         ], 'auditing-analyzers');
 
         $this->app->singleton(HreflangReturnAnalyzer::class, fn() => new HreflangReturnAnalyzer());

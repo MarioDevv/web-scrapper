@@ -10,7 +10,7 @@ use SeoSpider\Audit\Application\Engine\CrawlerEngine;
 use SeoSpider\Audit\Application\Engine\CrawlProgress;
 use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
-use SeoSpider\Audit\Domain\Model\Analyzer\BrokenLinkAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\BrokenLinkAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\DirectiveAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\MetaDataAnalyzer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
@@ -74,8 +74,7 @@ final class CrawlerEngineTest extends TestCase
             pageRepository: $this->pageRepository,
             auditRepository: $this->auditRepository,
             eventBus: $this->eventBus,
-            analyzers: [new BrokenLinkAnalyzer()],
-            auditingAnalyzers: [new MetaDataAnalyzer(), new DirectiveAnalyzer()],
+            auditingAnalyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer(), new DirectiveAnalyzer()],
         ));
 
         $verifier = new HttpExternalLinkVerifier(
