@@ -9,29 +9,32 @@ use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
 use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
-use SeoSpider\Audit\Domain\Model\Analyzer\Analyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\AnalyzablePage;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
-use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
+use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
+use SeoSpider\Audit\Domain\Model\Page\PageFetched;
+use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\IssueCollector;
+use SeoSpider\Auditing\Domain\Model\Analysis\PageSignals;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
-use SeoSpider\Audit\Domain\Model\Page\PageFetched;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Url;
+use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
-use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
+use SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository;
 
 final class AnalyzePageOnPageFetchedTest extends TestCase
 {
     private InMemoryAuditRepository $audits;
     private InMemoryPageRepository $pages;
+    private InMemoryAuditedPageRepository $auditedPages;
     private InMemoryEventBus $events;
     private AuditId $auditId;
 
@@ -39,6 +42,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
     {
         $this->audits = new InMemoryAuditRepository();
         $this->pages = new InMemoryPageRepository();
+        $this->auditedPages = new InMemoryAuditedPageRepository();
         $this->events = new InMemoryEventBus();
 
         $start = new StartAuditHandler($this->audits, new InMemoryFrontier(new UrlCanonicalizer()), $this->events);
@@ -52,17 +56,10 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
     {
         $page = $this->persistPage();
 
-        $reactor = new AnalyzePageOnPageFetched(
-            pageRepository: $this->pages,
-            auditRepository: $this->audits,
-            eventBus: $this->events,
-            analyzers: [
-                $this->analyzerThatAppends(IssueSeverity::ERROR),
-                $this->analyzerThatAppends(IssueSeverity::WARNING),
-            ],
-        );
-
-        ($reactor)(new PageFetched(
+        ($this->buildReactor([
+            $this->analyzerThatAppends(IssueSeverity::ERROR),
+            $this->analyzerThatAppends(IssueSeverity::WARNING),
+        ]))(new PageFetched(
             pageId: $page->id(),
             auditId: $this->auditId,
             newUrlsDiscovered: 3,
@@ -79,31 +76,21 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
         $this->assertSame(1, $audit->statistics()->pagesCrawled);
         $this->assertSame(1, $audit->statistics()->errorsFound);
         $this->assertSame(1, $audit->statistics()->warningsFound);
-        // seed (1) + newly discovered (3) = 4
         $this->assertSame(4, $audit->statistics()->pagesDiscovered);
     }
 
     public function test_also_persists_findings_through_the_auditing_repository(): void
     {
         $page = $this->persistPage();
-        $auditedPages = new \SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository();
 
-        $reactor = new AnalyzePageOnPageFetched(
-            pageRepository: $this->pages,
-            auditRepository: $this->audits,
-            eventBus: $this->events,
-            analyzers: [$this->analyzerThatAppends(IssueSeverity::ERROR)],
-            auditedPageRepository: $auditedPages,
-        );
-
-        ($reactor)(new PageFetched(
+        ($this->buildReactor([$this->analyzerThatAppends(IssueSeverity::ERROR)]))(new PageFetched(
             pageId: $page->id(),
             auditId: $this->auditId,
             newUrlsDiscovered: 0,
             occurredAt: new DateTimeImmutable(),
         ));
 
-        $audited = $auditedPages->findByAuditAndUrl(
+        $audited = $this->auditedPages->findByAuditAndUrl(
             $this->auditId->value(),
             'https://example.com/page',
         );
@@ -119,14 +106,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
     {
         $page = $this->persistPage();
 
-        $reactor = new AnalyzePageOnPageFetched(
-            pageRepository: $this->pages,
-            auditRepository: $this->audits,
-            eventBus: $this->events,
-            analyzers: [],
-        );
-
-        ($reactor)(new PageFetched(
+        ($this->buildReactor([]))(new PageFetched(
             pageId: $page->id(),
             auditId: $this->auditId,
             newUrlsDiscovered: 0,
@@ -135,7 +115,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
 
         $published = array_values(array_filter(
             $this->events->published(),
-            static fn($event) => $event instanceof PageCrawled,
+            static fn ($event) => $event instanceof PageCrawled,
         ));
 
         $this->assertCount(1, $published, 'reactor should publish the PageCrawled event emitted by markAsAnalyzed');
@@ -144,14 +124,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
 
     public function test_is_a_noop_when_the_page_has_been_deleted(): void
     {
-        $reactor = new AnalyzePageOnPageFetched(
-            pageRepository: $this->pages,
-            auditRepository: $this->audits,
-            eventBus: $this->events,
-            analyzers: [],
-        );
-
-        ($reactor)(new PageFetched(
+        ($this->buildReactor([]))(new PageFetched(
             pageId: \SeoSpider\Audit\Domain\Model\Page\PageId::generate(),
             auditId: $this->auditId,
             newUrlsDiscovered: 0,
@@ -162,6 +135,18 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
         $audit = $this->audits->findById($this->auditId);
         $this->assertNotNull($audit);
         $this->assertSame(0, $audit->statistics()->pagesCrawled);
+    }
+
+    /** @param Analyzer[] $analyzers */
+    private function buildReactor(array $analyzers): AnalyzePageOnPageFetched
+    {
+        return new AnalyzePageOnPageFetched(
+            pageRepository: $this->pages,
+            auditRepository: $this->audits,
+            eventBus: $this->events,
+            auditedPageRepository: $this->auditedPages,
+            analyzers: $analyzers,
+        );
     }
 
     private function persistPage(): Page
@@ -192,9 +177,9 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
         return new class ($severity) implements Analyzer {
             public function __construct(private IssueSeverity $severity) {}
 
-            public function analyze(AnalyzablePage $page): void
+            public function analyze(PageSignals $signals, IssueCollector $issues): void
             {
-                $page->addIssue(new Issue(
+                $issues->add(new Issue(
                     id: IssueId::generate(),
                     category: IssueCategory::METADATA,
                     severity: $this->severity,

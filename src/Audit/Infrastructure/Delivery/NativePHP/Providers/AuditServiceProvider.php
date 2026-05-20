@@ -197,8 +197,7 @@ final class AuditServiceProvider extends ServiceProvider
             auditRepository: $app->make(AuditRepository::class),
             siteIssueRepository: $app->make(SiteIssueRepository::class),
             auditedPageRepository: $app->make(AuditedPageRepository::class),
-            siteAnalyzers: iterator_to_array($app->tagged('site-analyzers')),
-            auditingSiteAnalyzers: iterator_to_array($app->tagged('auditing-site-analyzers')),
+            siteAnalyzers: iterator_to_array($app->tagged('auditing-site-analyzers')),
         ));
 
         $this->app->singleton(UrlDiscoverer::class, fn($app) => new FrontierUrlDiscoverer(
@@ -218,9 +217,8 @@ final class AuditServiceProvider extends ServiceProvider
             pageRepository: $app->make(PageRepository::class),
             auditRepository: $app->make(AuditRepository::class),
             eventBus: $app->make(EventBus::class),
-            analyzers: iterator_to_array($app->tagged('analyzers')),
             auditedPageRepository: $app->make(AuditedPageRepository::class),
-            auditingAnalyzers: iterator_to_array($app->tagged('auditing-analyzers')),
+            analyzers: iterator_to_array($app->tagged('auditing-analyzers')),
         ));
 
         $this->app->singleton(ExternalLinkVerifier::class, fn($app) => new HttpExternalLinkVerifier(

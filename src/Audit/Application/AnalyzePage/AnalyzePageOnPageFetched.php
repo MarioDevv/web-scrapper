@@ -6,9 +6,8 @@ namespace SeoSpider\Audit\Application\AnalyzePage;
 
 use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
 use SeoSpider\Audit\Application\Analysis\PageBackedIssueCollector;
-use SeoSpider\Audit\Domain\Model\Analyzer\Analyzer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer as AuditingAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Audit\Domain\Model\Page\Page;
@@ -16,30 +15,15 @@ use SeoSpider\Audit\Domain\Model\Page\PageFetched;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 
-/**
- * Event-driven analyzer phase. The crawl handler persists the fetched page
- * and announces PageFetched; this reactor picks it up, runs the analyzer
- * pipeline, records the resulting issue counts on the audit, saves both
- * aggregates, and publishes the downstream events (PageCrawled from the
- * page, any audit transitions like AuditCompleted when maxPages is hit).
- *
- * Keeping the pipeline behind the bus means adding a new analyzer does not
- * touch the crawl handler, and re-running analyzers over an already-crawled
- * page only needs to publish PageFetched for it.
- */
 final readonly class AnalyzePageOnPageFetched
 {
-    /**
-     * @param Analyzer[]         $analyzers
-     * @param AuditingAnalyzer[] $auditingAnalyzers
-     */
+    /** @param Analyzer[] $analyzers */
     public function __construct(
         private PageRepository $pageRepository,
         private AuditRepository $auditRepository,
         private EventBus $eventBus,
+        private AuditedPageRepository $auditedPageRepository,
         private array $analyzers = [],
-        private ?AuditedPageRepository $auditedPageRepository = null,
-        private array $auditingAnalyzers = [],
     ) {
     }
 
@@ -75,25 +59,19 @@ final readonly class AnalyzePageOnPageFetched
 
     private function runAnalyzers(Page $page): void
     {
-        foreach ($this->analyzers as $analyzer) {
-            $analyzer->analyze($page);
+        if ($this->analyzers === []) {
+            return;
         }
 
-        if ($this->auditingAnalyzers !== []) {
-            $signals = new LegacyPageToPageSignals($page);
-            $collector = new PageBackedIssueCollector($page);
-            foreach ($this->auditingAnalyzers as $analyzer) {
-                $analyzer->analyze($signals, $collector);
-            }
+        $signals = new LegacyPageToPageSignals($page);
+        $collector = new PageBackedIssueCollector($page);
+        foreach ($this->analyzers as $analyzer) {
+            $analyzer->analyze($signals, $collector);
         }
     }
 
     private function persistAuditedPage(Page $page): void
     {
-        if ($this->auditedPageRepository === null) {
-            return;
-        }
-
         $audited = AuditedPage::forUrl(
             $page->auditId()->value(),
             $page->url()->toString(),

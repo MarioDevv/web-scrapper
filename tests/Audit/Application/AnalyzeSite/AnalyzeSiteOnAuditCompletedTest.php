@@ -9,18 +9,18 @@ use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Application\AnalyzeSite\AnalyzeSiteOnAuditCompleted;
 use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
-use SeoSpider\Audit\Domain\Model\Analyzer\SiteAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\SiteAuditContext;
 use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatistics;
-use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
+use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Auditing\Domain\Model\Analysis\SiteAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\SiteContext;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 use SeoSpider\Auditing\Domain\Model\Issue\SiteIssue;
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
@@ -60,19 +60,11 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
     {
         $page = $this->persistPage('https://example.com/page-1');
 
-        $reactor = new AnalyzeSiteOnAuditCompleted(
-            pageRepository: $this->pages,
-            auditRepository: $this->audits,
-            siteIssueRepository: $this->siteIssues,
-            auditedPageRepository: $this->auditedPages,
-            siteAnalyzers: [$this->analyzerThatAppends('site_test')],
-        );
-
-        ($reactor)($this->event());
+        ($this->buildReactor([$this->analyzerThatAppends('site_test')]))($this->event());
 
         $stored = $this->pages->findById($page->id());
         $this->assertNotNull($stored);
-        $codes = array_map(static fn($i) => $i->code(), $stored->issues());
+        $codes = array_map(static fn ($i) => $i->code(), $stored->issues());
         $this->assertSame(['site_test'], $codes);
     }
 
@@ -89,39 +81,22 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
         $page->addIssue($existing);
         $this->pages->save($page);
 
-        $reactor = new AnalyzeSiteOnAuditCompleted(
-            pageRepository: $this->pages,
-            auditRepository: $this->audits,
-            siteIssueRepository: $this->siteIssues,
-            auditedPageRepository: $this->auditedPages,
-            siteAnalyzers: [$this->analyzerThatAppends('site_test')],
-        );
-
-        ($reactor)($this->event());
+        ($this->buildReactor([$this->analyzerThatAppends('site_test')]))($this->event());
 
         $stored = $this->pages->findById($page->id());
-        $codes = array_map(static fn($i) => $i->code(), $stored->issues());
+        $codes = array_map(static fn ($i) => $i->code(), $stored->issues());
         sort($codes);
         $this->assertSame(['pre_existing', 'site_test'], $codes);
     }
 
     public function test_is_a_noop_when_audit_is_unknown(): void
     {
-        $reactor = new AnalyzeSiteOnAuditCompleted(
-            pageRepository: $this->pages,
-            auditRepository: $this->audits,
-            siteIssueRepository: $this->siteIssues,
-            auditedPageRepository: $this->auditedPages,
-            siteAnalyzers: [$this->analyzerThatAppends('site_test')],
-        );
-
-        ($reactor)(new AuditCompleted(
+        ($this->buildReactor([$this->analyzerThatAppends('site_test')]))(new AuditCompleted(
             auditId: AuditId::generate(),
             statistics: new AuditStatistics(),
             occurredAt: new DateTimeImmutable(),
         ));
 
-        // No exception, no persisted state — implicit by reaching this point.
         $this->assertTrue(true);
     }
 
@@ -129,15 +104,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
     {
         $page = $this->persistPage('https://example.com/page-1');
 
-        $reactor = new AnalyzeSiteOnAuditCompleted(
-            pageRepository: $this->pages,
-            auditRepository: $this->audits,
-            siteIssueRepository: $this->siteIssues,
-            auditedPageRepository: $this->auditedPages,
-            siteAnalyzers: [],
-        );
-
-        ($reactor)($this->event());
+        ($this->buildReactor([]))($this->event());
 
         $stored = $this->pages->findById($page->id());
         $this->assertSame([], $stored->issues());
@@ -147,15 +114,9 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
     {
         $this->persistPage('https://example.com/page-1');
 
-        $reactor = new AnalyzeSiteOnAuditCompleted(
-            pageRepository: $this->pages,
-            auditRepository: $this->audits,
-            siteIssueRepository: $this->siteIssues,
-            auditedPageRepository: $this->auditedPages,
-            siteAnalyzers: [$this->analyzerThatEmitsSiteIssue('orphan_test', 'https://example.com/orphan')],
-        );
-
-        ($reactor)($this->event());
+        ($this->buildReactor([
+            $this->analyzerThatEmitsSiteIssue('orphan_test', 'https://example.com/orphan'),
+        ]))($this->event());
 
         $stored = $this->siteIssues->findByAudit($this->auditId);
         $this->assertCount(1, $stored);
@@ -167,27 +128,18 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
     {
         $page = $this->persistPage('https://example.com/page-1');
 
-        $reactor = new AnalyzeSiteOnAuditCompleted(
-            pageRepository: $this->pages,
-            auditRepository: $this->audits,
-            siteIssueRepository: $this->siteIssues,
-            auditedPageRepository: $this->auditedPages,
-            siteAnalyzers: [
-                new class () implements SiteAnalyzer {
-                    public function analyze(SiteAuditContext $context): void
-                    {
-                        // Inspect-only analyzer; emits nothing.
-                    }
+        ($this->buildReactor([
+            new class () implements SiteAnalyzer {
+                public function analyze(SiteContext $context): void
+                {
+                }
 
-                    public function category(): IssueCategory
-                    {
-                        return IssueCategory::METADATA;
-                    }
-                },
-            ],
-        );
-
-        ($reactor)($this->event());
+                public function category(): IssueCategory
+                {
+                    return IssueCategory::METADATA;
+                }
+            },
+        ]))($this->event());
 
         $stored = $this->pages->findById($page->id());
         $this->assertSame([], $stored->issues());
@@ -199,6 +151,18 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
             auditId: $this->auditId,
             statistics: new AuditStatistics(),
             occurredAt: new DateTimeImmutable(),
+        );
+    }
+
+    /** @param SiteAnalyzer[] $analyzers */
+    private function buildReactor(array $analyzers): AnalyzeSiteOnAuditCompleted
+    {
+        return new AnalyzeSiteOnAuditCompleted(
+            pageRepository: $this->pages,
+            auditRepository: $this->audits,
+            siteIssueRepository: $this->siteIssues,
+            auditedPageRepository: $this->auditedPages,
+            siteAnalyzers: $analyzers,
         );
     }
 
@@ -231,7 +195,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
         return new class ($code, $context) implements SiteAnalyzer {
             public function __construct(private string $code, private string $context) {}
 
-            public function analyze(SiteAuditContext $auditContext): void
+            public function analyze(SiteContext $auditContext): void
             {
                 $auditContext->addSiteIssue(new SiteIssue(
                     id: IssueId::generate(),
@@ -255,10 +219,10 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
         return new class ($code) implements SiteAnalyzer {
             public function __construct(private string $code) {}
 
-            public function analyze(SiteAuditContext $context): void
+            public function analyze(SiteContext $context): void
             {
-                foreach ($context->pages as $page) {
-                    $page->addIssue(new Issue(
+                foreach ($context->pages() as $page) {
+                    $context->addPageIssue($page->url(), new Issue(
                         id: IssueId::generate(),
                         category: IssueCategory::METADATA,
                         severity: IssueSeverity::NOTICE,

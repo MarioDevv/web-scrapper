@@ -74,7 +74,8 @@ final class CrawlerEngineTest extends TestCase
             pageRepository: $this->pageRepository,
             auditRepository: $this->auditRepository,
             eventBus: $this->eventBus,
-            auditingAnalyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer(), new DirectiveAnalyzer()],
+            auditedPageRepository: new \SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository(),
+            analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer(), new DirectiveAnalyzer()],
         ));
 
         $verifier = new HttpExternalLinkVerifier(
