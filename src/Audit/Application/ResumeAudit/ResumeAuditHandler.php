@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\ResumeAudit;
 
-use SeoSpider\Audit\Application\AuditNotFound;
+use SeoSpider\Auditing\Application\AuditNotFound;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Shared\Domain\Bus\EventBus;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application;
+namespace SeoSpider\Auditing\Application\Reporting;
 
 use RuntimeException;
 

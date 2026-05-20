@@ -7,7 +7,7 @@ namespace SeoSpider\Tests\Auditing\Application\Reporting\GetAuditPages;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
-use SeoSpider\Audit\Application\AuditNotFound;
+use SeoSpider\Auditing\Application\AuditNotFound;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesHandler;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
