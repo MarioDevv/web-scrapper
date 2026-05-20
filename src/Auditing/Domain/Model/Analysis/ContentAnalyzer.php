@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
@@ -19,19 +19,19 @@ final class ContentAnalyzer implements Analyzer
     private const int THIN_CONTENT_THRESHOLD = 80;
     private const int EMPTY_CONTENT_THRESHOLD = 50;
 
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml() || $page->metadata() === null) {
+        if (!$signals->isHtml() || $signals->metadata() === null) {
             return;
         }
-        if (!$page->response()->statusCode()->isSuccessful()) {
+        if (!$signals->response()->statusCode()->isSuccessful()) {
             return;
         }
 
-        $wordCount = $page->metadata()->wordCount();
+        $wordCount = $signals->metadata()->wordCount();
 
         if ($wordCount <= self::EMPTY_CONTENT_THRESHOLD) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::WARNING,
@@ -39,7 +39,7 @@ final class ContentAnalyzer implements Analyzer
                 message: sprintf('Page with very little content (%d words).', $wordCount),
             ));
         } elseif ($wordCount < self::THIN_CONTENT_THRESHOLD) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::NOTICE,

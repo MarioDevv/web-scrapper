@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
-use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\PageMetadata;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
@@ -12,15 +12,15 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 
 final class HeadingAnalyzer implements Analyzer
 {
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml() || $page->metadata() === null) {
+        if (!$signals->isHtml() || $signals->metadata() === null) {
             return;
         }
 
-        $metadata = $page->metadata();
-        $this->checkH2($page, $metadata);
-        $this->checkHeadingOrder($page, $metadata);
+        $metadata = $signals->metadata();
+        $this->checkH2($issues, $metadata);
+        $this->checkHeadingOrder($issues, $metadata);
     }
 
     public function category(): IssueCategory
@@ -28,12 +28,10 @@ final class HeadingAnalyzer implements Analyzer
         return IssueCategory::METADATA;
     }
 
-    private function checkH2(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkH2(IssueCollector $issues, PageMetadata $metadata): void
     {
-        $h2s = $metadata->h2s();
-
-        if (count($h2s) === 0) {
-            $page->addIssue(new Issue(
+        if ($metadata->h2s() === []) {
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::NOTICE,
@@ -43,16 +41,16 @@ final class HeadingAnalyzer implements Analyzer
         }
     }
 
-    private function checkHeadingOrder(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkHeadingOrder(IssueCollector $issues, PageMetadata $metadata): void
     {
         $hierarchy = $metadata->headingHierarchy();
-        if (count($hierarchy) === 0) {
+        if ($hierarchy === []) {
             return;
         }
 
         $first = $hierarchy[0];
         if ($first['level'] !== 1) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::WARNING,
@@ -65,7 +63,7 @@ final class HeadingAnalyzer implements Analyzer
         $prevLevel = 0;
         foreach ($hierarchy as $heading) {
             if ($heading['level'] > $prevLevel + 1 && $prevLevel > 0) {
-                $page->addIssue(new Issue(
+                $issues->add(new Issue(
                     id: IssueId::generate(),
                     category: IssueCategory::METADATA,
                     severity: IssueSeverity::NOTICE,

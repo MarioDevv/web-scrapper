@@ -11,7 +11,7 @@ use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
 use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Domain\Model\Analyzer\BrokenLinkAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\MetaDataAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\MetaDataAnalyzer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Audit\AuditStatus;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
@@ -65,7 +65,8 @@ final class CrawlPageHandlerTest extends TestCase
             pageRepository: $this->pageRepository,
             auditRepository: $this->auditRepository,
             eventBus: $this->eventBus,
-            analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer()],
+            analyzers: [new BrokenLinkAnalyzer()],
+            auditingAnalyzers: [new MetaDataAnalyzer()],
         ));
     }
 

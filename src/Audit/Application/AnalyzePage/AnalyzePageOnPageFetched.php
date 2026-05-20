@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace SeoSpider\Audit\Application\AnalyzePage;
 
+use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
+use SeoSpider\Audit\Application\Analysis\PageBackedIssueCollector;
 use SeoSpider\Audit\Domain\Model\Analyzer\Analyzer;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
+use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer as AuditingAnalyzer;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Audit\Domain\Model\Page\Page;
@@ -26,13 +29,17 @@ use SeoSpider\Shared\Domain\Bus\EventBus;
  */
 final readonly class AnalyzePageOnPageFetched
 {
-    /** @param Analyzer[] $analyzers */
+    /**
+     * @param Analyzer[]         $analyzers
+     * @param AuditingAnalyzer[] $auditingAnalyzers
+     */
     public function __construct(
         private PageRepository $pageRepository,
         private AuditRepository $auditRepository,
         private EventBus $eventBus,
         private array $analyzers = [],
         private ?AuditedPageRepository $auditedPageRepository = null,
+        private array $auditingAnalyzers = [],
     ) {
     }
 
@@ -70,6 +77,14 @@ final readonly class AnalyzePageOnPageFetched
     {
         foreach ($this->analyzers as $analyzer) {
             $analyzer->analyze($page);
+        }
+
+        if ($this->auditingAnalyzers !== []) {
+            $signals = new LegacyPageToPageSignals($page);
+            $collector = new PageBackedIssueCollector($page);
+            foreach ($this->auditingAnalyzers as $analyzer) {
+                $analyzer->analyze($signals, $collector);
+            }
         }
     }
 

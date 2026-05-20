@@ -33,10 +33,10 @@ use SeoSpider\Crawling\Infrastructure\Http\SymfonyHttpClient;
 use SeoSpider\Crawling\Infrastructure\Parser\DomCrawlerHtmlParser;
 use SeoSpider\Shared\Infrastructure\Bus\SyncEventBus;
 use SeoSpider\Audit\Domain\Model\Analyzer\BrokenLinkAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\MetaDataAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\MetaDataAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\DirectiveAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\HeadingAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\ContentAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\HeadingAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\ContentAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\ImageAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\PerformanceAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\SecurityHeaderAnalyzer;
@@ -148,10 +148,7 @@ final class AuditServiceProvider extends ServiceProvider
 
         $this->app->tag([
             BrokenLinkAnalyzer::class,
-            MetaDataAnalyzer::class,
             DirectiveAnalyzer::class,
-            HeadingAnalyzer::class,
-            ContentAnalyzer::class,
             ImageAnalyzer::class,
             PerformanceAnalyzer::class,
             SecurityHeaderAnalyzer::class,
@@ -161,6 +158,12 @@ final class AuditServiceProvider extends ServiceProvider
             HreflangAnalyzer::class,
             DuplicateAnalyzer::class,
         ], 'analyzers');
+
+        $this->app->tag([
+            ContentAnalyzer::class,
+            HeadingAnalyzer::class,
+            MetaDataAnalyzer::class,
+        ], 'auditing-analyzers');
 
         $this->app->singleton(HreflangReturnAnalyzer::class, fn() => new HreflangReturnAnalyzer());
         $this->app->singleton(CanonicalTargetAnalyzer::class, fn() => new CanonicalTargetAnalyzer());
@@ -205,6 +208,7 @@ final class AuditServiceProvider extends ServiceProvider
             eventBus: $app->make(EventBus::class),
             analyzers: iterator_to_array($app->tagged('analyzers')),
             auditedPageRepository: $app->make(AuditedPageRepository::class),
+            auditingAnalyzers: iterator_to_array($app->tagged('auditing-analyzers')),
         ));
 
         $this->app->singleton(ExternalLinkVerifier::class, fn($app) => new HttpExternalLinkVerifier(

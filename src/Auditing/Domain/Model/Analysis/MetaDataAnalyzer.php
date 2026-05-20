@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
-use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\PageMetadata;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
@@ -12,19 +12,18 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 
 final class MetaDataAnalyzer implements Analyzer
 {
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml() || $page->metadata() === null) {
+        if (!$signals->isHtml() || $signals->metadata() === null) {
             return;
         }
 
-        $metadata = $page->metadata();
-
-        $this->checkTitle($page, $metadata);
-        $this->checkMetaDescription($page, $metadata);
-        $this->checkH1($page, $metadata);
-        $this->checkViewport($page, $metadata);
-        $this->checkHtmlLang($page, $metadata);
+        $metadata = $signals->metadata();
+        $this->checkTitle($issues, $metadata);
+        $this->checkMetaDescription($issues, $metadata);
+        $this->checkH1($issues, $metadata);
+        $this->checkViewport($issues, $metadata);
+        $this->checkHtmlLang($issues, $metadata);
     }
 
     public function category(): IssueCategory
@@ -32,22 +31,21 @@ final class MetaDataAnalyzer implements Analyzer
         return IssueCategory::METADATA;
     }
 
-    private function checkTitle(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkTitle(IssueCollector $issues, PageMetadata $metadata): void
     {
         if (!$metadata->hasTitle()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::ERROR,
                 code: 'title_missing',
                 message: 'Page has no title tag.',
             ));
-
             return;
         }
 
         if ($metadata->isTitleTooLong()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::WARNING,
@@ -58,7 +56,7 @@ final class MetaDataAnalyzer implements Analyzer
         }
 
         if ($metadata->isTitleTooShort()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::WARNING,
@@ -69,22 +67,21 @@ final class MetaDataAnalyzer implements Analyzer
         }
     }
 
-    private function checkMetaDescription(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkMetaDescription(IssueCollector $issues, PageMetadata $metadata): void
     {
         if (!$metadata->hasMetaDescription()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::WARNING,
                 code: 'meta_description_missing',
                 message: 'Page has no meta description.',
             ));
-
             return;
         }
 
         if ($metadata->isMetaDescriptionTooLong()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::NOTICE,
@@ -94,10 +91,10 @@ final class MetaDataAnalyzer implements Analyzer
         }
     }
 
-    private function checkH1(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkH1(IssueCollector $issues, PageMetadata $metadata): void
     {
         if ($metadata->hasNoH1()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::WARNING,
@@ -107,7 +104,7 @@ final class MetaDataAnalyzer implements Analyzer
         }
 
         if ($metadata->hasMultipleH1s()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::NOTICE,
@@ -117,10 +114,10 @@ final class MetaDataAnalyzer implements Analyzer
         }
     }
 
-    private function checkViewport(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkViewport(IssueCollector $issues, PageMetadata $metadata): void
     {
         if (!$metadata->hasViewport()) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::METADATA,
                 severity: IssueSeverity::WARNING,
@@ -130,15 +127,14 @@ final class MetaDataAnalyzer implements Analyzer
         }
     }
 
-    private function checkHtmlLang(AnalyzablePage $page, \SeoSpider\Crawling\Domain\Model\Page\PageMetadata $metadata): void
+    private function checkHtmlLang(IssueCollector $issues, PageMetadata $metadata): void
     {
         $lang = $metadata->lang();
-
         if ($lang !== null && trim($lang) !== '') {
             return;
         }
 
-        $page->addIssue(new Issue(
+        $issues->add(new Issue(
             id: IssueId::generate(),
             category: IssueCategory::METADATA,
             severity: IssueSeverity::NOTICE,
