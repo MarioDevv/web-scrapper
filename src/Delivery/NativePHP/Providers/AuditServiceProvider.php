@@ -23,7 +23,7 @@ use SeoSpider\Crawling\Application\UrlDiscoverer;
 use SeoSpider\Audit\Infrastructure\Persistence\SqliteExternalLinkRepository;
 use SeoSpider\Crawling\Infrastructure\Robots\RobotsTxtPolicy;
 use SeoSpider\Shared\Domain\Bus\EventBus;
-use SeoSpider\Audit\Infrastructure\Persistence\SqliteAuditRepository;
+use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditRepository;
 use SeoSpider\Audit\Infrastructure\Persistence\SqlitePageRepository;
 use SeoSpider\Crawling\Infrastructure\Frontier\SqliteFrontier;
 use SeoSpider\Audit\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;

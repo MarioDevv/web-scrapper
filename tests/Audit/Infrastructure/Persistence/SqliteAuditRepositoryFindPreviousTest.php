@@ -6,7 +6,7 @@ namespace SeoSpider\Tests\Audit\Infrastructure\Persistence;
 
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Infrastructure\Persistence\SqliteAuditRepository;
+use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\Persistence\Support\SqliteSchemaFactory;
 
 final class SqliteAuditRepositoryFindPreviousTest extends TestCase

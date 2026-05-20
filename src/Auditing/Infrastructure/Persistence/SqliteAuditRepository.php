@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\Persistence;
+namespace SeoSpider\Auditing\Infrastructure\Persistence;
 
 use DateTimeImmutable;
 use PDO;
@@ -12,7 +12,6 @@ use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditStatistics;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditStatus;
-use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class SqliteAuditRepository implements AuditRepository
 {
