@@ -2,26 +2,24 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\AnalyzePage;
+namespace SeoSpider\Auditing\Application\Reactors;
 
 use SeoSpider\Auditing\Application\Analysis\BufferingIssueCollector;
-use SeoSpider\Auditing\Infrastructure\Acl\LegacyPageToPageSignals;
 use SeoSpider\Auditing\Domain\Model\Analysis\Analyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\PageSignals;
+use SeoSpider\Auditing\Domain\Model\Analysis\PageSignalsReader;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
-use SeoSpider\Crawling\Domain\Model\Page\Page;
-use SeoSpider\Crawling\Domain\Model\Page\PageId;
-use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 use SeoSpider\Shared\Integration\PageWasCrawled;
 
-final readonly class AnalyzePageOnPageFetched
+final readonly class AnalyzePageOnPageWasCrawled
 {
     /** @param Analyzer[] $analyzers */
     public function __construct(
-        private PageRepository $pageRepository,
+        private PageSignalsReader $pageSignalsReader,
         private AuditRepository $auditRepository,
         private EventBus $eventBus,
         private AuditedPageRepository $auditedPageRepository,
@@ -31,13 +29,13 @@ final readonly class AnalyzePageOnPageFetched
 
     public function __invoke(PageWasCrawled $event): void
     {
-        $page = $this->pageRepository->findById(new PageId($event->pageId));
-        if ($page === null) {
+        $signals = $this->pageSignalsReader->findById($event->pageId);
+        if ($signals === null) {
             return;
         }
 
-        $collector = $this->runAnalyzers($page);
-        $this->persistAuditedPage($page, $collector);
+        $collector = $this->runAnalyzers($signals);
+        $this->persistAuditedPage($event->auditId, $event->url, $collector);
 
         $audit = $this->auditRepository->findById(new AuditId($event->auditId));
         if ($audit === null) {
@@ -53,14 +51,9 @@ final readonly class AnalyzePageOnPageFetched
         $this->eventBus->publish(...$audit->pullDomainEvents());
     }
 
-    private function runAnalyzers(Page $page): BufferingIssueCollector
+    private function runAnalyzers(PageSignals $signals): BufferingIssueCollector
     {
         $collector = new BufferingIssueCollector();
-        if ($this->analyzers === []) {
-            return $collector;
-        }
-
-        $signals = new LegacyPageToPageSignals($page);
         foreach ($this->analyzers as $analyzer) {
             $analyzer->analyze($signals, $collector);
         }
@@ -68,12 +61,9 @@ final readonly class AnalyzePageOnPageFetched
         return $collector;
     }
 
-    private function persistAuditedPage(Page $page, BufferingIssueCollector $collector): void
+    private function persistAuditedPage(string $auditId, string $url, BufferingIssueCollector $collector): void
     {
-        $audited = AuditedPage::forUrl(
-            $page->auditId(),
-            $page->url()->toString(),
-        );
+        $audited = AuditedPage::forUrl($auditId, $url);
         foreach ($collector->issues() as $issue) {
             $audited->recordIssue($issue);
         }

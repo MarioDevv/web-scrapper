@@ -21,4 +21,10 @@ interface SiteContext
     public function addPageIssue(string $pageUrl, Issue $issue): void;
 
     public function addSiteIssue(SiteIssue $issue): void;
+
+    /** @return array<string, Issue[]> */
+    public function bufferedPageIssues(): array;
+
+    /** @return SiteIssue[] */
+    public function siteIssues(): array;
 }

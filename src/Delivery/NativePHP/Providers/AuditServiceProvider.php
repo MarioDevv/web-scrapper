@@ -59,7 +59,7 @@ use SeoSpider\Auditing\Infrastructure\Acl\FrontierBackedPendingUrlCounter;
 use SeoSpider\Auditing\Infrastructure\Acl\FrontierBackedAuditFrontier;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditFrontier;
 use SeoSpider\Auditing\Domain\Model\Reporting\PendingUrlCounter;
-use SeoSpider\Audit\Application\AnalyzeSite\AnalyzeSiteOnAuditCompleted;
+use SeoSpider\Auditing\Application\Reactors\AnalyzeSiteOnAuditCompleted;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportReader;
 use SeoSpider\Auditing\Infrastructure\Persistence\SqliteIssueReportReader;
 use SeoSpider\Auditing\Domain\Model\Reporting\SiteIssueRepository;
@@ -74,7 +74,11 @@ use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditedPageRepository;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
-use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
+use SeoSpider\Auditing\Application\Reactors\AnalyzePageOnPageWasCrawled;
+use SeoSpider\Auditing\Domain\Model\Analysis\PageSignalsReader;
+use SeoSpider\Auditing\Domain\Model\Analysis\SiteContextFactory;
+use SeoSpider\Auditing\Infrastructure\Acl\CrawlingPageSignalsReader;
+use SeoSpider\Auditing\Infrastructure\Acl\CrawlingSiteContextFactory;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Auditing\Application\Lifecycle\PauseAudit\PauseAuditHandler;
 use SeoSpider\Auditing\Application\Lifecycle\ResumeAudit\ResumeAuditHandler;
@@ -200,8 +204,12 @@ final class AuditServiceProvider extends ServiceProvider
             SitemapCoverageAnalyzer::class,
         ], 'auditing-site-analyzers');
 
+        $this->app->singleton(SiteContextFactory::class, fn($app) => new CrawlingSiteContextFactory(
+            $app->make(PageRepository::class),
+        ));
+
         $this->app->singleton(AnalyzeSiteOnAuditCompleted::class, fn($app) => new AnalyzeSiteOnAuditCompleted(
-            pageRepository: $app->make(PageRepository::class),
+            siteContextFactory: $app->make(SiteContextFactory::class),
             auditRepository: $app->make(AuditRepository::class),
             siteIssueRepository: $app->make(SiteIssueRepository::class),
             auditedPageRepository: $app->make(AuditedPageRepository::class),
@@ -221,8 +229,12 @@ final class AuditServiceProvider extends ServiceProvider
             eventBus: $app->make(EventBus::class),
         ));
 
-        $this->app->singleton(AnalyzePageOnPageFetched::class, fn($app) => new AnalyzePageOnPageFetched(
-            pageRepository: $app->make(PageRepository::class),
+        $this->app->singleton(PageSignalsReader::class, fn($app) => new CrawlingPageSignalsReader(
+            $app->make(PageRepository::class),
+        ));
+
+        $this->app->singleton(AnalyzePageOnPageWasCrawled::class, fn($app) => new AnalyzePageOnPageWasCrawled(
+            pageSignalsReader: $app->make(PageSignalsReader::class),
             auditRepository: $app->make(AuditRepository::class),
             eventBus: $app->make(EventBus::class),
             auditedPageRepository: $app->make(AuditedPageRepository::class),
@@ -327,7 +339,7 @@ final class AuditServiceProvider extends ServiceProvider
 
         $bus->subscribe(PageWasCrawled::class, static function (\SeoSpider\Shared\Domain\DomainEvent $event) use ($app): void {
             if ($event instanceof PageWasCrawled) {
-                ($app->make(AnalyzePageOnPageFetched::class))($event);
+                ($app->make(AnalyzePageOnPageWasCrawled::class))($event);
             }
         });
 

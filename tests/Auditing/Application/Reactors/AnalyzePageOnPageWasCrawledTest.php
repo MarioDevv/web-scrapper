@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Application\AnalyzePage;
+namespace SeoSpider\Tests\Auditing\Application\Reactors;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
+use SeoSpider\Auditing\Application\Reactors\AnalyzePageOnPageWasCrawled;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
@@ -30,7 +30,7 @@ use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository;
 
-final class AnalyzePageOnPageFetchedTest extends TestCase
+final class AnalyzePageOnPageWasCrawledTest extends TestCase
 {
     private InMemoryAuditRepository $audits;
     private InMemoryPageRepository $pages;
@@ -124,10 +124,10 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
     }
 
     /** @param Analyzer[] $analyzers */
-    private function buildReactor(array $analyzers): AnalyzePageOnPageFetched
+    private function buildReactor(array $analyzers): AnalyzePageOnPageWasCrawled
     {
-        return new AnalyzePageOnPageFetched(
-            pageRepository: $this->pages,
+        return new AnalyzePageOnPageWasCrawled(
+            pageSignalsReader: new \SeoSpider\Auditing\Infrastructure\Acl\CrawlingPageSignalsReader($this->pages),
             auditRepository: $this->audits,
             eventBus: $this->events,
             auditedPageRepository: $this->auditedPages,

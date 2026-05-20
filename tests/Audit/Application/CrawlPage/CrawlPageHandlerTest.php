@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Application\CrawlPage;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
+use SeoSpider\Auditing\Application\Reactors\AnalyzePageOnPageWasCrawled;
+use SeoSpider\Auditing\Infrastructure\Acl\CrawlingPageSignalsReader;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageCommand;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
@@ -63,8 +64,8 @@ final class CrawlPageHandlerTest extends TestCase
             eventBus: $this->eventBus,
         );
 
-        $this->eventBus->subscribe(PageWasCrawled::class, new AnalyzePageOnPageFetched(
-            pageRepository: $this->pageRepository,
+        $this->eventBus->subscribe(PageWasCrawled::class, new AnalyzePageOnPageWasCrawled(
+            pageSignalsReader: new CrawlingPageSignalsReader($this->pageRepository),
             auditRepository: $this->auditRepository,
             eventBus: $this->eventBus,
             auditedPageRepository: $this->auditedPages,

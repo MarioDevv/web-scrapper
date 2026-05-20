@@ -23,7 +23,8 @@ use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
-use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
+use SeoSpider\Auditing\Application\Reactors\AnalyzePageOnPageWasCrawled;
+use SeoSpider\Auditing\Infrastructure\Acl\CrawlingPageSignalsReader;
 use SeoSpider\Shared\Integration\PageWasCrawled;
 use SeoSpider\Crawling\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubPageFetcher;
@@ -71,8 +72,8 @@ final class CrawlerEngineTest extends TestCase
             eventBus: $this->eventBus,
         );
 
-        $this->eventBus->subscribe(PageWasCrawled::class, new AnalyzePageOnPageFetched(
-            pageRepository: $this->pageRepository,
+        $this->eventBus->subscribe(PageWasCrawled::class, new AnalyzePageOnPageWasCrawled(
+            pageSignalsReader: new CrawlingPageSignalsReader($this->pageRepository),
             auditRepository: $this->auditRepository,
             eventBus: $this->eventBus,
             auditedPageRepository: new \SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository(),

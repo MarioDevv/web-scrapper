@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Application\AnalyzeSite;
+namespace SeoSpider\Tests\Auditing\Application\Reactors;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Application\AnalyzeSite\AnalyzeSiteOnAuditCompleted;
+use SeoSpider\Auditing\Application\Reactors\AnalyzeSiteOnAuditCompleted;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
@@ -175,7 +175,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
     private function buildReactor(array $analyzers): AnalyzeSiteOnAuditCompleted
     {
         return new AnalyzeSiteOnAuditCompleted(
-            pageRepository: $this->pages,
+            siteContextFactory: new \SeoSpider\Auditing\Infrastructure\Acl\CrawlingSiteContextFactory($this->pages),
             auditRepository: $this->audits,
             siteIssueRepository: $this->siteIssues,
             auditedPageRepository: $this->auditedPages,

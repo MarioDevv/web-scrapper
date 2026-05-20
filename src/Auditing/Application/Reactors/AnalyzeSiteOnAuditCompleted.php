@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\AnalyzeSite;
+namespace SeoSpider\Auditing\Application\Reactors;
 
-use SeoSpider\Auditing\Infrastructure\Acl\LegacySiteContext;
-use SeoSpider\Crawling\Domain\Model\Page\PageRepository;
 use SeoSpider\Auditing\Domain\Model\Analysis\SiteAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\SiteContextFactory;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
@@ -18,7 +16,7 @@ final readonly class AnalyzeSiteOnAuditCompleted
 {
     /** @param SiteAnalyzer[] $siteAnalyzers */
     public function __construct(
-        private PageRepository $pageRepository,
+        private SiteContextFactory $siteContextFactory,
         private AuditRepository $auditRepository,
         private SiteIssueRepository $siteIssueRepository,
         private AuditedPageRepository $auditedPageRepository,
@@ -37,16 +35,13 @@ final readonly class AnalyzeSiteOnAuditCompleted
             return;
         }
 
-        $pages = $this->pageRepository->findByAudit($event->auditId->value());
-        if ($pages === []) {
+        $context = $this->siteContextFactory->forAudit(
+            $event->auditId->value(),
+            $audit->configuration()->seedUrl,
+        );
+        if ($context === null) {
             return;
         }
-
-        $context = new LegacySiteContext(
-            auditId: $event->auditId->value(),
-            seedUrl: $audit->configuration()->seedUrl,
-            pages: $pages,
-        );
 
         foreach ($this->siteAnalyzers as $analyzer) {
             $analyzer->analyze($context);
