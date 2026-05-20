@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\Persistence;
+namespace SeoSpider\Crawling\Infrastructure\Persistence;
 
 use PDO;
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
+use SeoSpider\Crawling\Domain\Model\ExternalLink\ExternalLinkRepository;
 use SeoSpider\Crawling\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Url;
 
@@ -14,18 +13,18 @@ final readonly class SqliteExternalLinkRepository implements ExternalLinkReposit
 {
     public function __construct(private PDO $pdo) {}
 
-    public function exists(AuditId $auditId, Url $url): bool
+    public function exists(string $auditId, Url $url): bool
     {
         $stmt = $this->pdo->prepare(
             'SELECT 1 FROM external_url_checks WHERE audit_id = ? AND url = ? LIMIT 1'
         );
-        $stmt->execute([$auditId->value(), $url->toString()]);
+        $stmt->execute([$auditId, $url->toString()]);
 
         return $stmt->fetch() !== false;
     }
 
     public function save(
-        AuditId $auditId,
+        string $auditId,
         Url $url,
         int $statusCode,
         float $responseTime,
@@ -38,7 +37,7 @@ final readonly class SqliteExternalLinkRepository implements ExternalLinkReposit
              VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
-            $auditId->value(),
+            $auditId,
             $url->toString(),
             $statusCode,
             $responseTime,

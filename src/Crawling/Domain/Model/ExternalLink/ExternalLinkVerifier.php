@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model;
+namespace SeoSpider\Crawling\Domain\Model\ExternalLink;
 
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 
 /**
  * Post-crawl phase: walks every external anchor link that the crawl recorded,
@@ -18,5 +17,5 @@ use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 interface ExternalLinkVerifier
 {
     /** Returns the number of unique external URLs probed. */
-    public function verify(AuditId $auditId, ?string $userAgent = null): int;
+    public function verify(string $auditId, ?string $userAgent = null): int;
 }

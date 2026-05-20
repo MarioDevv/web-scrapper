@@ -2,18 +2,17 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model;
+namespace SeoSpider\Crawling\Domain\Model\ExternalLink;
 use SeoSpider\Crawling\Domain\Model\Url;
 
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Page\PageId;
 
 interface ExternalLinkRepository
 {
-    public function exists(AuditId $auditId, Url $url): bool;
+    public function exists(string $auditId, Url $url): bool;
 
     public function save(
-        AuditId $auditId,
+        string $auditId,
         Url $url,
         int $statusCode,
         float $responseTime,

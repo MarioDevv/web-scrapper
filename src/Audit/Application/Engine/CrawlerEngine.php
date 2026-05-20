@@ -8,7 +8,7 @@ use SeoSpider\Audit\Application\CrawlPage\CrawlPageCommand;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
+use SeoSpider\Crawling\Domain\Model\ExternalLink\ExternalLinkVerifier;
 use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Crawling\Domain\Model\FrontierEntry;
 use SeoSpider\Crawling\Application\PageFetcher;
@@ -68,7 +68,7 @@ final readonly class CrawlerEngine
 
             $batch = $this->frontier->dequeueBatch($id->value(), $concurrency);
             if ($batch === []) {
-                $this->externalLinkVerifier->verify($id, $audit->configuration()->customUserAgent);
+                $this->externalLinkVerifier->verify($id->value(), $audit->configuration()->customUserAgent);
                 $audit->complete();
                 $this->auditRepository->save($audit);
                 break;

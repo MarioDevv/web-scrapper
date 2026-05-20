@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\ExternalLinks;
+namespace SeoSpider\Crawling\Infrastructure\ExternalLinks;
 
-use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
-use SeoSpider\Audit\Domain\Model\ExternalLinkRepository;
-use SeoSpider\Audit\Domain\Model\ExternalLinkVerifier;
+use SeoSpider\Crawling\Domain\Model\ExternalLink\ExternalLinkRepository;
+use SeoSpider\Crawling\Domain\Model\ExternalLink\ExternalLinkVerifier;
 use SeoSpider\Crawling\Application\HttpClient;
 use SeoSpider\Crawling\Domain\Model\HttpRequestFailed;
 use SeoSpider\Crawling\Domain\Model\Page\Page;
@@ -23,7 +22,7 @@ final readonly class HttpExternalLinkVerifier implements ExternalLinkVerifier
     ) {
     }
 
-    public function verify(AuditId $auditId, ?string $userAgent = null): int
+    public function verify(string $auditId, ?string $userAgent = null): int
     {
         $references = $this->collectExternalReferences($auditId);
         $probed = 0;
@@ -58,12 +57,12 @@ final readonly class HttpExternalLinkVerifier implements ExternalLinkVerifier
     /**
      * @return array<string, array{url: Url, references: list<array{sourcePageId: PageId, anchorText: ?string}>}>
      */
-    private function collectExternalReferences(AuditId $auditId): array
+    private function collectExternalReferences(string $auditId): array
     {
         $grouped = [];
 
         /** @var Page[] $pages */
-        $pages = $this->pageRepository->findByAudit($auditId->value());
+        $pages = $this->pageRepository->findByAudit($auditId);
 
         foreach ($pages as $page) {
             foreach ($page->links() as $link) {

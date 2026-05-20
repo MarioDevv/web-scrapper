@@ -16,7 +16,7 @@ use SeoSpider\Crawling\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
-use SeoSpider\Audit\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
+use SeoSpider\Crawling\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryExternalLinkRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubHttpClient;
@@ -44,7 +44,7 @@ final class HttpExternalLinkVerifierTest extends TestCase
 
     public function test_returns_zero_when_audit_has_no_pages(): void
     {
-        $this->assertSame(0, $this->verifier->verify($this->auditId));
+        $this->assertSame(0, $this->verifier->verify($this->auditId->value()));
     }
 
     public function test_returns_zero_when_no_page_has_external_anchor_links(): void
@@ -55,7 +55,7 @@ final class HttpExternalLinkVerifierTest extends TestCase
             $this->externalImage('https://cdn.example.org/img.png'),
         ]);
 
-        $this->assertSame(0, $this->verifier->verify($this->auditId));
+        $this->assertSame(0, $this->verifier->verify($this->auditId->value()));
     }
 
     public function test_probes_each_unique_external_url_once_across_all_pages(): void
@@ -69,12 +69,12 @@ final class HttpExternalLinkVerifierTest extends TestCase
             $this->externalAnchor('https://linkedin.com/in/user'),
         ]);
 
-        $probed = $this->verifier->verify($this->auditId);
+        $probed = $this->verifier->verify($this->auditId->value());
 
         $this->assertSame(3, $probed, 'twitter should be probed once even though two pages link to it');
-        $this->assertTrue($this->external->exists($this->auditId, Url::fromString('https://twitter.com/user')));
-        $this->assertTrue($this->external->exists($this->auditId, Url::fromString('https://github.com/user')));
-        $this->assertTrue($this->external->exists($this->auditId, Url::fromString('https://linkedin.com/in/user')));
+        $this->assertTrue($this->external->exists($this->auditId->value(), Url::fromString('https://twitter.com/user')));
+        $this->assertTrue($this->external->exists($this->auditId->value(), Url::fromString('https://github.com/user')));
+        $this->assertTrue($this->external->exists($this->auditId->value(), Url::fromString('https://linkedin.com/in/user')));
     }
 
     public function test_skips_urls_that_already_exist_in_the_repository(): void
@@ -85,7 +85,7 @@ final class HttpExternalLinkVerifierTest extends TestCase
         ]);
 
         $this->external->save(
-            $this->auditId,
+            $this->auditId->value(),
             Url::fromString('https://twitter.com/user'),
             statusCode: 200,
             responseTime: 50.0,
@@ -94,7 +94,7 @@ final class HttpExternalLinkVerifierTest extends TestCase
             anchorText: 'prior',
         );
 
-        $this->assertSame(1, $this->verifier->verify($this->auditId), 'twitter is cached, only github is probed');
+        $this->assertSame(1, $this->verifier->verify($this->auditId->value()), 'twitter is cached, only github is probed');
     }
 
     public function test_records_transport_failures_with_the_error_message(): void
@@ -104,9 +104,9 @@ final class HttpExternalLinkVerifierTest extends TestCase
         ]);
         $this->http->failWith('https://unreachable.test/', 'connection refused');
 
-        $this->verifier->verify($this->auditId);
+        $this->verifier->verify($this->auditId->value());
 
-        $this->assertTrue($this->external->exists($this->auditId, Url::fromString('https://unreachable.test/')));
+        $this->assertTrue($this->external->exists($this->auditId->value(), Url::fromString('https://unreachable.test/')));
     }
 
     /** @param Link[] $links */

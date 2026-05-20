@@ -25,7 +25,7 @@ use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
 use SeoSpider\Crawling\Domain\Model\Page\PageFetched;
-use SeoSpider\Audit\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
+use SeoSpider\Crawling\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubPageFetcher;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubSitemapIngester;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryExternalLinkRepository;
