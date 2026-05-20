@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Analyzer\CanonicalTargetAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\SiteAuditContext;
+use SeoSpider\Audit\Application\Analysis\LegacySiteContext;
+use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Auditing\Domain\Model\Analysis\CanonicalTargetAnalyzer;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
-use SeoSpider\Crawling\Domain\Model\Url;
+use SeoSpider\Tests\Audit\Domain\Model\Analyzer\AnalyzerTestHelpers;
 
 final class CanonicalTargetAnalyzerTest extends TestCase
 {
@@ -20,7 +21,7 @@ final class CanonicalTargetAnalyzerTest extends TestCase
 
         $this->runAnalyzer($page);
 
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $this->codes($page));
     }
 
     public function test_does_not_flag_pages_with_no_canonical(): void
@@ -29,7 +30,7 @@ final class CanonicalTargetAnalyzerTest extends TestCase
 
         $this->runAnalyzer($page);
 
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $this->codes($page));
     }
 
     public function test_flags_when_canonical_target_returns_4xx(): void
@@ -39,8 +40,7 @@ final class CanonicalTargetAnalyzerTest extends TestCase
 
         $this->runAnalyzer($source, $target);
 
-        $codes = array_map(static fn($i) => $i->code(), $source->issues());
-        $this->assertSame(['canonical_broken_target'], $codes);
+        $this->assertSame(['canonical_broken_target'], $this->codes($source));
         $this->assertStringContainsString('404', $source->issues()[0]->message());
     }
 
@@ -51,8 +51,7 @@ final class CanonicalTargetAnalyzerTest extends TestCase
 
         $this->runAnalyzer($source, $target);
 
-        $codes = array_map(static fn($i) => $i->code(), $source->issues());
-        $this->assertSame(['canonical_broken_target'], $codes);
+        $this->assertSame(['canonical_broken_target'], $this->codes($source));
     }
 
     public function test_flags_when_canonical_target_redirects(): void
@@ -66,8 +65,7 @@ final class CanonicalTargetAnalyzerTest extends TestCase
 
         $this->runAnalyzer($source, $target);
 
-        $codes = array_map(static fn($i) => $i->code(), $source->issues());
-        $this->assertSame(['canonical_broken_target'], $codes);
+        $this->assertSame(['canonical_broken_target'], $this->codes($source));
         $this->assertStringContainsString('redirect', $source->issues()[0]->message());
     }
 
@@ -78,8 +76,7 @@ final class CanonicalTargetAnalyzerTest extends TestCase
 
         $this->runAnalyzer($source, $target);
 
-        $codes = array_map(static fn($i) => $i->code(), $source->issues());
-        $this->assertSame(['canonical_broken_target'], $codes);
+        $this->assertSame(['canonical_broken_target'], $this->codes($source));
         $this->assertStringContainsString('noindex', $source->issues()[0]->message());
     }
 
@@ -89,17 +86,23 @@ final class CanonicalTargetAnalyzerTest extends TestCase
 
         $this->runAnalyzer($source);
 
-        $this->assertSame([], $source->issues());
+        $this->assertSame([], $this->codes($source));
     }
 
-    private function runAnalyzer(\SeoSpider\Audit\Domain\Model\Page\Page ...$pages): void
+    private function runAnalyzer(Page ...$pages): void
     {
-        $context = new SiteAuditContext(
-            auditId: $this->buildAuditId(),
-            seedUrl: Url::fromString('https://example.com/'),
+        $context = new LegacySiteContext(
+            auditId: $this->buildAuditId()->value(),
+            seedUrl: 'https://example.com/',
             pages: $pages,
         );
 
         (new CanonicalTargetAnalyzer())->analyze($context);
+    }
+
+    /** @return string[] */
+    private function codes(Page $page): array
+    {
+        return array_map(static fn ($i) => $i->code(), $page->issues());
     }
 }

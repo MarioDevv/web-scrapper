@@ -47,8 +47,8 @@ use SeoSpider\Auditing\Infrastructure\Persistence\SqliteFingerprintIndex;
 use SeoSpider\Auditing\Domain\Model\Analysis\TransportSecurityAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\SocialMetadataAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\StructuredDataAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\HreflangReturnAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\CanonicalTargetAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\HreflangReturnAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\CanonicalTargetAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\RobotsIndexableAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\SitemapCoverageAnalyzer;
 use SeoSpider\Audit\Application\AnalyzeSite\AnalyzeSiteOnAuditCompleted;
@@ -176,11 +176,14 @@ final class AuditServiceProvider extends ServiceProvider
         ));
 
         $this->app->tag([
-            HreflangReturnAnalyzer::class,
-            CanonicalTargetAnalyzer::class,
             RobotsIndexableAnalyzer::class,
             SitemapCoverageAnalyzer::class,
         ], 'site-analyzers');
+
+        $this->app->tag([
+            HreflangReturnAnalyzer::class,
+            CanonicalTargetAnalyzer::class,
+        ], 'auditing-site-analyzers');
 
         $this->app->singleton(AnalyzeSiteOnAuditCompleted::class, fn($app) => new AnalyzeSiteOnAuditCompleted(
             pageRepository: $app->make(PageRepository::class),
@@ -188,6 +191,7 @@ final class AuditServiceProvider extends ServiceProvider
             siteIssueRepository: $app->make(SiteIssueRepository::class),
             auditedPageRepository: $app->make(AuditedPageRepository::class),
             siteAnalyzers: iterator_to_array($app->tagged('site-analyzers')),
+            auditingSiteAnalyzers: iterator_to_array($app->tagged('auditing-site-analyzers')),
         ));
 
         $this->app->singleton(UrlDiscoverer::class, fn($app) => new FrontierUrlDiscoverer(

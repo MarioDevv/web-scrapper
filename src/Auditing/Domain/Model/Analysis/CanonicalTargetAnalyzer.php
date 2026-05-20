@@ -2,19 +2,18 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class CanonicalTargetAnalyzer implements SiteAnalyzer
 {
-    public function analyze(SiteAuditContext $context): void
+    public function analyze(SiteContext $context): void
     {
-        foreach ($context->pages as $page) {
+        foreach ($context->pages() as $page) {
             $this->checkCanonicalTarget($page, $context);
         }
     }
@@ -24,7 +23,7 @@ final class CanonicalTargetAnalyzer implements SiteAnalyzer
         return IssueCategory::DIRECTIVES;
     }
 
-    private function checkCanonicalTarget(Page $page, SiteAuditContext $context): void
+    private function checkCanonicalTarget(PageSignals $page, SiteContext $context): void
     {
         $directives = $page->directives();
         if ($directives === null || !$directives->hasCanonical()) {
@@ -38,10 +37,6 @@ final class CanonicalTargetAnalyzer implements SiteAnalyzer
 
         $target = $context->pageByUrl($canonical);
         if ($target === null) {
-            // Target was not crawled. It may be intentional (cross-domain
-            // canonical) so we do not flag it from this analyzer; the
-            // per-page DirectiveAnalyzer already surfaces non-self
-            // canonicals as INFO.
             return;
         }
 
@@ -67,13 +62,13 @@ final class CanonicalTargetAnalyzer implements SiteAnalyzer
             return;
         }
 
-        $page->addIssue(new Issue(
+        $context->addPageIssue($page->url(), new Issue(
             id: IssueId::generate(),
             category: IssueCategory::DIRECTIVES,
             severity: $severity,
             code: 'canonical_broken_target',
             message: sprintf('Canonical target is broken: %s.', $reason),
-            context: $canonical->toString(),
+            context: $canonical,
         ));
     }
 }

@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Analyzer\HreflangReturnAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\SiteAuditContext;
-use SeoSpider\Crawling\Domain\Model\Url;
+use SeoSpider\Audit\Application\Analysis\LegacySiteContext;
+use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Auditing\Domain\Model\Analysis\HreflangReturnAnalyzer;
+use SeoSpider\Tests\Audit\Domain\Model\Analyzer\AnalyzerTestHelpers;
 
 final class HreflangReturnAnalyzerTest extends TestCase
 {
@@ -35,13 +36,11 @@ final class HreflangReturnAnalyzerTest extends TestCase
         $es = $this->pageAt('https://example.com/', hreflangs: [
             $this->hreflang('en', 'https://example.com/en/'),
         ]);
-        // /en/ does not declare any hreflang
         $en = $this->pageAt('https://example.com/en/', hreflangs: []);
 
         $this->runAnalyzer($es, $en);
 
-        $codes = array_map(static fn($i) => $i->code(), $es->issues());
-        $this->assertSame(['hreflang_no_return'], $codes);
+        $this->assertSame(['hreflang_no_return'], array_map(static fn ($i) => $i->code(), $es->issues()));
         $this->assertSame([], $en->issues());
     }
 
@@ -50,7 +49,6 @@ final class HreflangReturnAnalyzerTest extends TestCase
         $es = $this->pageAt('https://example.com/', hreflangs: [
             $this->hreflang('en', 'https://example.com/en/'),
         ]);
-        // Only the source page is in the audit set.
 
         $this->runAnalyzer($es);
 
@@ -90,8 +88,6 @@ final class HreflangReturnAnalyzerTest extends TestCase
         $es = $this->pageAt('https://example.com/', hreflangs: [
             $this->hreflang('en', 'https://example.com/en/'),
         ]);
-        // /en/ returns hreflang to / via the resolved finalUrl rather than the
-        // request URL — both must be accepted as a valid back-reference.
         $en = $this->pageAt(
             url: 'https://example.com/en/',
             finalUrl: 'https://example.com/en/',
@@ -105,11 +101,11 @@ final class HreflangReturnAnalyzerTest extends TestCase
         $this->assertSame([], $es->issues());
     }
 
-    private function runAnalyzer(\SeoSpider\Audit\Domain\Model\Page\Page ...$pages): void
+    private function runAnalyzer(Page ...$pages): void
     {
-        $context = new SiteAuditContext(
-            auditId: $this->buildAuditId(),
-            seedUrl: Url::fromString('https://example.com/'),
+        $context = new LegacySiteContext(
+            auditId: $this->buildAuditId()->value(),
+            seedUrl: 'https://example.com/',
             pages: $pages,
         );
 

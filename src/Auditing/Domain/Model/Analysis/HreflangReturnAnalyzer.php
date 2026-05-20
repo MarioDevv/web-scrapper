@@ -2,27 +2,26 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
-use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Hreflang;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 
 final class HreflangReturnAnalyzer implements SiteAnalyzer
 {
-    public function analyze(SiteAuditContext $context): void
+    public function analyze(SiteContext $context): void
     {
-        foreach ($context->pages as $sourcePage) {
+        foreach ($context->pages() as $sourcePage) {
             $missing = $this->collectMissingReturns($sourcePage, $context);
 
             if ($missing === []) {
                 continue;
             }
 
-            $sourcePage->addIssue(new Issue(
+            $context->addPageIssue($sourcePage->url(), new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::HREFLANG,
                 severity: IssueSeverity::WARNING,
@@ -43,28 +42,25 @@ final class HreflangReturnAnalyzer implements SiteAnalyzer
     }
 
     /** @return string[] */
-    private function collectMissingReturns(Page $sourcePage, SiteAuditContext $context): array
+    private function collectMissingReturns(PageSignals $sourcePage, SiteContext $context): array
     {
         $missing = [];
 
         foreach ($sourcePage->hreflangs() as $hreflang) {
-            // x-default has no language partner, the spec does not require
-            // a return link from x-default targets to the source page.
             if ($hreflang->isXDefault()) {
                 continue;
             }
 
             $targetPage = $context->pageByUrl($hreflang->href());
             if ($targetPage === null) {
-                // Target was not crawled — out of scope for reciprocity.
                 continue;
             }
 
             if (!$this->targetReturnsTo($targetPage->hreflangs(), $sourcePage)) {
                 $missing[] = sprintf(
                     '%s → %s (%s)',
-                    $sourcePage->url()->toString(),
-                    $hreflang->href()->toString(),
+                    $sourcePage->url(),
+                    $hreflang->href(),
                     $hreflang->languageRegionCode(),
                 );
             }
@@ -74,7 +70,7 @@ final class HreflangReturnAnalyzer implements SiteAnalyzer
     }
 
     /** @param Hreflang[] $targetHreflangs */
-    private function targetReturnsTo(array $targetHreflangs, Page $sourcePage): bool
+    private function targetReturnsTo(array $targetHreflangs, PageSignals $sourcePage): bool
     {
         foreach ($targetHreflangs as $hreflang) {
             if ($hreflang->isXDefault()) {
