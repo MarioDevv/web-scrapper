@@ -74,7 +74,7 @@ final class CompareAuditsHandlerTest extends TestCase
         $audit = Audit::reconstitute(
             id: $id,
             configuration: new AuditConfiguration(
-                seedUrl: Url::fromString($seedUrl),
+                seedUrl: $seedUrl,
                 maxPages: 100,
                 maxDepth: 5,
                 concurrency: 1,

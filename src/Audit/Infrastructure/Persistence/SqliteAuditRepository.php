@@ -58,7 +58,7 @@ final readonly class SqliteAuditRepository implements AuditRepository
 
         $stmt->execute([
             'id' => $audit->id()->value(),
-            'seed_url' => $config->seedUrl->toString(),
+            'seed_url' => $config->seedUrl,
             'status' => $audit->status()->value,
             'max_pages' => $config->maxPages,
             'max_depth' => $config->maxDepth,
@@ -135,7 +135,7 @@ final readonly class SqliteAuditRepository implements AuditRepository
         return Audit::reconstitute(
             id: new AuditId($row['id']),
             configuration: new AuditConfiguration(
-                seedUrl: Url::fromString($row['seed_url']),
+                seedUrl: $row['seed_url'],
                 maxPages: (int) $row['max_pages'],
                 maxDepth: (int) $row['max_depth'],
                 concurrency: (int) $row['concurrency'],

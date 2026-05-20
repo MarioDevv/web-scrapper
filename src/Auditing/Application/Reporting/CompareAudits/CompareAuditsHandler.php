@@ -67,7 +67,7 @@ final readonly class CompareAuditsHandler
         return new CompareAuditsResponse(
             baseAuditId: $query->baseAuditId->value(),
             targetAuditId: $query->targetAuditId->value(),
-            host: $target->configuration()->seedUrl->host(),
+            host: (string) (parse_url($target->configuration()->seedUrl, PHP_URL_HOST) ?? ""),
             baseCompletedAt: $base->statistics()->completedAt
                 ?? throw new RuntimeException('Base audit has no completed_at; cannot compare.'),
             targetCompletedAt: $target->statistics()->completedAt

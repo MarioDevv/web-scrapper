@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Domain\Model\Audit;
 
 use InvalidArgumentException;
-use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class AuditConfiguration
 {
@@ -14,7 +13,7 @@ final readonly class AuditConfiguration
      * @param string[] $includePatterns
      */
     public function __construct(
-        public Url $seedUrl,
+        public string $seedUrl,
         public int $maxPages = 500,
         public int $maxDepth = 10,
         public int $concurrency = 5,

@@ -25,7 +25,7 @@ final class AuditTest extends TestCase
         return Audit::start(
             AuditId::generate(),
             new AuditConfiguration(
-                seedUrl: Url::fromString('https://example.com'),
+                seedUrl: 'https://example.com',
                 maxPages: $maxPages,
             ),
         );

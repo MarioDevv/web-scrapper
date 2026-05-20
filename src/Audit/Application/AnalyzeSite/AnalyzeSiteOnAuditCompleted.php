@@ -43,7 +43,7 @@ final readonly class AnalyzeSiteOnAuditCompleted
 
         $context = new LegacySiteContext(
             auditId: $event->auditId->value(),
-            seedUrl: $audit->configuration()->seedUrl->toString(),
+            seedUrl: $audit->configuration()->seedUrl,
             pages: $pages,
         );
 

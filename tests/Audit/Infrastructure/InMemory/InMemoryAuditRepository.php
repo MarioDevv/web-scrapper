@@ -39,7 +39,7 @@ final class InMemoryAuditRepository implements AuditRepository
             if ($audit->status() !== AuditStatus::COMPLETED) {
                 continue;
             }
-            if ($audit->configuration()->seedUrl->host() !== $host) {
+            if (parse_url($audit->configuration()->seedUrl, PHP_URL_HOST) !== $host) {
                 continue;
             }
             $completedAt = $audit->statistics()->completedAt;

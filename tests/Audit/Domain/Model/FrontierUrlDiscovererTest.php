@@ -147,7 +147,7 @@ final class FrontierUrlDiscovererTest extends TestCase
     private function config(int $maxDepth = 10, bool $crawlResources = false): AuditConfiguration
     {
         return new AuditConfiguration(
-            seedUrl: Url::fromString('https://example.com/'),
+            seedUrl: 'https://example.com/',
             maxDepth: $maxDepth,
             crawlResources: $crawlResources,
         );

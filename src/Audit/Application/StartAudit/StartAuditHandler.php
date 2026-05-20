@@ -29,7 +29,7 @@ final readonly class StartAuditHandler
         $audit = Audit::start(
             new AuditId($command->auditId),
             new AuditConfiguration(
-                seedUrl: $seedUrl,
+                seedUrl: $seedUrl->toString(),
                 maxPages: $command->maxPages,
                 maxDepth: $command->maxDepth,
                 concurrency: $command->concurrency,

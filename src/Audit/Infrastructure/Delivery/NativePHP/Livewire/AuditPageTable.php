@@ -179,7 +179,7 @@ class AuditPageTable extends Component
         }
 
         $previous = $audits->findPreviousCompletedByHost(
-            $target->configuration()->seedUrl->host(),
+            (string) (parse_url($target->configuration()->seedUrl, PHP_URL_HOST) ?? ""),
             $targetId,
         );
 

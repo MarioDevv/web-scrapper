@@ -14,6 +14,7 @@ use SeoSpider\Crawling\Domain\Model\FrontierEntry;
 use SeoSpider\Crawling\Application\PageFetcher;
 use SeoSpider\Crawling\Application\RobotsPolicy;
 use SeoSpider\Crawling\Application\SitemapIngester;
+use SeoSpider\Crawling\Domain\Model\Url;
 
 final readonly class CrawlerEngine
 {
@@ -38,14 +39,16 @@ final readonly class CrawlerEngine
             return;
         }
 
+        $seedUrl = Url::fromString($audit->configuration()->seedUrl);
+
         if ($audit->configuration()->respectRobotsTxt) {
-            $this->robotsPolicy->load($audit->configuration()->seedUrl);
+            $this->robotsPolicy->load($seedUrl);
         }
 
         if ($audit->configuration()->ingestSitemaps) {
             $added = $this->sitemapIngester->ingest(
                 $id,
-                $audit->configuration()->seedUrl,
+                $seedUrl,
                 $audit->configuration()->customUserAgent,
             );
             if ($added > 0) {

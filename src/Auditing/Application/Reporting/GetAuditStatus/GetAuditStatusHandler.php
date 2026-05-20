@@ -29,7 +29,7 @@ final readonly class GetAuditStatusHandler
 
         return new GetAuditStatusResponse(
             auditId: $audit->id()->value(),
-            seedUrl: $audit->configuration()->seedUrl->toString(),
+            seedUrl: $audit->configuration()->seedUrl,
             status: $audit->status()->value,
             pagesDiscovered: $stats->pagesDiscovered,
             pagesCrawled: $stats->pagesCrawled,
