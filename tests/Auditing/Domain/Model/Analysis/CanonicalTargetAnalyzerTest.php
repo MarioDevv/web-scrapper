@@ -19,18 +19,18 @@ final class CanonicalTargetAnalyzerTest extends TestCase
     {
         $page = $this->pageAt('https://example.com/', canonical: 'https://example.com/');
 
-        $this->runAnalyzer($page);
+        $context = $this->runAnalyzer($page);
 
-        $this->assertSame([], $this->codes($page));
+        $this->assertSame([], $this->codesFor($context, $page));
     }
 
     public function test_does_not_flag_pages_with_no_canonical(): void
     {
         $page = $this->pageAt('https://example.com/');
 
-        $this->runAnalyzer($page);
+        $context = $this->runAnalyzer($page);
 
-        $this->assertSame([], $this->codes($page));
+        $this->assertSame([], $this->codesFor($context, $page));
     }
 
     public function test_flags_when_canonical_target_returns_4xx(): void
@@ -38,10 +38,12 @@ final class CanonicalTargetAnalyzerTest extends TestCase
         $source = $this->pageAt('https://example.com/old/', canonical: 'https://example.com/new/');
         $target = $this->pageAt('https://example.com/new/', statusCode: 404);
 
-        $this->runAnalyzer($source, $target);
+        $context = $this->runAnalyzer($source, $target);
 
-        $this->assertSame(['canonical_broken_target'], $this->codes($source));
-        $this->assertStringContainsString('404', $source->issues()[0]->message());
+        $issues = $context->bufferedPageIssues()[$source->url()->toString()] ?? [];
+        $codes = array_map(static fn ($i) => $i->code(), $issues);
+        $this->assertSame(['canonical_broken_target'], $codes);
+        $this->assertStringContainsString('404', $issues[0]->message());
     }
 
     public function test_flags_when_canonical_target_returns_5xx(): void
@@ -49,9 +51,9 @@ final class CanonicalTargetAnalyzerTest extends TestCase
         $source = $this->pageAt('https://example.com/a/', canonical: 'https://example.com/b/');
         $target = $this->pageAt('https://example.com/b/', statusCode: 503);
 
-        $this->runAnalyzer($source, $target);
+        $context = $this->runAnalyzer($source, $target);
 
-        $this->assertSame(['canonical_broken_target'], $this->codes($source));
+        $this->assertSame(['canonical_broken_target'], $this->codesFor($context, $source));
     }
 
     public function test_flags_when_canonical_target_redirects(): void
@@ -63,10 +65,12 @@ final class CanonicalTargetAnalyzerTest extends TestCase
         $source = $this->pageAt('https://example.com/a/', canonical: 'https://example.com/b/');
         $target = $this->pageAt('https://example.com/b/', redirectChain: $chain);
 
-        $this->runAnalyzer($source, $target);
+        $context = $this->runAnalyzer($source, $target);
 
-        $this->assertSame(['canonical_broken_target'], $this->codes($source));
-        $this->assertStringContainsString('redirect', $source->issues()[0]->message());
+        $issues = $context->bufferedPageIssues()[$source->url()->toString()] ?? [];
+        $codes = array_map(static fn ($i) => $i->code(), $issues);
+        $this->assertSame(['canonical_broken_target'], $codes);
+        $this->assertStringContainsString('redirect', $issues[0]->message());
     }
 
     public function test_flags_when_canonical_target_is_noindexed(): void
@@ -74,22 +78,24 @@ final class CanonicalTargetAnalyzerTest extends TestCase
         $source = $this->pageAt('https://example.com/a/', canonical: 'https://example.com/b/');
         $target = $this->pageAt('https://example.com/b/', noindex: true);
 
-        $this->runAnalyzer($source, $target);
+        $context = $this->runAnalyzer($source, $target);
 
-        $this->assertSame(['canonical_broken_target'], $this->codes($source));
-        $this->assertStringContainsString('noindex', $source->issues()[0]->message());
+        $issues = $context->bufferedPageIssues()[$source->url()->toString()] ?? [];
+        $codes = array_map(static fn ($i) => $i->code(), $issues);
+        $this->assertSame(['canonical_broken_target'], $codes);
+        $this->assertStringContainsString('noindex', $issues[0]->message());
     }
 
     public function test_does_not_flag_when_canonical_target_is_outside_audit(): void
     {
         $source = $this->pageAt('https://example.com/', canonical: 'https://other.example/');
 
-        $this->runAnalyzer($source);
+        $context = $this->runAnalyzer($source);
 
-        $this->assertSame([], $this->codes($source));
+        $this->assertSame([], $this->codesFor($context, $source));
     }
 
-    private function runAnalyzer(Page ...$pages): void
+    private function runAnalyzer(Page ...$pages): LegacySiteContext
     {
         $context = new LegacySiteContext(
             auditId: $this->buildAuditId()->value(),
@@ -98,11 +104,14 @@ final class CanonicalTargetAnalyzerTest extends TestCase
         );
 
         (new CanonicalTargetAnalyzer())->analyze($context);
+
+        return $context;
     }
 
     /** @return string[] */
-    private function codes(Page $page): array
+    private function codesFor(LegacySiteContext $context, Page $page): array
     {
-        return array_map(static fn ($i) => $i->code(), $page->issues());
+        $issues = $context->bufferedPageIssues()[$page->url()->toString()] ?? [];
+        return array_map(static fn ($i) => $i->code(), $issues);
     }
 }

@@ -21,6 +21,9 @@ final class LegacySiteContext implements SiteContext
     /** @var SiteIssue[] */
     private array $siteIssues = [];
 
+    /** @var array<string, Issue[]> */
+    private array $bufferedIssuesByUrl = [];
+
     /** @param LegacyPage[] $pages */
     public function __construct(
         private readonly string $auditId,
@@ -67,7 +70,7 @@ final class LegacySiteContext implements SiteContext
         if ($page === null) {
             return;
         }
-        $page->addIssue($issue);
+        $this->bufferedIssuesByUrl[$page->url()->toString()][] = $issue;
     }
 
     public function addSiteIssue(SiteIssue $issue): void
@@ -79,5 +82,11 @@ final class LegacySiteContext implements SiteContext
     public function siteIssues(): array
     {
         return $this->siteIssues;
+    }
+
+    /** @return array<string, Issue[]> */
+    public function bufferedPageIssues(): array
+    {
+        return $this->bufferedIssuesByUrl;
     }
 }

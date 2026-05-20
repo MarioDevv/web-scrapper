@@ -41,7 +41,6 @@ final class PageFixture
             fingerprint: null,
             links: [],
             hreflangs: [],
-            issues: [$issue],
             crawledAt: new DateTimeImmutable('2026-04-27T10:00:00+00:00'),
         );
     }

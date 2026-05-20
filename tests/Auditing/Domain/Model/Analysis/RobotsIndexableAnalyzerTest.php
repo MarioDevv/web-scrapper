@@ -20,9 +20,10 @@ final class RobotsIndexableAnalyzerTest extends TestCase
         $robots = new StubRobotsCheck();
         $robots->disallow('https://example.com/blocked');
 
-        $this->runAnalyzer($robots, $page);
+        $context = $this->runAnalyzer($robots, $page);
 
-        $codes = array_map(static fn ($i) => $i->code(), $page->issues());
+        $issues = $context->bufferedPageIssues()[$page->url()->toString()] ?? [];
+        $codes = array_map(static fn ($i) => $i->code(), $issues);
         $this->assertSame(['robots_blocks_indexable'], $codes);
     }
 
@@ -32,18 +33,18 @@ final class RobotsIndexableAnalyzerTest extends TestCase
         $robots = new StubRobotsCheck();
         $robots->disallow('https://example.com/blocked');
 
-        $this->runAnalyzer($robots, $page);
+        $context = $this->runAnalyzer($robots, $page);
 
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
     public function test_does_not_flag_indexable_page_not_blocked(): void
     {
         $page = $this->pageAt('https://example.com/');
 
-        $this->runAnalyzer(new StubRobotsCheck(), $page);
+        $context = $this->runAnalyzer(new StubRobotsCheck(), $page);
 
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
     public function test_does_not_flag_pages_returning_4xx(): void
@@ -52,12 +53,12 @@ final class RobotsIndexableAnalyzerTest extends TestCase
         $robots = new StubRobotsCheck();
         $robots->disallow('https://example.com/missing');
 
-        $this->runAnalyzer($robots, $page);
+        $context = $this->runAnalyzer($robots, $page);
 
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
-    private function runAnalyzer(StubRobotsCheck $robots, Page ...$pages): void
+    private function runAnalyzer(StubRobotsCheck $robots, Page ...$pages): LegacySiteContext
     {
         $context = new LegacySiteContext(
             auditId: $this->buildAuditId()->value(),
@@ -66,5 +67,7 @@ final class RobotsIndexableAnalyzerTest extends TestCase
         );
 
         (new RobotsIndexableAnalyzer($robots))->analyze($context);
+
+        return $context;
     }
 }

@@ -25,10 +25,9 @@ final class HreflangReturnAnalyzerTest extends TestCase
             $this->hreflang('en', 'https://example.com/en/'),
         ]);
 
-        $this->runAnalyzer($es, $en);
+        $context = $this->runAnalyzer($es, $en);
 
-        $this->assertSame([], $es->issues());
-        $this->assertSame([], $en->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
     public function test_flags_when_target_does_not_return(): void
@@ -38,10 +37,12 @@ final class HreflangReturnAnalyzerTest extends TestCase
         ]);
         $en = $this->pageAt('https://example.com/en/', hreflangs: []);
 
-        $this->runAnalyzer($es, $en);
+        $context = $this->runAnalyzer($es, $en);
 
-        $this->assertSame(['hreflang_no_return'], array_map(static fn ($i) => $i->code(), $es->issues()));
-        $this->assertSame([], $en->issues());
+        $esIssues = $context->bufferedPageIssues()[$es->url()->toString()] ?? [];
+        $enIssues = $context->bufferedPageIssues()[$en->url()->toString()] ?? [];
+        $this->assertSame(['hreflang_no_return'], array_map(static fn ($i) => $i->code(), $esIssues));
+        $this->assertSame([], $enIssues);
     }
 
     public function test_does_not_flag_when_target_was_not_crawled(): void
@@ -50,9 +51,9 @@ final class HreflangReturnAnalyzerTest extends TestCase
             $this->hreflang('en', 'https://example.com/en/'),
         ]);
 
-        $this->runAnalyzer($es);
+        $context = $this->runAnalyzer($es);
 
-        $this->assertSame([], $es->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
     public function test_ignores_x_default_in_reciprocity_check(): void
@@ -62,9 +63,9 @@ final class HreflangReturnAnalyzerTest extends TestCase
         ]);
         $en = $this->pageAt('https://example.com/en/', hreflangs: []);
 
-        $this->runAnalyzer($es, $en);
+        $context = $this->runAnalyzer($es, $en);
 
-        $this->assertSame([], $es->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
     public function test_lists_all_missing_returns_in_context(): void
@@ -76,11 +77,12 @@ final class HreflangReturnAnalyzerTest extends TestCase
         $en = $this->pageAt('https://example.com/en/', hreflangs: []);
         $fr = $this->pageAt('https://example.com/fr/', hreflangs: []);
 
-        $this->runAnalyzer($es, $en, $fr);
+        $context = $this->runAnalyzer($es, $en, $fr);
 
-        $context = $es->issues()[0]->context() ?? '';
-        $this->assertStringContainsString('en/', $context);
-        $this->assertStringContainsString('fr/', $context);
+        $esIssues = $context->bufferedPageIssues()[$es->url()->toString()] ?? [];
+        $issueContext = $esIssues[0]->context() ?? '';
+        $this->assertStringContainsString('en/', $issueContext);
+        $this->assertStringContainsString('fr/', $issueContext);
     }
 
     public function test_accepts_return_link_via_final_url(): void
@@ -96,12 +98,12 @@ final class HreflangReturnAnalyzerTest extends TestCase
             ],
         );
 
-        $this->runAnalyzer($es, $en);
+        $context = $this->runAnalyzer($es, $en);
 
-        $this->assertSame([], $es->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
-    private function runAnalyzer(Page ...$pages): void
+    private function runAnalyzer(Page ...$pages): LegacySiteContext
     {
         $context = new LegacySiteContext(
             auditId: $this->buildAuditId()->value(),
@@ -110,5 +112,7 @@ final class HreflangReturnAnalyzerTest extends TestCase
         );
 
         (new HreflangReturnAnalyzer())->analyze($context);
+
+        return $context;
     }
 }

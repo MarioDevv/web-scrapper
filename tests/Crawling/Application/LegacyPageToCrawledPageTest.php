@@ -88,13 +88,6 @@ final class LegacyPageToCrawledPageTest extends TestCase
             fingerprint: $fingerprint,
             links: $links,
             hreflangs: [],
-            issues: [new Issue(
-                id: IssueId::generate(),
-                category: IssueCategory::CONTENT,
-                severity: IssueSeverity::WARNING,
-                code: 'content_thin',
-                message: 'x',
-            )],
             crawledAt: $crawledAt,
         );
 

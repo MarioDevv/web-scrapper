@@ -18,9 +18,9 @@ final class SitemapCoverageAnalyzerTest extends TestCase
     {
         $page = $this->pageAt('https://example.com/');
 
-        $this->runAnalyzer(new InMemorySitemapIndex(), $page);
+        $context = $this->runAnalyzer(new InMemorySitemapIndex(), $page);
 
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
     public function test_does_not_flag_pages_present_in_sitemap(): void
@@ -29,9 +29,9 @@ final class SitemapCoverageAnalyzerTest extends TestCase
         $sitemap = new InMemorySitemapIndex();
         $sitemap->put($this->buildAuditId()->value(), 'https://example.com/blog/post-1');
 
-        $this->runAnalyzer($sitemap, $page);
+        $context = $this->runAnalyzer($sitemap, $page);
 
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
     public function test_flags_pages_missing_from_sitemap(): void
@@ -40,9 +40,10 @@ final class SitemapCoverageAnalyzerTest extends TestCase
         $sitemap = new InMemorySitemapIndex();
         $sitemap->put($this->buildAuditId()->value(), 'https://example.com/blog/post-1');
 
-        $this->runAnalyzer($sitemap, $page);
+        $context = $this->runAnalyzer($sitemap, $page);
 
-        $codes = array_map(static fn ($i) => $i->code(), $page->issues());
+        $issues = $context->bufferedPageIssues()[$page->url()->toString()] ?? [];
+        $codes = array_map(static fn ($i) => $i->code(), $issues);
         $this->assertSame(['sitemap_missing'], $codes);
     }
 
@@ -52,9 +53,9 @@ final class SitemapCoverageAnalyzerTest extends TestCase
         $sitemap = new InMemorySitemapIndex();
         $sitemap->put($this->buildAuditId()->value(), 'https://example.com/');
 
-        $this->runAnalyzer($sitemap, $page);
+        $context = $this->runAnalyzer($sitemap, $page);
 
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
     public function test_does_not_flag_pages_returning_4xx(): void
@@ -63,9 +64,9 @@ final class SitemapCoverageAnalyzerTest extends TestCase
         $sitemap = new InMemorySitemapIndex();
         $sitemap->put($this->buildAuditId()->value(), 'https://example.com/');
 
-        $this->runAnalyzer($sitemap, $page);
+        $context = $this->runAnalyzer($sitemap, $page);
 
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
     public function test_matches_via_final_url_after_redirect(): void
@@ -77,9 +78,9 @@ final class SitemapCoverageAnalyzerTest extends TestCase
         $sitemap = new InMemorySitemapIndex();
         $sitemap->put($this->buildAuditId()->value(), 'https://example.com/new');
 
-        $this->runAnalyzer($sitemap, $page);
+        $context = $this->runAnalyzer($sitemap, $page);
 
-        $this->assertSame([], $page->issues());
+        $this->assertSame([], $context->bufferedPageIssues());
     }
 
     public function test_emits_sitemap_orphan_for_uncrawled_sitemap_url(): void

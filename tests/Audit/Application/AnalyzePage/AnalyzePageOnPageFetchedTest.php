@@ -67,10 +67,13 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
             occurredAt: new DateTimeImmutable(),
         ));
 
-        $savedPage = $this->pages->findById($page->id());
-        $this->assertNotNull($savedPage);
-        $this->assertSame(1, $savedPage->errorCount());
-        $this->assertSame(1, $savedPage->warningCount());
+        $audited = $this->auditedPages->findByAuditAndUrl(
+            $this->auditId->value(),
+            $page->url()->toString(),
+        );
+        $this->assertNotNull($audited);
+        $this->assertSame(1, $audited->errorCount());
+        $this->assertSame(1, $audited->warningCount());
 
         $audit = $this->audits->findById($this->auditId);
         $this->assertNotNull($audit);
@@ -97,7 +100,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
         );
         $this->assertNotNull($audited);
         $this->assertSame(
-            ['test-code'],
+            ['test-code-error'],
             array_map(static fn ($i) => $i->code(), $audited->issues()),
         );
         $this->assertSame(1, $audited->errorCount());
@@ -184,7 +187,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
                     id: IssueId::generate(),
                     category: IssueCategory::METADATA,
                     severity: $this->severity,
-                    code: 'test-code',
+                    code: 'test-code-' . $this->severity->value,
                     message: 'test',
                 ));
             }

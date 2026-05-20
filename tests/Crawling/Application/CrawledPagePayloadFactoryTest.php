@@ -40,7 +40,6 @@ final class CrawledPagePayloadFactoryTest extends TestCase
             fingerprint: null,
             links: [],
             hreflangs: [],
-            issues: [],
             crawledAt: new DateTimeImmutable('2026-05-19T10:00:00+00:00'),
         );
 

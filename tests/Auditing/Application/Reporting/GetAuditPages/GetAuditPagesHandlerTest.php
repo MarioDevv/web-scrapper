@@ -29,12 +29,14 @@ final class GetAuditPagesHandlerTest extends TestCase
 {
     private InMemoryAuditRepository $audits;
     private InMemoryPageRepository $pages;
+    private \SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository $auditedPages;
     private AuditId $auditId;
 
     protected function setUp(): void
     {
         $this->audits = new InMemoryAuditRepository();
         $this->pages = new InMemoryPageRepository();
+        $this->auditedPages = new \SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository();
         $start = new StartAuditHandler($this->audits, new FrontierBackedAuditFrontier(new InMemoryFrontier(new UrlCanonicalizer())), new InMemoryEventBus());
         $auditId = AuditId::generate()->value();
         $start(new StartAuditCommand(auditId: $auditId, seedUrl: 'https://example.com'));
@@ -43,7 +45,7 @@ final class GetAuditPagesHandlerTest extends TestCase
 
     public function test_raises_audit_not_found_for_unknown_id(): void
     {
-        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages, $this->auditedPages));
 
         $this->expectException(AuditNotFound::class);
         $handler(new GetAuditPagesQuery(AuditId::generate()->value()));
@@ -54,7 +56,7 @@ final class GetAuditPagesHandlerTest extends TestCase
         $this->persistPage('https://example.com/a', '2026-04-26T10:00:00+00:00');
         $this->persistPage('https://example.com/b', '2026-04-26T10:00:05+00:00');
 
-        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages, $this->auditedPages));
         $response = $handler(new GetAuditPagesQuery($this->auditId->value()));
 
         $this->assertCount(2, $response->pages);
@@ -67,7 +69,7 @@ final class GetAuditPagesHandlerTest extends TestCase
         $this->persistPage('https://example.com/b', '2026-04-26T10:00:05+00:00');
         $this->persistPage('https://example.com/c', '2026-04-26T10:00:10+00:00');
 
-        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages, $this->auditedPages));
         $response = $handler(new GetAuditPagesQuery(
             auditId: $this->auditId->value(),
             since: '2026-04-26T10:00:05+00:00',
@@ -82,7 +84,7 @@ final class GetAuditPagesHandlerTest extends TestCase
     {
         $this->persistPage('https://example.com/a', '2026-04-26T10:00:00+00:00');
 
-        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages, $this->auditedPages));
         $response = $handler(new GetAuditPagesQuery(
             auditId: $this->auditId->value(),
             since: '2026-04-26T10:00:00+00:00',
@@ -97,7 +99,7 @@ final class GetAuditPagesHandlerTest extends TestCase
         $this->persistPage('https://example.com/blog', '2026-04-26T10:00:00+00:00');
         $this->persistPage('https://example.com/about', '2026-04-26T10:00:01+00:00');
 
-        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages, $this->auditedPages));
         $response = $handler(new GetAuditPagesQuery(
             auditId: $this->auditId->value(),
             search: 'blog',
@@ -117,7 +119,7 @@ final class GetAuditPagesHandlerTest extends TestCase
             );
         }
 
-        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages, $this->auditedPages));
 
         $first = $handler(new GetAuditPagesQuery(
             auditId: $this->auditId->value(),
@@ -149,7 +151,7 @@ final class GetAuditPagesHandlerTest extends TestCase
         $this->persistPage('https://example.com/a', '2026-04-26T10:00:00+00:00');
         $this->persistPage('https://example.com/b', '2026-04-26T10:00:05+00:00');
 
-        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages));
+        $handler = new GetAuditPagesHandler($this->audits, new InMemoryPageSummaryReader($this->pages, $this->auditedPages));
         $response = $handler(new GetAuditPagesQuery(
             auditId: $this->auditId->value(),
             sortField: 'crawledAt',

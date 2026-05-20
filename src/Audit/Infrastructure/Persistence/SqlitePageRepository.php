@@ -13,11 +13,6 @@ use SeoSpider\Crawling\Domain\Model\Page\DirectiveSource;
 use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
 use SeoSpider\Crawling\Domain\Model\Page\HreflangSource;
-use SeoSpider\Auditing\Domain\Model\Issue\Issue;
-use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
-use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
-use SeoSpider\Auditing\Domain\Model\Issue\IssueRuleCatalog;
-use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
@@ -59,9 +54,7 @@ final readonly class SqlitePageRepository implements PageRepository
             return null;
         }
 
-        $issues = $this->loadIssues($id->value());
-
-        return $this->hydrate($row, $issues);
+        return $this->hydrate($row);
     }
 
     public function findByAuditAndUrl(AuditId $auditId, Url $url): ?Page
@@ -77,9 +70,7 @@ final readonly class SqlitePageRepository implements PageRepository
             return null;
         }
 
-        $issues = $this->loadIssues($row['id']);
-
-        return $this->hydrate($row, $issues);
+        return $this->hydrate($row);
     }
 
     /** @return Page[] */
@@ -88,14 +79,7 @@ final readonly class SqlitePageRepository implements PageRepository
         $stmt = $this->pdo->prepare('SELECT * FROM pages WHERE audit_id = :audit_id ORDER BY crawled_at ASC');
         $stmt->execute(['audit_id' => $auditId->value()]);
 
-        $rows = $stmt->fetchAll();
-        $pageIds = array_column($rows, 'id');
-        $issuesByPage = $this->loadIssuesBatch($pageIds);
-
-        return array_map(
-            fn(array $row) => $this->hydrate($row, $issuesByPage[$row['id']] ?? []),
-            $rows,
-        );
+        return array_map(fn (array $row) => $this->hydrate($row), $stmt->fetchAll());
     }
 
     public function findByAuditSince(AuditId $auditId, ?string $sinceIso): array
@@ -112,18 +96,7 @@ final readonly class SqlitePageRepository implements PageRepository
             'since' => $sinceIso,
         ]);
 
-        $rows = $stmt->fetchAll();
-        if ($rows === []) {
-            return [];
-        }
-
-        $pageIds = array_column($rows, 'id');
-        $issuesByPage = $this->loadIssuesBatch($pageIds);
-
-        return array_map(
-            fn(array $row) => $this->hydrate($row, $issuesByPage[$row['id']] ?? []),
-            $rows,
-        );
+        return array_map(fn (array $row) => $this->hydrate($row), $stmt->fetchAll());
     }
 
     public function countByAudit(AuditId $auditId): int
@@ -211,8 +184,8 @@ final readonly class SqlitePageRepository implements PageRepository
             'final_url' => $page->response()->finalUrl()?->toString(),
             'headers' => json_encode($page->response()->headers()),
             'crawl_depth' => $page->crawlDepth(),
-            'error_count' => $page->errorCount(),
-            'warning_count' => $page->warningCount(),
+            'error_count' => 0,
+            'warning_count' => 0,
             'internal_link_count' => $linkSummary['internal'],
             'external_link_count' => $linkSummary['external'],
             'image_count' => $linkSummary['images'],
@@ -249,70 +222,8 @@ final readonly class SqlitePageRepository implements PageRepository
         ]);
     }
 
-    /** @param Issue[] $issues */
-    private function insertIssues(string $pageId, array $issues): void
-    {
-        if ($issues === []) {
-            return;
-        }
-
-        $stmt = $this->pdo->prepare('
-            INSERT INTO issues (id, page_id, category, severity, code, catalog_version, message, context)
-            VALUES (:id, :page_id, :category, :severity, :code, :catalog_version, :message, :context)
-        ');
-
-        // Default to the active catalog version when the analyzer didn't pin one,
-        // so persisted issues always carry the version that produced them.
-        foreach ($issues as $issue) {
-            $stmt->execute([
-                'id' => $issue->id()->value(),
-                'page_id' => $pageId,
-                'category' => $issue->category()->value,
-                'severity' => $issue->severity()->value,
-                'code' => $issue->code(),
-                'catalog_version' => $issue->catalogVersion() ?? IssueRuleCatalog::VERSION,
-                'message' => $issue->message(),
-                'context' => $issue->context(),
-            ]);
-        }
-    }
-
-    /** @return Issue[] */
-    private function loadIssues(string $pageId): array
-    {
-        $stmt = $this->pdo->prepare('SELECT * FROM issues WHERE page_id = :page_id');
-        $stmt->execute(['page_id' => $pageId]);
-
-        return array_map($this->hydrateIssue(...), $stmt->fetchAll());
-    }
-
-    /**
-     * @param string[] $pageIds
-     * @return array<string, Issue[]>
-     */
-    private function loadIssuesBatch(array $pageIds): array
-    {
-        if ($pageIds === []) {
-            return [];
-        }
-
-        $placeholders = implode(',', array_fill(0, count($pageIds), '?'));
-        $stmt = $this->pdo->prepare("SELECT * FROM issues WHERE page_id IN ($placeholders)");
-        $stmt->execute($pageIds);
-
-        $grouped = [];
-        foreach ($stmt->fetchAll() as $row) {
-            $grouped[$row['page_id']][] = $this->hydrateIssue($row);
-        }
-
-        return $grouped;
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     * @param Issue[] $issues
-     */
-    private function hydrate(array $row, array $issues): Page
+    /** @param array<string, mixed> $row */
+    private function hydrate(array $row): Page
     {
         return Page::reconstitute(
             id: new PageId($row['id']),
@@ -362,22 +273,7 @@ final readonly class SqlitePageRepository implements PageRepository
                 : null,
             links: $this->hydrateLinks(json_decode($row['links'], true)),
             hreflangs: $this->hydrateHreflangs(json_decode($row['hreflangs'], true)),
-            issues: $issues,
             crawledAt: new DateTimeImmutable($row['crawled_at']),
-        );
-    }
-
-    /** @param array<string, mixed> $row */
-    private function hydrateIssue(array $row): Issue
-    {
-        return new Issue(
-            id: new IssueId($row['id']),
-            category: IssueCategory::from($row['category']),
-            severity: IssueSeverity::from($row['severity']),
-            code: $row['code'],
-            message: $row['message'],
-            context: $row['context'],
-            catalogVersion: $row['catalog_version'] ?? null,
         );
     }
 

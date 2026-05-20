@@ -111,7 +111,6 @@ final class LegacyPageToPageSignalsTest extends TestCase
             fingerprint: $fingerprint,
             links: $links,
             hreflangs: $hreflangs,
-            issues: [],
             crawledAt: new DateTimeImmutable('2026-05-19T10:00:00+00:00'),
         );
 

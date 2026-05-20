@@ -3,17 +3,16 @@
 declare(strict_types=1);
 
 namespace SeoSpider\Audit\Domain\Model\Page;
-use SeoSpider\Auditing\Domain\Model\Issue\Issue;
-use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
-use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
-use SeoSpider\Crawling\Domain\Model\Page\Directive;
-use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
-use SeoSpider\Crawling\Domain\Model\Page\Link;
-use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
-use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
 
 use DateTimeImmutable;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Crawling\Domain\Model\Page\Directive;
+use SeoSpider\Crawling\Domain\Model\Page\Fingerprint;
+use SeoSpider\Crawling\Domain\Model\Page\Hreflang;
+use SeoSpider\Crawling\Domain\Model\Page\Link;
+use SeoSpider\Crawling\Domain\Model\Page\PageMetadata;
+use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
+use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Shared\Domain\AggregateRoot;
 
@@ -34,9 +33,6 @@ final class Page extends AggregateRoot
 
     /** @var Hreflang[] */
     private array $hreflangs = [];
-
-    /** @var Issue[] */
-    private array $issues = [];
 
     private DateTimeImmutable $crawledAt;
 
@@ -65,9 +61,8 @@ final class Page extends AggregateRoot
     }
 
     /**
-     * @param Link[] $links
+     * @param Link[]     $links
      * @param Hreflang[] $hreflangs
-     * @param Issue[] $issues
      */
     public static function reconstitute(
         PageId $id,
@@ -81,7 +76,6 @@ final class Page extends AggregateRoot
         ?Fingerprint $fingerprint,
         array $links,
         array $hreflangs,
-        array $issues,
         DateTimeImmutable $crawledAt,
     ): self {
         $page = new self();
@@ -96,7 +90,6 @@ final class Page extends AggregateRoot
         $page->fingerprint = $fingerprint;
         $page->links = $links;
         $page->hreflangs = $hreflangs;
-        $page->issues = $issues;
         $page->crawledAt = $crawledAt;
 
         return $page;
@@ -127,23 +120,6 @@ final class Page extends AggregateRoot
     public function enrichWithHreflangs(array $hreflangs): void
     {
         $this->hreflangs = $hreflangs;
-    }
-
-    public function addIssue(Issue $issue): void
-    {
-        $this->issues[] = $issue;
-    }
-
-    public function markAsAnalyzed(): void
-    {
-        $this->recordEvent(new PageCrawled(
-            $this->id,
-            $this->auditId,
-            $this->url,
-            $this->response->statusCode(),
-            count($this->issues),
-            new DateTimeImmutable(),
-        ));
     }
 
     public function id(): PageId
@@ -203,12 +179,6 @@ final class Page extends AggregateRoot
         return $this->hreflangs;
     }
 
-    /** @return Issue[] */
-    public function issues(): array
-    {
-        return $this->issues;
-    }
-
     public function crawledAt(): DateTimeImmutable
     {
         return $this->crawledAt;
@@ -248,28 +218,12 @@ final class Page extends AggregateRoot
         return true;
     }
 
-    public function errorCount(): int
-    {
-        return count(array_filter(
-            $this->issues,
-            static fn(Issue $issue) => $issue->isError(),
-        ));
-    }
-
-    public function warningCount(): int
-    {
-        return count(array_filter(
-            $this->issues,
-            static fn(Issue $issue) => $issue->isWarning(),
-        ));
-    }
-
     /** @return Link[] */
     public function internalLinks(): array
     {
         return array_filter(
             $this->links,
-            static fn(Link $link) => $link->isInternal(),
+            static fn (Link $link) => $link->isInternal(),
         );
     }
 
@@ -278,7 +232,7 @@ final class Page extends AggregateRoot
     {
         return array_filter(
             $this->links,
-            static fn(Link $link) => $link->isExternal(),
+            static fn (Link $link) => $link->isExternal(),
         );
     }
 }

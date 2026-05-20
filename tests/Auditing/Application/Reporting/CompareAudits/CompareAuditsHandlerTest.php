@@ -145,7 +145,6 @@ final class CompareAuditsHandlerTest extends TestCase
             fingerprint: null,
             links: [],
             hreflangs: [],
-            issues: $issues,
             crawledAt: new DateTimeImmutable(),
         );
     }

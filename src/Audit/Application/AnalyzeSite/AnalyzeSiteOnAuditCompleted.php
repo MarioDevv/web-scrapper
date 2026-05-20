@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace SeoSpider\Audit\Application\AnalyzeSite;
 
 use SeoSpider\Audit\Application\Analysis\LegacySiteContext;
+use SeoSpider\Audit\Domain\Model\Page\PageRepository;
+use SeoSpider\Auditing\Domain\Model\Analysis\SiteAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Audit\Domain\Model\Page\PageRepository;
-use SeoSpider\Auditing\Domain\Model\Reporting\SiteIssueRepository;
-use SeoSpider\Auditing\Domain\Model\Analysis\SiteAnalyzer;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
+use SeoSpider\Auditing\Domain\Model\Reporting\SiteIssueRepository;
 
 final readonly class AnalyzeSiteOnAuditCompleted
 {
@@ -51,18 +51,16 @@ final readonly class AnalyzeSiteOnAuditCompleted
             $analyzer->analyze($context);
         }
 
-        foreach ($pages as $page) {
-            if ($page->issues() === []) {
-                continue;
-            }
-            $audited = AuditedPage::forUrl(
+        foreach ($context->bufferedPageIssues() as $pageUrl => $issues) {
+            $existing = $this->auditedPageRepository->findByAuditAndUrl(
                 $event->auditId->value(),
-                $page->url()->toString(),
-            );
-            foreach ($page->issues() as $issue) {
-                $audited->recordIssue($issue);
+                $pageUrl,
+            ) ?? AuditedPage::forUrl($event->auditId->value(), $pageUrl);
+
+            foreach ($issues as $issue) {
+                $existing->recordIssue($issue);
             }
-            $this->auditedPageRepository->save($audited);
+            $this->auditedPageRepository->save($existing);
         }
 
         if ($context->siteIssues() !== []) {

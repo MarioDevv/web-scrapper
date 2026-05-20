@@ -67,7 +67,6 @@ final class PageTest extends TestCase
         $this->assertSame($url, $page->url());
         $this->assertSame(2, $page->crawlDepth());
         $this->assertTrue($page->redirectChain()->isEmpty());
-        $this->assertSame([], $page->issues());
         $this->assertSame([], $page->links());
         $this->assertSame([], $page->hreflangs());
         $this->assertNull($page->metadata());
@@ -153,42 +152,6 @@ final class PageTest extends TestCase
         $page = $this->createHtmlPage(404);
 
         $this->assertFalse($page->isIndexable());
-    }
-
-    // ─── Issues ────────────────────────────────────────────────
-
-    public function test_add_issue_accumulates(): void
-    {
-        $page = $this->createHtmlPage();
-
-        $page->addIssue(new Issue(
-            IssueId::generate(), IssueCategory::METADATA, IssueSeverity::ERROR,
-            'title_missing', 'No title',
-        ));
-        $page->addIssue(new Issue(
-            IssueId::generate(), IssueCategory::METADATA, IssueSeverity::WARNING,
-            'h1_missing', 'No H1',
-        ));
-
-        $this->assertCount(2, $page->issues());
-        $this->assertSame(1, $page->errorCount());
-        $this->assertSame(1, $page->warningCount());
-    }
-
-    public function test_mark_as_analyzed_publishes_page_crawled_event(): void
-    {
-        $page = $this->createHtmlPage();
-        $page->addIssue(new Issue(
-            IssueId::generate(), IssueCategory::LINKS, IssueSeverity::ERROR,
-            'broken', 'Broken link',
-        ));
-
-        $page->markAsAnalyzed();
-
-        $events = $page->pullDomainEvents();
-        $this->assertCount(1, $events);
-        $this->assertInstanceOf(PageCrawled::class, $events[0]);
-        $this->assertSame(1, $events[0]->issueCount);
     }
 
     // ─── Links ─────────────────────────────────────────────────

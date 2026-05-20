@@ -88,6 +88,14 @@ final readonly class SqliteAuditedPageRepository implements AuditedPageRepositor
                 'context' => $issue->context(),
             ]);
         }
+
+        $this->pdo->prepare(
+            'UPDATE pages SET error_count = :errors, warning_count = :warnings WHERE id = :id',
+        )->execute([
+            'errors' => $page->errorCount(),
+            'warnings' => $page->warningCount(),
+            'id' => $pageId,
+        ]);
     }
 
     public function issueCodesByUrl(string $auditId): array

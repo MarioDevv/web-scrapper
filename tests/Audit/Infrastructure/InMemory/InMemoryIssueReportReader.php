@@ -8,17 +8,13 @@ use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportData
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportReader;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportRow;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
+use SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository;
 
-/**
- * Test double that projects an in-memory page repository into the same
- * shape the SQLite reader returns. Lets the existing handler tests keep
- * persisting Page aggregates while the production code path uses a
- * direct SQL query.
- */
 final readonly class InMemoryIssueReportReader implements IssueReportReader
 {
     public function __construct(
         private InMemoryPageRepository $pages,
+        private InMemoryAuditedPageRepository $auditedPages,
         private ?InMemorySiteIssueRepository $siteIssues = null,
     ) {
     }
@@ -29,7 +25,14 @@ final readonly class InMemoryIssueReportReader implements IssueReportReader
 
         $rows = [];
         foreach ($pages as $page) {
-            foreach ($page->issues() as $issue) {
+            $audited = $this->auditedPages->findByAuditAndUrl(
+                $auditId->value(),
+                $page->url()->toString(),
+            );
+            if ($audited === null) {
+                continue;
+            }
+            foreach ($audited->issues() as $issue) {
                 $rows[] = new IssueReportRow(
                     pageId: $page->id()->value(),
                     pageUrl: $page->url()->toString(),

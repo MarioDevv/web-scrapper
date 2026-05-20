@@ -63,29 +63,39 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
 
         ($this->buildReactor([$this->analyzerThatAppends('site_test')]))($this->event());
 
-        $stored = $this->pages->findById($page->id());
-        $this->assertNotNull($stored);
-        $codes = array_map(static fn ($i) => $i->code(), $stored->issues());
+        $audited = $this->auditedPages->findByAuditAndUrl(
+            $this->auditId->value(),
+            $page->url()->toString(),
+        );
+        $this->assertNotNull($audited);
+        $codes = array_map(static fn ($i) => $i->code(), $audited->issues());
         $this->assertSame(['site_test'], $codes);
     }
 
     public function test_preserves_existing_issues(): void
     {
         $page = $this->persistPage('https://example.com/page-1');
-        $existing = new Issue(
+
+        $existing = \SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage::forUrl(
+            $this->auditId->value(),
+            $page->url()->toString(),
+        );
+        $existing->recordIssue(new Issue(
             id: IssueId::generate(),
             category: IssueCategory::METADATA,
             severity: IssueSeverity::ERROR,
             code: 'pre_existing',
             message: 'pre',
-        );
-        $page->addIssue($existing);
-        $this->pages->save($page);
+        ));
+        $this->auditedPages->save($existing);
 
         ($this->buildReactor([$this->analyzerThatAppends('site_test')]))($this->event());
 
-        $stored = $this->pages->findById($page->id());
-        $codes = array_map(static fn ($i) => $i->code(), $stored->issues());
+        $audited = $this->auditedPages->findByAuditAndUrl(
+            $this->auditId->value(),
+            $page->url()->toString(),
+        );
+        $codes = array_map(static fn ($i) => $i->code(), $audited->issues());
         sort($codes);
         $this->assertSame(['pre_existing', 'site_test'], $codes);
     }
@@ -107,8 +117,11 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
 
         ($this->buildReactor([]))($this->event());
 
-        $stored = $this->pages->findById($page->id());
-        $this->assertSame([], $stored->issues());
+        $audited = $this->auditedPages->findByAuditAndUrl(
+            $this->auditId->value(),
+            $page->url()->toString(),
+        );
+        $this->assertNull($audited);
     }
 
     public function test_persists_site_issues_emitted_by_analyzers(): void
@@ -142,8 +155,11 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
             },
         ]))($this->event());
 
-        $stored = $this->pages->findById($page->id());
-        $this->assertSame([], $stored->issues());
+        $audited = $this->auditedPages->findByAuditAndUrl(
+            $this->auditId->value(),
+            $page->url()->toString(),
+        );
+        $this->assertNull($audited);
     }
 
     private function event(): AuditCompleted

@@ -43,6 +43,7 @@ final class CrawlPageHandlerTest extends TestCase
     private StubHttpClient $httpClient;
     private StubHtmlParser $htmlParser;
     private CrawlPageHandler $handler;
+    private \SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository $auditedPages;
 
     protected function setUp(): void
     {
@@ -52,6 +53,7 @@ final class CrawlPageHandlerTest extends TestCase
         $this->eventBus = new InMemoryEventBus();
         $this->httpClient = new StubHttpClient();
         $this->htmlParser = new StubHtmlParser();
+        $this->auditedPages = new \SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository();
 
         $this->handler = new CrawlPageHandler(
             auditRepository: $this->auditRepository,
@@ -66,7 +68,7 @@ final class CrawlPageHandlerTest extends TestCase
             pageRepository: $this->pageRepository,
             auditRepository: $this->auditRepository,
             eventBus: $this->eventBus,
-            auditedPageRepository: new \SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository(),
+            auditedPageRepository: $this->auditedPages,
             analyzers: [new BrokenLinkAnalyzer(), new MetaDataAnalyzer()],
         ));
     }
@@ -241,15 +243,10 @@ final class CrawlPageHandlerTest extends TestCase
             depth: 0,
         ));
 
-        $pages = $this->pageRepository->findByAudit(new AuditId($auditId));
-        $page = array_first($pages);
+        $audited = $this->auditedPages->findByAuditAndUrl($auditId, 'https://example.com');
+        $this->assertNotNull($audited);
 
-        $this->assertGreaterThan(0, count($page->issues()));
-
-        $codes = array_map(
-            static fn($issue) => $issue->code(),
-            $page->issues(),
-        );
+        $codes = array_map(static fn ($issue) => $issue->code(), $audited->issues());
         $this->assertContains('title_missing', $codes);
         $this->assertContains('h1_missing', $codes);
         $this->assertContains('meta_description_missing', $codes);

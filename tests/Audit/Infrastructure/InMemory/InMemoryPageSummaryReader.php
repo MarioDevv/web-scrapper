@@ -4,21 +4,20 @@ declare(strict_types=1);
 
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
+use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummary;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummaryReader;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository;
 
-/**
- * Test double that projects the in-memory page repository through the
- * same filter/sort/paginate semantics the SQLite reader implements.
- */
 final readonly class InMemoryPageSummaryReader implements PageSummaryReader
 {
-    public function __construct(private InMemoryPageRepository $pages)
-    {
+    public function __construct(
+        private InMemoryPageRepository $pages,
+        private InMemoryAuditedPageRepository $auditedPages,
+    ) {
     }
 
     /** @return PageSummary[] */
@@ -26,13 +25,14 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
     {
         $matches = $this->matchingPages($query);
 
-        usort($matches, $this->comparator($query->sortField, $query->sortDir));
+        usort($matches, $this->comparator(new AuditId($query->auditId), $query->sortField, $query->sortDir));
 
         if ($query->limit !== null) {
             $matches = array_slice($matches, max(0, $query->offset), $query->limit);
         }
 
-        return array_map($this->toSummary(...), $matches);
+        $auditId = new AuditId($query->auditId);
+        return array_map(fn (Page $p) => $this->toSummary($p, $auditId), $matches);
     }
 
     public function count(GetAuditPagesQuery $query): int
@@ -71,7 +71,7 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
             if ($status >= 400) {
                 $errors++;
             }
-            if ($page->errorCount() > 0 || $page->warningCount() > 0) {
+            if ($this->countsFor($auditId, $page)['issues'] > 0) {
                 $issues++;
             }
             if (!$page->isIndexable()) {
@@ -101,7 +101,7 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
         $tab = $query->tab;
         $search = $query->search !== null ? mb_strtolower($query->search) : null;
 
-        return array_values(array_filter($pages, static function (Page $p) use ($tab, $search): bool {
+        return array_values(array_filter($pages, function (Page $p) use ($auditId, $tab, $search): bool {
             $status = $p->response()->statusCode()->code();
             $contentType = $p->response()->contentType() ?? '';
             $isHtml = str_contains(strtolower($contentType), 'html');
@@ -111,7 +111,7 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
                 GetAuditPagesQuery::TAB_HTML => $isHtml,
                 GetAuditPagesQuery::TAB_REDIRECTS => $status >= 300 && $status < 400,
                 GetAuditPagesQuery::TAB_ERRORS => $status >= 400,
-                GetAuditPagesQuery::TAB_ISSUES => $p->errorCount() > 0 || $p->warningCount() > 0,
+                GetAuditPagesQuery::TAB_ISSUES => $this->countsFor($auditId, $p)['issues'] > 0,
                 GetAuditPagesQuery::TAB_NOINDEX => !$p->isIndexable(),
                 default => true,
             };
@@ -131,20 +131,21 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
         }));
     }
 
-    private function comparator(?string $sortField, string $sortDir): callable
+    private function comparator(AuditId $auditId, ?string $sortField, string $sortDir): callable
     {
         $dir = strtolower($sortDir) === 'desc' ? -1 : 1;
 
-        return static function (Page $a, Page $b) use ($sortField, $dir): int {
-            $extract = static function (Page $p) use ($sortField): mixed {
+        return function (Page $a, Page $b) use ($auditId, $sortField, $dir): int {
+            $extract = function (Page $p) use ($auditId, $sortField): mixed {
+                $counts = $this->countsFor($auditId, $p);
                 return match ($sortField) {
                     'url' => $p->url()->toString(),
                     'statusCode' => $p->response()->statusCode()->code(),
                     'bodySize' => $p->response()->bodySize(),
                     'responseTime' => $p->response()->responseTime(),
                     'crawlDepth' => $p->crawlDepth(),
-                    'errorCount' => $p->errorCount(),
-                    'warningCount' => $p->warningCount(),
+                    'errorCount' => $counts['errors'],
+                    'warningCount' => $counts['warnings'],
                     'title' => (string) ($p->metadata()?->title() ?? ''),
                     'wordCount' => $p->metadata()?->wordCount() ?? 0,
                     'h1Count' => $p->metadata()?->h1Count() ?? 0,
@@ -162,7 +163,7 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
         };
     }
 
-    private function toSummary(Page $page): PageSummary
+    private function toSummary(Page $page, AuditId $auditId): PageSummary
     {
         $links = $page->links();
         $internal = 0;
@@ -185,6 +186,8 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
             default => 'other',
         };
 
+        $counts = $this->countsFor($auditId, $page);
+
         return new PageSummary(
             pageId: $page->id()->value(),
             url: $page->url()->toString(),
@@ -193,8 +196,8 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
             bodySize: $page->response()->bodySize(),
             responseTime: $page->response()->responseTime(),
             crawlDepth: $page->crawlDepth(),
-            errorCount: $page->errorCount(),
-            warningCount: $page->warningCount(),
+            errorCount: $counts['errors'],
+            warningCount: $counts['warnings'],
             isIndexable: $page->isIndexable(),
             title: $page->metadata()?->title(),
             wordCount: $page->metadata()?->wordCount() ?? 0,
@@ -205,5 +208,22 @@ final readonly class InMemoryPageSummaryReader implements PageSummaryReader
             h1Count: $page->metadata()?->h1Count() ?? 0,
             crawledAt: $page->crawledAt()->format('c'),
         );
+    }
+
+    /** @return array{errors: int, warnings: int, issues: int} */
+    private function countsFor(AuditId $auditId, Page $page): array
+    {
+        $audited = $this->auditedPages->findByAuditAndUrl(
+            $auditId->value(),
+            $page->url()->toString(),
+        );
+        if ($audited === null) {
+            return ['errors' => 0, 'warnings' => 0, 'issues' => 0];
+        }
+        return [
+            'errors' => $audited->errorCount(),
+            'warnings' => $audited->warningCount(),
+            'issues' => count($audited->issues()),
+        ];
     }
 }
