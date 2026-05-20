@@ -29,12 +29,14 @@ use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemorySiteIssueRepository;
+use SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository;
 
 final class AnalyzeSiteOnAuditCompletedTest extends TestCase
 {
     private InMemoryAuditRepository $audits;
     private InMemoryPageRepository $pages;
     private InMemorySiteIssueRepository $siteIssues;
+    private InMemoryAuditedPageRepository $auditedPages;
     private AuditId $auditId;
 
     protected function setUp(): void
@@ -42,6 +44,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
         $this->audits = new InMemoryAuditRepository();
         $this->pages = new InMemoryPageRepository();
         $this->siteIssues = new InMemorySiteIssueRepository();
+        $this->auditedPages = new InMemoryAuditedPageRepository();
 
         $start = new StartAuditHandler(
             $this->audits,
@@ -61,6 +64,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
             pageRepository: $this->pages,
             auditRepository: $this->audits,
             siteIssueRepository: $this->siteIssues,
+            auditedPageRepository: $this->auditedPages,
             siteAnalyzers: [$this->analyzerThatAppends('site_test')],
         );
 
@@ -89,6 +93,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
             pageRepository: $this->pages,
             auditRepository: $this->audits,
             siteIssueRepository: $this->siteIssues,
+            auditedPageRepository: $this->auditedPages,
             siteAnalyzers: [$this->analyzerThatAppends('site_test')],
         );
 
@@ -106,6 +111,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
             pageRepository: $this->pages,
             auditRepository: $this->audits,
             siteIssueRepository: $this->siteIssues,
+            auditedPageRepository: $this->auditedPages,
             siteAnalyzers: [$this->analyzerThatAppends('site_test')],
         );
 
@@ -127,6 +133,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
             pageRepository: $this->pages,
             auditRepository: $this->audits,
             siteIssueRepository: $this->siteIssues,
+            auditedPageRepository: $this->auditedPages,
             siteAnalyzers: [],
         );
 
@@ -144,6 +151,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
             pageRepository: $this->pages,
             auditRepository: $this->audits,
             siteIssueRepository: $this->siteIssues,
+            auditedPageRepository: $this->auditedPages,
             siteAnalyzers: [$this->analyzerThatEmitsSiteIssue('orphan_test', 'https://example.com/orphan')],
         );
 
@@ -163,6 +171,7 @@ final class AnalyzeSiteOnAuditCompletedTest extends TestCase
             pageRepository: $this->pages,
             auditRepository: $this->audits,
             siteIssueRepository: $this->siteIssues,
+            auditedPageRepository: $this->auditedPages,
             siteAnalyzers: [
                 new class () implements SiteAnalyzer {
                     public function analyze(SiteAuditContext $context): void

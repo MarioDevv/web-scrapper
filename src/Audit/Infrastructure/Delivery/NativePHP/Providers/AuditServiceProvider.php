@@ -182,6 +182,7 @@ final class AuditServiceProvider extends ServiceProvider
             pageRepository: $app->make(PageRepository::class),
             auditRepository: $app->make(AuditRepository::class),
             siteIssueRepository: $app->make(SiteIssueRepository::class),
+            auditedPageRepository: $app->make(AuditedPageRepository::class),
             siteAnalyzers: iterator_to_array($app->tagged('site-analyzers')),
         ));
 

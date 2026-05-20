@@ -8,18 +8,11 @@ use SeoSpider\Audit\Domain\Model\Analyzer\SiteAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\SiteAuditContext;
 use SeoSpider\Audit\Domain\Model\Audit\AuditCompleted;
 use SeoSpider\Audit\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Auditing\Domain\Model\Issue\Issue;
-use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageRepository;
 use SeoSpider\Audit\Domain\Model\Page\SiteIssueRepository;
+use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPage;
+use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 
-/**
- * Site-wide analysis phase. After the per-page pipeline has finished
- * (signalled by AuditCompleted), this reactor loads every page of the
- * audit, runs the SiteAnalyzer pipeline against the complete graph,
- * and persists only the newly produced issues. Existing issues stay
- * intact — appendIssues skips the DELETE+INSERT path that save() uses.
- */
 final readonly class AnalyzeSiteOnAuditCompleted
 {
     /** @param SiteAnalyzer[] $siteAnalyzers */
@@ -27,6 +20,7 @@ final readonly class AnalyzeSiteOnAuditCompleted
         private PageRepository $pageRepository,
         private AuditRepository $auditRepository,
         private SiteIssueRepository $siteIssueRepository,
+        private AuditedPageRepository $auditedPageRepository,
         private array $siteAnalyzers = [],
     ) {
     }
@@ -53,55 +47,26 @@ final readonly class AnalyzeSiteOnAuditCompleted
             pages: $pages,
         );
 
-        $existingIssueIds = $this->snapshotExistingIssueIds($pages);
-
         foreach ($this->siteAnalyzers as $analyzer) {
             $analyzer->analyze($context);
         }
 
         foreach ($pages as $page) {
-            $newIssues = $this->newIssuesFor($page, $existingIssueIds[$page->id()->value()] ?? []);
-            if ($newIssues !== []) {
-                $this->pageRepository->appendIssues($page->id(), $newIssues);
+            if ($page->issues() === []) {
+                continue;
             }
+            $audited = AuditedPage::forUrl(
+                $event->auditId->value(),
+                $page->url()->toString(),
+            );
+            foreach ($page->issues() as $issue) {
+                $audited->recordIssue($issue);
+            }
+            $this->auditedPageRepository->save($audited);
         }
 
         if ($context->siteIssues() !== []) {
             $this->siteIssueRepository->appendIssues($event->auditId, $context->siteIssues());
         }
-    }
-
-    /**
-     * @param Page[] $pages
-     * @return array<string, array<string, true>>
-     */
-    private function snapshotExistingIssueIds(array $pages): array
-    {
-        $snapshot = [];
-        foreach ($pages as $page) {
-            $ids = [];
-            foreach ($page->issues() as $issue) {
-                $ids[$issue->id()->value()] = true;
-            }
-            $snapshot[$page->id()->value()] = $ids;
-        }
-
-        return $snapshot;
-    }
-
-    /**
-     * @param array<string, true> $existingIds
-     * @return Issue[]
-     */
-    private function newIssuesFor(Page $page, array $existingIds): array
-    {
-        $new = [];
-        foreach ($page->issues() as $issue) {
-            if (!isset($existingIds[$issue->id()->value()])) {
-                $new[] = $issue;
-            }
-        }
-
-        return $new;
     }
 }
