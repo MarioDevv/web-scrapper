@@ -2,31 +2,30 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
+use SeoSpider\Auditing\Domain\Model\Analysis\Signal\Link;
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueId;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
-use SeoSpider\Crawling\Domain\Model\Page\Link;
-use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 
 final class ImageAnalyzer implements Analyzer
 {
     private const int ALT_MAX_LENGTH = 125;
 
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml()) {
+        if (!$signals->isHtml()) {
             return;
         }
 
-        $images = array_filter(
-            $page->links(),
-            static fn($link) => $link->type() === LinkType::IMAGE,
-        );
+        $images = array_values(array_filter(
+            $signals->links(),
+            static fn (Link $link): bool => $link->type() === 'image',
+        ));
 
-        if (count($images) === 0) {
+        if ($images === []) {
             return;
         }
 
@@ -39,13 +38,13 @@ final class ImageAnalyzer implements Analyzer
             if ($alt === null || trim($alt) === '') {
                 $missingAlt++;
             } elseif (mb_strlen($alt) > self::ALT_MAX_LENGTH) {
-                $page->addIssue(new Issue(
+                $issues->add(new Issue(
                     id: IssueId::generate(),
                     category: IssueCategory::CONTENT,
                     severity: IssueSeverity::INFO,
                     code: 'img_alt_too_long',
                     message: sprintf('Image alt is %d chars. Screen readers may truncate past ~%d; tighten for accessibility (not a direct SEO factor).', mb_strlen($alt), self::ALT_MAX_LENGTH),
-                    context: $image->targetUrl()->toString(),
+                    context: $image->targetUrl(),
                 ));
             }
 
@@ -55,7 +54,7 @@ final class ImageAnalyzer implements Analyzer
         }
 
         if ($missingAlt > 0) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::WARNING,
@@ -66,12 +65,12 @@ final class ImageAnalyzer implements Analyzer
 
         if ($missingDimensions !== []) {
             $sample = array_map(
-                static fn(Link $img) => $img->targetUrl()->toString(),
+                static fn (Link $img): string => $img->targetUrl(),
                 array_slice($missingDimensions, 0, 5),
             );
             $count = count($missingDimensions);
 
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::CONTENT,
                 severity: IssueSeverity::NOTICE,

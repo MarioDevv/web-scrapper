@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Auditing\Domain\Model\Analysis;
 
 use SeoSpider\Auditing\Domain\Model\Issue\Issue;
 use SeoSpider\Auditing\Domain\Model\Issue\IssueCategory;
@@ -11,16 +11,16 @@ use SeoSpider\Auditing\Domain\Model\Issue\IssueSeverity;
 
 final class HreflangAnalyzer implements Analyzer
 {
-    public function analyze(AnalyzablePage $page): void
+    public function analyze(PageSignals $signals, IssueCollector $issues): void
     {
-        if (!$page->isHtml() || count($page->hreflangs()) === 0) {
+        if (!$signals->isHtml() || $signals->hreflangs() === []) {
             return;
         }
 
-        $this->checkInvalidLanguageCodes($page);
-        $this->checkInvalidRegionCodes($page);
-        $this->checkMissingSelfReference($page);
-        $this->checkDuplicateLanguageRegion($page);
+        $this->checkInvalidLanguageCodes($signals, $issues);
+        $this->checkInvalidRegionCodes($signals, $issues);
+        $this->checkMissingSelfReference($signals, $issues);
+        $this->checkDuplicateLanguageRegion($signals, $issues);
     }
 
     public function category(): IssueCategory
@@ -28,50 +28,50 @@ final class HreflangAnalyzer implements Analyzer
         return IssueCategory::HREFLANG;
     }
 
-    private function checkInvalidLanguageCodes(AnalyzablePage $page): void
+    private function checkInvalidLanguageCodes(PageSignals $signals, IssueCollector $issues): void
     {
-        foreach ($page->hreflangs() as $hreflang) {
+        foreach ($signals->hreflangs() as $hreflang) {
             if (!$hreflang->isValidLanguageCode()) {
-                $page->addIssue(new Issue(
+                $issues->add(new Issue(
                     id: IssueId::generate(),
                     category: IssueCategory::HREFLANG,
                     severity: IssueSeverity::ERROR,
                     code: 'hreflang_invalid_language',
                     message: sprintf('Invalid hreflang language code: "%s".', $hreflang->language()),
-                    context: $hreflang->href()->toString(),
+                    context: $hreflang->href(),
                 ));
             }
         }
     }
 
-    private function checkInvalidRegionCodes(AnalyzablePage $page): void
+    private function checkInvalidRegionCodes(PageSignals $signals, IssueCollector $issues): void
     {
-        foreach ($page->hreflangs() as $hreflang) {
+        foreach ($signals->hreflangs() as $hreflang) {
             if (!$hreflang->isValidRegionCode()) {
-                $page->addIssue(new Issue(
+                $issues->add(new Issue(
                     id: IssueId::generate(),
                     category: IssueCategory::HREFLANG,
                     severity: IssueSeverity::ERROR,
                     code: 'hreflang_invalid_region',
                     message: sprintf('Invalid hreflang region code: "%s".', $hreflang->region()),
-                    context: $hreflang->languageRegionCode() . ' → ' . $hreflang->href()->toString(),
+                    context: $hreflang->languageRegionCode() . ' → ' . $hreflang->href(),
                 ));
             }
         }
     }
 
-    private function checkMissingSelfReference(AnalyzablePage $page): void
+    private function checkMissingSelfReference(PageSignals $signals, IssueCollector $issues): void
     {
         $hasSelf = false;
-        foreach ($page->hreflangs() as $hreflang) {
-            if ($hreflang->pointsTo($page->url())) {
+        foreach ($signals->hreflangs() as $hreflang) {
+            if ($hreflang->pointsTo($signals->url())) {
                 $hasSelf = true;
                 break;
             }
         }
 
         if (!$hasSelf) {
-            $page->addIssue(new Issue(
+            $issues->add(new Issue(
                 id: IssueId::generate(),
                 category: IssueCategory::HREFLANG,
                 severity: IssueSeverity::WARNING,
@@ -81,21 +81,21 @@ final class HreflangAnalyzer implements Analyzer
         }
     }
 
-    private function checkDuplicateLanguageRegion(AnalyzablePage $page): void
+    private function checkDuplicateLanguageRegion(PageSignals $signals, IssueCollector $issues): void
     {
         $seen = [];
-        foreach ($page->hreflangs() as $hreflang) {
+        foreach ($signals->hreflangs() as $hreflang) {
             $code = $hreflang->languageRegionCode();
             if (isset($seen[$code])) {
-                $page->addIssue(new Issue(
+                $issues->add(new Issue(
                     id: IssueId::generate(),
                     category: IssueCategory::HREFLANG,
                     severity: IssueSeverity::WARNING,
                     code: 'hreflang_duplicate',
                     message: sprintf('Duplicate hreflang for "%s".', $code),
-                    context: $hreflang->href()->toString(),
+                    context: $hreflang->href(),
                 ));
-                break; // Report only once
+                break;
             }
             $seen[$code] = true;
         }

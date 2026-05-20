@@ -37,10 +37,10 @@ use SeoSpider\Auditing\Domain\Model\Analysis\MetaDataAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\DirectiveAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\HeadingAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\ContentAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\ImageAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\ImageAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\PerformanceAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\SecurityHeaderAnalyzer;
-use SeoSpider\Audit\Domain\Model\Analyzer\HreflangAnalyzer;
+use SeoSpider\Auditing\Domain\Model\Analysis\HreflangAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\DuplicateAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\TransportSecurityAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\SocialMetadataAnalyzer;
@@ -148,8 +148,6 @@ final class AuditServiceProvider extends ServiceProvider
 
         $this->app->tag([
             BrokenLinkAnalyzer::class,
-            ImageAnalyzer::class,
-            HreflangAnalyzer::class,
             DuplicateAnalyzer::class,
         ], 'analyzers');
 
@@ -163,6 +161,8 @@ final class AuditServiceProvider extends ServiceProvider
             SecurityHeaderAnalyzer::class,
             TransportSecurityAnalyzer::class,
             SocialMetadataAnalyzer::class,
+            ImageAnalyzer::class,
+            HreflangAnalyzer::class,
         ], 'auditing-analyzers');
 
         $this->app->singleton(HreflangReturnAnalyzer::class, fn() => new HreflangReturnAnalyzer());

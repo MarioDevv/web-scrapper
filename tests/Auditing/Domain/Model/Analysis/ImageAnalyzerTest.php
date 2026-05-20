@@ -2,63 +2,50 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Tests\Audit\Domain\Model\Analyzer;
+namespace SeoSpider\Tests\Auditing\Domain\Model\Analysis;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Domain\Model\Analyzer\ImageAnalyzer;
+use SeoSpider\Audit\Application\Analysis\LegacyPageToPageSignals;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
+use SeoSpider\Audit\Domain\Model\Page\Page;
+use SeoSpider\Audit\Domain\Model\Page\PageId;
+use SeoSpider\Auditing\Domain\Model\Analysis\ImageAnalyzer;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Crawling\Domain\Model\Page\Link;
 use SeoSpider\Crawling\Domain\Model\Page\LinkRelation;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
-use SeoSpider\Audit\Domain\Model\Page\Page;
-use SeoSpider\Audit\Domain\Model\Page\PageId;
 use SeoSpider\Crawling\Domain\Model\Page\PageResponse;
 use SeoSpider\Crawling\Domain\Model\Page\RedirectChain;
 use SeoSpider\Crawling\Domain\Model\Url;
 
-/**
- * Only covers the image_missing_dimensions rule introduced in phase A.2.
- * The older img_alt_* rules remain without dedicated unit tests; that
- * is pre-existing tech debt tracked separately.
- */
 final class ImageAnalyzerTest extends TestCase
 {
     public function test_does_not_flag_when_all_images_have_dimensions(): void
     {
-        $page = $this->pageWithImages([
+        $collector = $this->runOn($this->pageWithImages([
             $this->image('https://example.com/a.png', 'alt a', width: 800, height: 600),
             $this->image('https://example.com/b.png', 'alt b', width: 200, height: 200),
-        ]);
+        ]));
 
-        (new ImageAnalyzer())->analyze($page);
-
-        $codes = array_map(static fn($issue) => $issue->code(), $page->issues());
-        $this->assertNotContains('image_missing_dimensions', $codes);
+        $this->assertNotContains('image_missing_dimensions', $collector->codes());
     }
 
     public function test_flags_images_missing_both_dimensions(): void
     {
-        $page = $this->pageWithImages([
+        $collector = $this->runOn($this->pageWithImages([
             $this->image('https://example.com/a.png', 'alt'),
-        ]);
+        ]));
 
-        (new ImageAnalyzer())->analyze($page);
-
-        $codes = array_map(static fn($issue) => $issue->code(), $page->issues());
-        $this->assertContains('image_missing_dimensions', $codes);
+        $this->assertContains('image_missing_dimensions', $collector->codes());
     }
 
     public function test_flags_images_missing_only_one_dimension(): void
     {
-        $page = $this->pageWithImages([
+        $collector = $this->runOn($this->pageWithImages([
             $this->image('https://example.com/a.png', 'alt', width: 800, height: null),
-        ]);
+        ]));
 
-        (new ImageAnalyzer())->analyze($page);
-
-        $codes = array_map(static fn($issue) => $issue->code(), $page->issues());
-        $this->assertContains('image_missing_dimensions', $codes);
+        $this->assertContains('image_missing_dimensions', $collector->codes());
     }
 
     public function test_lists_sample_urls_in_context_with_overflow_marker(): void
@@ -68,17 +55,25 @@ final class ImageAnalyzerTest extends TestCase
             $images[] = $this->image(sprintf('https://example.com/img-%d.png', $i), 'alt');
         }
 
-        $page = $this->pageWithImages($images);
-
-        (new ImageAnalyzer())->analyze($page);
+        $collector = $this->runOn($this->pageWithImages($images));
 
         $issue = array_values(array_filter(
-            $page->issues(),
-            static fn($i) => $i->code() === 'image_missing_dimensions',
+            $collector->issues(),
+            static fn ($i) => $i->code() === 'image_missing_dimensions',
         ))[0];
 
         $this->assertStringContainsString('8 image(s)', $issue->message());
         $this->assertStringContainsString('+3 more', $issue->context() ?? '');
+    }
+
+    private function runOn(Page $page): InMemoryIssueCollector
+    {
+        $signals = new LegacyPageToPageSignals($page);
+        $collector = new InMemoryIssueCollector();
+
+        (new ImageAnalyzer())->analyze($signals, $collector);
+
+        return $collector;
     }
 
     /** @param Link[] $images */
