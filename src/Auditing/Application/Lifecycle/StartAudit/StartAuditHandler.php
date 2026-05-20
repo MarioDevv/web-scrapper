@@ -2,34 +2,30 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\StartAudit;
+namespace SeoSpider\Auditing\Application\Lifecycle\StartAudit;
 
 use SeoSpider\Auditing\Domain\Model\Audit\Audit;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditConfiguration;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditFrontier;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Crawling\Domain\Model\DiscoverySource;
-use SeoSpider\Crawling\Application\Frontier;
-use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 
 final readonly class StartAuditHandler
 {
     public function __construct(
         private AuditRepository $auditRepository,
-        private Frontier $frontier,
+        private AuditFrontier $frontier,
         private EventBus $eventBus,
     ) {
     }
 
     public function __invoke(StartAuditCommand $command): void
     {
-        $seedUrl = Url::fromString($command->seedUrl);
-
         $audit = Audit::start(
             new AuditId($command->auditId),
             new AuditConfiguration(
-                seedUrl: $seedUrl->toString(),
+                seedUrl: $command->seedUrl,
                 maxPages: $command->maxPages,
                 maxDepth: $command->maxDepth,
                 concurrency: $command->concurrency,
@@ -44,10 +40,10 @@ final readonly class StartAuditHandler
             ),
         );
 
-        $this->auditRepository->save($audit);
-        $_ = $this->frontier->enqueue($audit->id()->value(), $seedUrl, depth: 0, source: DiscoverySource::SEED);
+        $this->frontier->enqueueSeed($audit->id()->value(), $command->seedUrl);
 
-        // Count the seed URL as discovered
+        $this->auditRepository->save($audit);
+
         $audit->registerUrlsDiscovered(1);
         $this->auditRepository->save($audit);
 

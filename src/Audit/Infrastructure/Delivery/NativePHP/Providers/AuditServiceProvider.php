@@ -56,6 +56,8 @@ use SeoSpider\Auditing\Domain\Model\Analysis\SitemapIndex;
 use SeoSpider\Audit\Application\Analysis\CrawlingRobotsCheck;
 use SeoSpider\Audit\Application\Analysis\FrontierBackedSitemapIndex;
 use SeoSpider\Audit\Application\Analysis\FrontierBackedPendingUrlCounter;
+use SeoSpider\Audit\Application\Analysis\FrontierBackedAuditFrontier;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditFrontier;
 use SeoSpider\Auditing\Domain\Model\Reporting\PendingUrlCounter;
 use SeoSpider\Audit\Application\AnalyzeSite\AnalyzeSiteOnAuditCompleted;
 use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportReader;
@@ -71,20 +73,20 @@ use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditSnapshotRepository;
 use SeoSpider\Auditing\Domain\Model\AuditedPage\AuditedPageRepository;
 use SeoSpider\Auditing\Infrastructure\Persistence\SqliteAuditedPageRepository;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditCompleted;
-use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Auditing\Application\Lifecycle\PauseAudit\PauseAuditHandler;
 use SeoSpider\Auditing\Application\Lifecycle\ResumeAudit\ResumeAuditHandler;
-use SeoSpider\Audit\Application\CancelAudit\CancelAuditHandler;
+use SeoSpider\Auditing\Application\Lifecycle\CancelAudit\CancelAuditHandler;
 use SeoSpider\Auditing\Application\Reporting\GetAuditStatus\GetAuditStatusHandler;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesHandler;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailHandler;
 use SeoSpider\Audit\Application\Engine\CrawlerEngine;
-use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\PauseAudit\PauseAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\ResumeAudit\ResumeAuditCommand;
-use SeoSpider\Audit\Application\CancelAudit\CancelAuditCommand;
+use SeoSpider\Auditing\Application\Lifecycle\CancelAudit\CancelAuditCommand;
 use SeoSpider\Auditing\Application\Reporting\GetAuditStatus\GetAuditStatusQuery;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesQuery;
 use SeoSpider\Auditing\Application\Reporting\GetPageDetail\GetPageDetailQuery;
@@ -230,9 +232,12 @@ final class AuditServiceProvider extends ServiceProvider
         ));
 
 
+        $this->app->singleton(AuditFrontier::class, fn($app) => new FrontierBackedAuditFrontier(
+            $app->make(Frontier::class),
+        ));
         $this->app->singleton(StartAuditHandler::class, fn($app) => new StartAuditHandler(
             auditRepository: $app->make(AuditRepository::class),
-            frontier: $app->make(Frontier::class),
+            frontier: $app->make(AuditFrontier::class),
             eventBus: $app->make(EventBus::class),
         ));
 
@@ -248,7 +253,7 @@ final class AuditServiceProvider extends ServiceProvider
 
         $this->app->singleton(CancelAuditHandler::class, fn($app) => new CancelAuditHandler(
             auditRepository: $app->make(AuditRepository::class),
-            frontier: $app->make(Frontier::class),
+            frontier: $app->make(AuditFrontier::class),
             eventBus: $app->make(EventBus::class),
         ));
 

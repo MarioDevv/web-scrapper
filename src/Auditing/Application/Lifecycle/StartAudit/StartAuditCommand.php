@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\StartAudit;
+namespace SeoSpider\Auditing\Application\Lifecycle\StartAudit;
 
 final readonly class StartAuditCommand
 {

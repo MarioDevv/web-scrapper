@@ -6,12 +6,12 @@ namespace App\Livewire;
 
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
-use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
-use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Application\Reporting\GetAuditStatus\GetAuditStatusQuery;
 use SeoSpider\Auditing\Application\Reporting\GetAuditStatus\GetAuditStatusHandler;
-use SeoSpider\Audit\Application\CancelAudit\CancelAuditCommand;
-use SeoSpider\Audit\Application\CancelAudit\CancelAuditHandler;
+use SeoSpider\Auditing\Application\Lifecycle\CancelAudit\CancelAuditCommand;
+use SeoSpider\Auditing\Application\Lifecycle\CancelAudit\CancelAuditHandler;
 use SeoSpider\Auditing\Application\Lifecycle\PauseAudit\PauseAuditCommand;
 use SeoSpider\Auditing\Application\Lifecycle\PauseAudit\PauseAuditHandler;
 use SeoSpider\Auditing\Application\Lifecycle\ResumeAudit\ResumeAuditCommand;

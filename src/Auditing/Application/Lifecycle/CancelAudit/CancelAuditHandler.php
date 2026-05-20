@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\CancelAudit;
+namespace SeoSpider\Auditing\Application\Lifecycle\CancelAudit;
 
 use SeoSpider\Auditing\Application\AuditNotFound;
+use SeoSpider\Auditing\Domain\Model\Audit\AuditFrontier;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditRepository;
-use SeoSpider\Crawling\Application\Frontier;
 use SeoSpider\Shared\Domain\Bus\EventBus;
 
 final readonly class CancelAuditHandler
 {
     public function __construct(
         private AuditRepository $auditRepository,
-        private Frontier $frontier,
+        private AuditFrontier $frontier,
         private EventBus $eventBus,
     ) {
     }

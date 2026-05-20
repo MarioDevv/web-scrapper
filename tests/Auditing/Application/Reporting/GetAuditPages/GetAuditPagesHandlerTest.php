@@ -10,8 +10,8 @@ use ReflectionProperty;
 use SeoSpider\Auditing\Application\AuditNotFound;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesHandler;
 use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesQuery;
-use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
-use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\HttpStatusCode;
 use SeoSpider\Audit\Domain\Model\Page\Page;
@@ -20,6 +20,7 @@ use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
+use SeoSpider\Audit\Application\Analysis\FrontierBackedAuditFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageSummaryReader;
@@ -34,7 +35,7 @@ final class GetAuditPagesHandlerTest extends TestCase
     {
         $this->audits = new InMemoryAuditRepository();
         $this->pages = new InMemoryPageRepository();
-        $start = new StartAuditHandler($this->audits, new InMemoryFrontier(new UrlCanonicalizer()), new InMemoryEventBus());
+        $start = new StartAuditHandler($this->audits, new FrontierBackedAuditFrontier(new InMemoryFrontier(new UrlCanonicalizer())), new InMemoryEventBus());
         $auditId = AuditId::generate()->value();
         $start(new StartAuditCommand(auditId: $auditId, seedUrl: 'https://example.com'));
         $this->auditId = new AuditId($auditId);

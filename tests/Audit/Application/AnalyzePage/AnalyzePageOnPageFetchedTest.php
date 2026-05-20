@@ -7,8 +7,8 @@ namespace SeoSpider\Tests\Audit\Application\AnalyzePage;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Application\AnalyzePage\AnalyzePageOnPageFetched;
-use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
-use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Audit\Domain\Model\Page\Page;
 use SeoSpider\Audit\Domain\Model\Page\PageCrawled;
@@ -26,6 +26,7 @@ use SeoSpider\Crawling\Domain\Model\Url;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
+use SeoSpider\Audit\Application\Analysis\FrontierBackedAuditFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Auditing\Infrastructure\InMemory\InMemoryAuditedPageRepository;
@@ -45,7 +46,7 @@ final class AnalyzePageOnPageFetchedTest extends TestCase
         $this->auditedPages = new InMemoryAuditedPageRepository();
         $this->events = new InMemoryEventBus();
 
-        $start = new StartAuditHandler($this->audits, new InMemoryFrontier(new UrlCanonicalizer()), $this->events);
+        $start = new StartAuditHandler($this->audits, new FrontierBackedAuditFrontier(new InMemoryFrontier(new UrlCanonicalizer())), $this->events);
         $auditId = AuditId::generate()->value();
         $start(new StartAuditCommand(auditId: $auditId, seedUrl: 'https://example.com'));
         $this->auditId = new AuditId($auditId);

@@ -8,8 +8,8 @@ use PHPUnit\Framework\TestCase;
 use SeoSpider\Audit\Application\CrawlPage\CrawlPageHandler;
 use SeoSpider\Audit\Application\Engine\CrawlerEngine;
 use SeoSpider\Audit\Application\Engine\CrawlProgress;
-use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
-use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Analysis\BrokenLinkAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\DirectiveAnalyzer;
 use SeoSpider\Auditing\Domain\Model\Analysis\MetaDataAnalyzer;
@@ -29,6 +29,7 @@ use SeoSpider\Audit\Infrastructure\ExternalLinks\HttpExternalLinkVerifier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubPageFetcher;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubSitemapIngester;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryExternalLinkRepository;
+use SeoSpider\Audit\Application\Analysis\FrontierBackedAuditFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryPageRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\StubHttpClient;
@@ -105,7 +106,7 @@ final class CrawlerEngineTest extends TestCase
     {
         $startHandler = new StartAuditHandler(
             $this->auditRepository,
-            $this->frontier,
+            new FrontierBackedAuditFrontier($this->frontier),
             $this->eventBus,
         );
 

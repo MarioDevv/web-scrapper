@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace SeoSpider\Tests\Audit\Application\StartAudit;
 
 use PHPUnit\Framework\TestCase;
-use SeoSpider\Audit\Application\StartAudit\StartAuditCommand;
-use SeoSpider\Audit\Application\StartAudit\StartAuditHandler;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditCommand;
+use SeoSpider\Auditing\Application\Lifecycle\StartAudit\StartAuditHandler;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditId;
 use SeoSpider\Auditing\Domain\Model\Audit\AuditStatus;
 use SeoSpider\Audit\Domain\Model\Page\InvalidUrl;
 use SeoSpider\Crawling\Domain\Model\UrlCanonicalizer;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryAuditRepository;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryEventBus;
+use SeoSpider\Audit\Application\Analysis\FrontierBackedAuditFrontier;
 use SeoSpider\Tests\Audit\Infrastructure\InMemory\InMemoryFrontier;
 
 final class StartAuditHandlerTest extends TestCase
@@ -30,7 +31,7 @@ final class StartAuditHandlerTest extends TestCase
 
         $this->handler = new StartAuditHandler(
             $this->auditRepository,
-            $this->frontier,
+            new FrontierBackedAuditFrontier($this->frontier),
             $this->eventBus,
         );
     }

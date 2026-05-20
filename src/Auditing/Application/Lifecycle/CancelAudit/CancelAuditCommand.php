@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Application\CancelAudit;
+namespace SeoSpider\Auditing\Application\Lifecycle\CancelAudit;
 
 final readonly class CancelAuditCommand
 {
