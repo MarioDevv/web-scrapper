@@ -70,18 +70,6 @@ final class InMemoryPageRepository implements PageRepository
         return PageId::generate();
     }
 
-    /**
-     * No-op: in-memory aggregates already hold the issues their analyzers
-     * added via Page::addIssue(). This mirrors the SQLite implementation,
-     * which simply inserts rows into the issues table without touching
-     * the page aggregate that triggered the call.
-     *
-     * @param Issue[] $issues
-     */
-    public function appendIssues(PageId $pageId, array $issues): void
-    {
-    }
-
     /** @return array<string, Fingerprint> */
     public function fingerprintsByAudit(AuditId $auditId): array
     {

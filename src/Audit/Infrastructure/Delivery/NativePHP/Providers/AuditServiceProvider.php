@@ -31,7 +31,7 @@ use SeoSpider\Crawling\Infrastructure\Http\ConcurrentPageFetcher;
 use SeoSpider\Crawling\Infrastructure\Sitemap\XmlSitemapIngester;
 use SeoSpider\Crawling\Infrastructure\Http\SymfonyHttpClient;
 use SeoSpider\Crawling\Infrastructure\Parser\DomCrawlerHtmlParser;
-use SeoSpider\Audit\Infrastructure\Bus\SyncEventBus;
+use SeoSpider\Shared\Infrastructure\Bus\SyncEventBus;
 use SeoSpider\Audit\Domain\Model\Analyzer\BrokenLinkAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\MetaDataAnalyzer;
 use SeoSpider\Audit\Domain\Model\Analyzer\DirectiveAnalyzer;

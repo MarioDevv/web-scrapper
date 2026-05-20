@@ -250,41 +250,6 @@ final readonly class SqlitePageRepository implements PageRepository
     }
 
     /** @param Issue[] $issues */
-    public function appendIssues(PageId $pageId, array $issues): void
-    {
-        if ($issues === []) {
-            return;
-        }
-
-        $this->insertIssues($pageId->value(), $issues);
-
-        // Materialised counts must reflect the newly inserted rows so the
-        // page-list query can avoid recomputing them per render.
-        $errors = 0;
-        $warnings = 0;
-        foreach ($issues as $issue) {
-            if ($issue->isError()) {
-                $errors++;
-            } elseif ($issue->isWarning()) {
-                $warnings++;
-            }
-        }
-
-        if ($errors === 0 && $warnings === 0) {
-            return;
-        }
-
-        $stmt = $this->pdo->prepare(
-            'UPDATE pages SET error_count = error_count + :errors, warning_count = warning_count + :warnings WHERE id = :id',
-        );
-        $stmt->execute([
-            'errors' => $errors,
-            'warnings' => $warnings,
-            'id' => $pageId->value(),
-        ]);
-    }
-
-    /** @param Issue[] $issues */
     private function insertIssues(string $pageId, array $issues): void
     {
         if ($issues === []) {

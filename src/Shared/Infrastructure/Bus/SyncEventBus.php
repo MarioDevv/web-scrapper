@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SeoSpider\Audit\Infrastructure\Bus;
+namespace SeoSpider\Shared\Infrastructure\Bus;
 
 use SeoSpider\Shared\Domain\Bus\EventBus;
 use SeoSpider\Shared\Domain\DomainEvent;
