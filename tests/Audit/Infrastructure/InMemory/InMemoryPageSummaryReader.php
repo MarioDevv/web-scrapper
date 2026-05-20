@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
-use SeoSpider\Audit\Application\GetAuditPages\GetAuditPagesQuery;
-use SeoSpider\Audit\Application\GetAuditPages\PageSummary;
-use SeoSpider\Audit\Application\GetAuditPages\PageSummaryReader;
+use SeoSpider\Auditing\Application\Reporting\GetAuditPages\GetAuditPagesQuery;
+use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummary;
+use SeoSpider\Auditing\Application\Reporting\GetAuditPages\PageSummaryReader;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 use SeoSpider\Crawling\Domain\Model\Page\LinkType;
 use SeoSpider\Audit\Domain\Model\Page\Page;

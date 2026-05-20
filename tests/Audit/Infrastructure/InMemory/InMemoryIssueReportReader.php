@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace SeoSpider\Tests\Audit\Infrastructure\InMemory;
 
-use SeoSpider\Audit\Application\GetAuditIssueReport\IssueReportData;
-use SeoSpider\Audit\Application\GetAuditIssueReport\IssueReportReader;
-use SeoSpider\Audit\Application\GetAuditIssueReport\IssueReportRow;
+use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportData;
+use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportReader;
+use SeoSpider\Auditing\Application\Reporting\GetAuditIssueReport\IssueReportRow;
 use SeoSpider\Audit\Domain\Model\Audit\AuditId;
 
 /**
